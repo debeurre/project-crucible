@@ -141,3 +141,6 @@ vite.config.ts.timestamp-*
 
 # personal
 personal notes/
+
+# Vite cache
+.vite/
