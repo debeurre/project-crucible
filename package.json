@@ -1,0 +1,26 @@
+{
+  "name": "project-crucible",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/debeurre/project-crucible.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/debeurre/project-crucible/issues"
+  },
+  "homepage": "https://github.com/debeurre/project-crucible#readme",
+  "dependencies": {
+    "pixi.js": "^8.5.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6"
+  }
+}
