@@ -23,21 +23,51 @@ async function main() {
     document.body.appendChild(app.canvas);
     
     // --- DEBUG UI ---
-    const debugDiv = document.createElement('div');
-    debugDiv.style.position = 'absolute';
-    debugDiv.style.bottom = '20px';
-    debugDiv.style.right = '20px';
-    debugDiv.style.color = 'white';
-    debugDiv.style.fontFamily = 'monospace';
-    debugDiv.style.fontSize = '24px';
-    debugDiv.style.pointerEvents = 'none'; // Let clicks pass through
-    debugDiv.style.textShadow = 
-        '-2px -2px 0 #000, ' +
-        '2px -2px 0 #000, ' +
-        '-2px 2px 0 #000, ' +
-        '2px 2px 0 #000';
-    debugDiv.textContent = 'MODE: RECT';
-    document.body.appendChild(debugDiv);
+    const debugContainer = document.createElement('div');
+    debugContainer.style.position = 'absolute';
+    debugContainer.style.bottom = '20px';
+    debugContainer.style.left = '20px';
+    debugContainer.style.color = 'white';
+    debugContainer.style.fontFamily = 'monospace';
+    debugContainer.style.fontSize = '16px';
+    debugContainer.style.pointerEvents = 'none';
+    debugContainer.style.display = 'flex';
+    debugContainer.style.flexDirection = 'column';
+    debugContainer.style.gap = '4px';
+    debugContainer.style.textShadow = '1px 1px 0 #000';
+    document.body.appendChild(debugContainer);
+
+    const modes = [
+        { key: '1', label: 'FULL', mode: MapShape.FULL },
+        { key: '2', label: 'RECT', mode: MapShape.RECT },
+        { key: '3', label: 'SQUARE', mode: MapShape.SQUARE },
+        { key: '4', label: 'CIRCLE', mode: MapShape.CIRCLE },
+    ];
+
+    const modeElements: HTMLDivElement[] = [];
+
+    modes.forEach(m => {
+        const line = document.createElement('div');
+        line.textContent = `${m.key} - MODE: ${m.label}`;
+        debugContainer.appendChild(line);
+        modeElements.push(line);
+    });
+
+    const updateDebugUI = () => {
+        modes.forEach((m, i) => {
+            if (mapSystem.mode === m.mode) {
+                modeElements[i].style.opacity = '1.0';
+                modeElements[i].style.color = '#fff';
+                modeElements[i].style.fontWeight = 'bold';
+            } else {
+                modeElements[i].style.opacity = '0.5';
+                modeElements[i].style.color = '#aaa';
+                modeElements[i].style.fontWeight = 'normal';
+            }
+        });
+    };
+
+    updateDebugUI();
 
     const inputState = createInputManager(app); // Renamed to inputState
 
@@ -67,7 +97,7 @@ async function main() {
                 case '3': mapSystem.setMode(MapShape.SQUARE); break;
                 case '4': mapSystem.setMode(MapShape.CIRCLE); break;
             }
-            debugDiv.textContent = `MODE: ${mapSystem.mode}`;
+            updateDebugUI();
             inputState.debugKey = null;
         }
 
