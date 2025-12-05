@@ -17,6 +17,7 @@
 - **Functional over OOP:** Prefer composition and simple functions over deep class inheritance.
 - **Config-Driven:** All "magic numbers" (speed, colors, spawn rates) go into `src/config.ts`.
 - **Spectacle First:** If a mechanic doesn't have visual juice (particles, tweens), it is not finished.
+- **Shell Safety:** Do NOT chain shell commands with `&&` (e.g., `git add . && git commit`). Run them as separate tool calls to avoid safety filter rejections.
 
 ## 4. ARCHITECTURE & PERFORMANCE
 - **Simulation vs. Render:** Keep the math (logic) separate from the PixiJS (view).
