@@ -43,6 +43,8 @@ async function main() {
         { key: '3', label: 'SQUARE', mode: MapShape.SQUARE },
         { key: '4', label: 'CIRCLE', mode: MapShape.CIRCLE },
         { key: '5', label: 'PROCGEN', mode: MapShape.PROCGEN },
+        { key: '6', label: 'MIRROR', mode: MapShape.MIRROR },
+        { key: '7', label: 'RADIAL', mode: MapShape.RADIAL },
     ];
 
     const modeElements: HTMLDivElement[] = [];
@@ -98,6 +100,8 @@ async function main() {
                 case '3': mapSystem.setMode(MapShape.SQUARE); break;
                 case '4': mapSystem.setMode(MapShape.CIRCLE); break;
                 case '5': mapSystem.setMode(MapShape.PROCGEN); break;
+                case '6': mapSystem.setMode(MapShape.MIRROR); break;
+                case '7': mapSystem.setMode(MapShape.RADIAL); break;
             }
             updateDebugUI();
             inputState.debugKey = null;

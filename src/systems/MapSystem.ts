@@ -84,9 +84,10 @@ export class MapSystem {
         this.foreground.circle(centerX, centerY, this.circleShape.radius).fill(CONFIG.LAND_COLOR);
         break;
       case MapShape.PROCGEN:
+      case MapShape.MIRROR:
+      case MapShape.RADIAL:
         this.generateProcGen();
         break;
-      // TODO: Implement MIRROR, RADIAL
     }
   }
   
@@ -133,6 +134,27 @@ export class MapSystem {
           }
           this.grid = newGrid;
       }
+
+      // Symmetry Logic
+      if (this.mode === MapShape.MIRROR) {
+          const halfW = Math.floor(cols / 2);
+          for (let x = 0; x < halfW; x++) {
+              for (let y = 0; y < rows; y++) {
+                  this.grid[cols - 1 - x][y] = this.grid[x][y];
+              }
+          }
+      } else if (this.mode === MapShape.RADIAL) {
+          const halfW = Math.floor(cols / 2);
+          const halfH = Math.floor(rows / 2);
+          for (let x = 0; x < halfW; x++) {
+              for (let y = 0; y < halfH; y++) {
+                  const val = this.grid[x][y];
+                  this.grid[cols - 1 - x][y] = val; // Mirror X
+                  this.grid[x][rows - 1 - y] = val; // Mirror Y
+                  this.grid[cols - 1 - x][rows - 1 - y] = val; // Mirror XY
+              }
+          }
+      }
       
       // Draw
       for (let x = 0; x < cols; x++) {
@@ -154,6 +176,8 @@ export class MapSystem {
       case MapShape.CIRCLE:
         return this.circleShape.contains(x, y);
       case MapShape.PROCGEN:
+      case MapShape.MIRROR:
+      case MapShape.RADIAL:
         const cx = Math.floor(x / CONFIG.CELL_SIZE);
         const cy = Math.floor(y / CONFIG.CELL_SIZE);
         if (cx < 0 || cx >= this.gridWidth || cy < 0 || cy >= this.gridHeight) return false;
@@ -219,6 +243,8 @@ export class MapSystem {
          break;
          
       case MapShape.PROCGEN:
+      case MapShape.MIRROR:
+      case MapShape.RADIAL:
          const cx = Math.floor(position.x / CONFIG.CELL_SIZE);
          const cy = Math.floor(position.y / CONFIG.CELL_SIZE);
          
