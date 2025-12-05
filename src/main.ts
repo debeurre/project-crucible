@@ -67,12 +67,12 @@ async function main() {
         });
     };
 
-    updateDebugUI();
-
     const inputState = createInputManager(app); // Renamed to inputState
 
     // Initialize Systems
     const mapSystem = new MapSystem(app);
+    updateDebugUI(); // Initial UI update
+
     app.stage.addChild(mapSystem.container);
 
     const sprigSystem = new SprigSystem(app, mapSystem);
