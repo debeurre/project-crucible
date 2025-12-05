@@ -137,21 +137,47 @@ export class MapSystem {
 
       // Symmetry Logic
       if (this.mode === MapShape.MIRROR) {
-          const halfW = Math.floor(cols / 2);
-          for (let x = 0; x < halfW; x++) {
-              for (let y = 0; y < rows; y++) {
-                  this.grid[cols - 1 - x][y] = this.grid[x][y];
+          // 180-degree Rotational Symmetry (S-shape / Point Symmetry)
+          // Instead of mirroring Left->Right, we rotate Top-Half -> Bottom-Half inverted.
+          const halfH = Math.ceil(rows / 2);
+          for (let y = 0; y < halfH; y++) {
+              for (let x = 0; x < cols; x++) {
+                  this.grid[cols - 1 - x][rows - 1 - y] = this.grid[x][y];
               }
           }
       } else if (this.mode === MapShape.RADIAL) {
-          const halfW = Math.floor(cols / 2);
-          const halfH = Math.floor(rows / 2);
-          for (let x = 0; x < halfW; x++) {
-              for (let y = 0; y < halfH; y++) {
+          // 4-way Rotational Symmetry (90, 180, 270 degrees)
+          // Pivot around center
+          const cx = Math.floor(cols / 2);
+          const cy = Math.floor(rows / 2);
+          
+          // Iterate Top-Left Quadrant (approximately)
+          // We over-iterate slightly to ensure coverage, but rely on the source being the "seed"
+          for (let x = 0; x < cx; x++) {
+              for (let y = 0; y < cy; y++) {
                   const val = this.grid[x][y];
-                  this.grid[cols - 1 - x][y] = val; // Mirror X
-                  this.grid[x][rows - 1 - y] = val; // Mirror Y
-                  this.grid[cols - 1 - x][rows - 1 - y] = val; // Mirror XY
+                  
+                  // 1. 180 deg (Opposite corner) - Always fits in rectangle
+                  this.grid[cols - 1 - x][rows - 1 - y] = val;
+
+                  // For 90/270, we need coordinate rotation math
+                  // Relative to center
+                  const dx = x - cx;
+                  const dy = y - cy;
+
+                  // 2. 90 deg: (-dy, dx)
+                  const r1x = cx - dy;
+                  const r1y = cy + dx;
+                  if (r1x >= 0 && r1x < cols && r1y >= 0 && r1y < rows) {
+                      this.grid[r1x][r1y] = val;
+                  }
+
+                  // 3. 270 deg: (dy, -dx)
+                  const r2x = cx + dy;
+                  const r2y = cy - dx;
+                  if (r2x >= 0 && r2x < cols && r2y >= 0 && r2y < rows) {
+                      this.grid[r2x][r2y] = val;
+                  }
               }
           }
       }
