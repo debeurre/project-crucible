@@ -3,6 +3,7 @@ import { Application, Graphics } from 'pixi.js'; // Named imports are better for
 import { SprigSystem } from './SprigSystem';
 import { createInputManager } from './InputManager';
 import { CONFIG } from './config';
+import { MapSystem } from './systems/MapSystem';
 
 // State for screen shake (managed inside the loop now)
 let shakeIntensity = 0;
@@ -22,7 +23,17 @@ async function main() {
     document.body.appendChild(app.canvas);
 
     const mouseState = createInputManager(app);
-    const sprigSystem = new SprigSystem(app);
+
+    // Initialize Systems
+    const mapSystem = new MapSystem(app);
+    app.stage.addChild(mapSystem.container);
+
+    const sprigSystem = new SprigSystem(app, mapSystem);
+
+    // Handle resize
+    app.renderer.on('resize', () => {
+        mapSystem.resize();
+    });
 
     // 3. Graphics Setup
     const pheromonePath = new Graphics();

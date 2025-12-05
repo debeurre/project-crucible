@@ -26,4 +26,13 @@ export const CONFIG = {
   MAX_SPEED: 2,
   FRICTION: 0.95,
   GRAVITY: 0.0, // No gravity for now
+
+  // Map System
+  LAND_COLOR: 0xa1855f, // Medium Tan - The play area
+  BG_COLOR: 0x9eb1cb,   // Blue-ish Grey - The void
+  CELL_SIZE: 20,        // Resolution of the terrain chunks
+  
+  // Map Modes
+  MAP_WIDTH: 1600,
+  MAP_HEIGHT: 800,
 };

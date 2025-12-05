@@ -1,6 +1,7 @@
 import { Application, Graphics, Point } from 'pixi.js';
 import { CONFIG } from './config';
 import { MouseState } from './InputManager';
+import { MapSystem } from './systems/MapSystem';
 
 interface Sprig {
     sprite: Graphics;
@@ -13,9 +14,11 @@ interface Sprig {
 export class SprigSystem {
     private sprigs: Sprig[] = [];
     private app: Application;
+    private mapSystem: MapSystem;
 
-    constructor(app: Application) {
+    constructor(app: Application, mapSystem: MapSystem) {
         this.app = app;
+        this.mapSystem = mapSystem;
         this.initSprigs();
     }
 
@@ -205,13 +208,8 @@ export class SprigSystem {
         sprig.position.x += sprig.velocity.x;
         sprig.position.y += sprig.velocity.y;
 
-        // Screen Wrap
-        const { width, height } = this.app.screen;
-        const padding = 10;
-        if (sprig.position.x < -padding) sprig.position.x = width + padding;
-        if (sprig.position.x > width + padding) sprig.position.x = -padding;
-        if (sprig.position.y < -padding) sprig.position.y = height + padding;
-        if (sprig.position.y > height + padding) sprig.position.y = -padding;
+        // Delegate boundary checks to MapSystem
+        this.mapSystem.constrain(sprig.position, sprig.velocity);
     }
 
     private updateVisuals(sprig: Sprig) {
