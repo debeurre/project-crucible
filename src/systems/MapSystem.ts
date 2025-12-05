@@ -228,18 +228,37 @@ export class MapSystem {
              velocity.x *= -1;
              velocity.y *= -1;
              
-             // 2. Emergency Push to Center (Unstick)
-             // If we are stuck inside a wall, we need to get out.
-             const centerX = this.app.screen.width / 2;
-             const centerY = this.app.screen.height / 2;
-             const dx = centerX - position.x;
-             const dy = centerY - position.y;
-             const dist = Math.sqrt(dx*dx + dy*dy);
-             
-             if (dist > 0) {
-                 // Push towards center aggressively to pop out of walls
-                 position.x += (dx / dist) * 2; 
-                 position.y += (dy / dist) * 2;
+             // 2. Undo the last move (Backtrack)
+             // Since we reversed velocity, adding it now moves us "backwards" in time
+             position.x += velocity.x;
+             position.y += velocity.y;
+
+             // 3. Check if we are still stuck (e.g. spawned in void)
+             const ncx = Math.floor(position.x / CONFIG.CELL_SIZE);
+             const ncy = Math.floor(position.y / CONFIG.CELL_SIZE);
+
+             if (ncx < 0 || ncx >= this.gridWidth || ncy < 0 || ncy >= this.gridHeight || !this.grid[ncx][ncy]) {
+                 // We are still stuck. Find nearest VALID land cell.
+                 let found = false;
+                 const range = 4; // Look up to 4 cells away
+
+                 for (let r = 1; r <= range; r++) {
+                     for (let dx = -r; dx <= r; dx++) {
+                         for (let dy = -r; dy <= r; dy++) {
+                             const nx = cx + dx;
+                             const ny = cy + dy;
+                             if (nx >= 0 && nx < this.gridWidth && ny >= 0 && ny < this.gridHeight && this.grid[nx][ny]) {
+                                 // Found land! Teleport to center of that cell
+                                 position.x = (nx * CONFIG.CELL_SIZE) + (CONFIG.CELL_SIZE / 2);
+                                 position.y = (ny * CONFIG.CELL_SIZE) + (CONFIG.CELL_SIZE / 2);
+                                 found = true;
+                                 break;
+                             }
+                         }
+                         if (found) break;
+                     }
+                     if (found) break;
+                 }
              }
          }
          break;
