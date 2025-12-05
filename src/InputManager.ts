@@ -1,18 +1,20 @@
 import { Application, Point, FederatedPointerEvent } from 'pixi.js';
 
-export interface MouseState {
+export interface InputState {
     isDown: boolean;
     isDragging: boolean;
     path: Point[];      // The trail of points for the pheromone line
     pulse: Point | null; // The specific point where a "Tap" occurred
+    debugKey: string | null;
 }
 
-export function createInputManager(app: Application): MouseState {
-    const mouseState: MouseState = {
+export function createInputManager(app: Application): InputState {
+    const state: InputState = {
         isDown: false,
         isDragging: false,
         path: [],
         pulse: null,
+        debugKey: null,
     };
 
     // 1. Enable interactivity on the stage
@@ -25,39 +27,43 @@ export function createInputManager(app: Application): MouseState {
 
     // 3. Event Listeners
     app.stage.on('pointerdown', (e: FederatedPointerEvent) => {
-        mouseState.isDown = true;
-        mouseState.isDragging = false;
+        state.isDown = true;
+        state.isDragging = false;
         // Store global coordinates
-        mouseState.path = [new Point(e.global.x, e.global.y)];
+        state.path = [new Point(e.global.x, e.global.y)];
     });
 
     app.stage.on('pointermove', (e: FederatedPointerEvent) => {
-        if (mouseState.isDown) {
-            mouseState.isDragging = true;
+        if (state.isDown) {
+            state.isDragging = true;
             // Add point to path
-            mouseState.path.push(new Point(e.global.x, e.global.y));
+            state.path.push(new Point(e.global.x, e.global.y));
         }
     });
 
     app.stage.on('pointerup', (e: FederatedPointerEvent) => {
-        if (!mouseState.isDragging) {
+        if (!state.isDragging) {
             // It was a quick tap, not a drag. 
             // Save the LOCATION of the tap into 'pulse'
-            mouseState.pulse = new Point(e.global.x, e.global.y);
+            state.pulse = new Point(e.global.x, e.global.y);
         }
         
         // Reset drag state
-        mouseState.isDown = false;
-        mouseState.isDragging = false;
-        mouseState.path = [];
+        state.isDown = false;
+        state.path = []; 
     });
 
-    // Handle dragging off-screen
     app.stage.on('pointerupoutside', () => {
-        mouseState.isDown = false;
-        mouseState.isDragging = false;
-        mouseState.path = [];
+        state.isDown = false;
+        state.path = [];
+    });
+    
+    // Keyboard Listener
+    window.addEventListener('keydown', (e) => {
+        if (e.key >= '1' && e.key <= '9') {
+            state.debugKey = e.key;
+        }
     });
 
-    return mouseState;
+    return state;
 }

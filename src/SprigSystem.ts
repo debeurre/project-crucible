@@ -1,6 +1,6 @@
 import { Application, Graphics, Point } from 'pixi.js';
 import { CONFIG } from './config';
-import { MouseState } from './InputManager';
+import { InputState } from './InputManager';
 import { MapSystem } from './systems/MapSystem';
 
 interface Sprig {
@@ -50,12 +50,14 @@ export class SprigSystem {
             this.app.stage.addChild(sprite);
         }
     }
+    
+    // ...
 
-    public update(mouseState: MouseState) {
+    public update(inputState: InputState) {
         for (const sprig of this.sprigs) {
             this.applyBoids(sprig);
-            this.applyPheromonePath(sprig, mouseState.path);
-            this.applyPulse(sprig, mouseState.pulse);
+            this.applyPheromonePath(sprig, inputState.path);
+            this.applyPulse(sprig, inputState.pulse);
             this.updatePosition(sprig);
             this.updateVisuals(sprig); // Handle trails and colors
         }

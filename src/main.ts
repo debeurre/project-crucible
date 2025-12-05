@@ -3,7 +3,7 @@ import { Application, Graphics } from 'pixi.js'; // Named imports are better for
 import { SprigSystem } from './SprigSystem';
 import { createInputManager } from './InputManager';
 import { CONFIG } from './config';
-import { MapSystem } from './systems/MapSystem';
+import { MapSystem, MapShape } from './systems/MapSystem';
 
 // State for screen shake (managed inside the loop now)
 let shakeIntensity = 0;
@@ -21,8 +21,25 @@ async function main() {
     });
 
     document.body.appendChild(app.canvas);
+    
+    // --- DEBUG UI ---
+    const debugDiv = document.createElement('div');
+    debugDiv.style.position = 'absolute';
+    debugDiv.style.bottom = '20px';
+    debugDiv.style.right = '20px';
+    debugDiv.style.color = 'white';
+    debugDiv.style.fontFamily = 'monospace';
+    debugDiv.style.fontSize = '24px';
+    debugDiv.style.pointerEvents = 'none'; // Let clicks pass through
+    debugDiv.style.textShadow = 
+        '-2px -2px 0 #000, ' +
+        '2px -2px 0 #000, ' +
+        '-2px 2px 0 #000, ' +
+        '2px 2px 0 #000';
+    debugDiv.textContent = 'MODE: RECT';
+    document.body.appendChild(debugDiv);
 
-    const mouseState = createInputManager(app);
+    const inputState = createInputManager(app); // Renamed to inputState
 
     // Initialize Systems
     const mapSystem = new MapSystem(app);
@@ -42,17 +59,29 @@ async function main() {
     // 4. The Game Loop (Ticker)
     // v8 passes 'ticker' to the callback which contains deltaTime
     app.ticker.add((ticker) => {
-        sprigSystem.update(mouseState);
+        // --- DEBUG INPUT ---
+        if (inputState.debugKey) {
+            switch (inputState.debugKey) {
+                case '1': mapSystem.setMode(MapShape.FULL); break;
+                case '2': mapSystem.setMode(MapShape.RECT); break;
+                case '3': mapSystem.setMode(MapShape.SQUARE); break;
+                case '4': mapSystem.setMode(MapShape.CIRCLE); break;
+            }
+            debugDiv.textContent = `MODE: ${mapSystem.mode}`;
+            inputState.debugKey = null;
+        }
+
+        sprigSystem.update(inputState);
 
         // --- GRAPHICS UPDATE (The big v8 change) ---
         pheromonePath.clear();
         
-        if (mouseState.path.length > 1) {
+        if (inputState.path.length > 1) {
             // In v8, we define the geometry first...
-            pheromonePath.moveTo(mouseState.path[0].x, mouseState.path[0].y);
+            pheromonePath.moveTo(inputState.path[0].x, inputState.path[0].y);
             
-            for (let i = 1; i < mouseState.path.length; i++) {
-                pheromonePath.lineTo(mouseState.path[i].x, mouseState.path[i].y);
+            for (let i = 1; i < inputState.path.length; i++) {
+                pheromonePath.lineTo(inputState.path[i].x, inputState.path[i].y);
             }
 
             // ...and THEN we command it to stroke (render)
@@ -65,10 +94,10 @@ async function main() {
         
         // --- SCREEN SHAKE UPDATE ---
         // Handle shake input
-        if (mouseState.pulse) {
+        if (inputState.pulse) {
             shakeIntensity = CONFIG.SCREEN_SHAKE_INTENSITY;
             // Reset pulse immediately so we don't shake forever if input sticks
-            mouseState.pulse = null; 
+            inputState.pulse = null; 
         }
 
         // Apply shake logic synced to the ticker (smoother than requestAnimationFrame)
