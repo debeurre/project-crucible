@@ -21,6 +21,11 @@ export class MapSystem {
   // Shapes
   private rectShape: Rectangle;
   private circleShape: Circle;
+  
+  // ProcGen
+  private grid: boolean[][] = [];
+  private gridWidth = 0;
+  private gridHeight = 0;
 
   constructor(app: Application) {
     this.app = app;
@@ -78,21 +83,81 @@ export class MapSystem {
         this.circleShape.y = centerY;
         this.foreground.circle(centerX, centerY, this.circleShape.radius).fill(CONFIG.LAND_COLOR);
         break;
-      // TODO: Implement PROCGEN, MIRROR, RADIAL
+      case MapShape.PROCGEN:
+        this.generateProcGen();
+        break;
+      // TODO: Implement MIRROR, RADIAL
     }
   }
   
+  private generateProcGen() {
+      const cellSize = CONFIG.CELL_SIZE;
+      const cols = Math.ceil(this.app.screen.width / cellSize);
+      const rows = Math.ceil(this.app.screen.height / cellSize);
+      
+      this.gridWidth = cols;
+      this.gridHeight = rows;
+      this.grid = [];
+
+      // Initialize random (true = LAND)
+      for (let x = 0; x < cols; x++) {
+          this.grid[x] = [];
+          for (let y = 0; y < rows; y++) {
+              // 48% chance of Land initially
+              this.grid[x][y] = Math.random() > 0.52;
+          }
+      }
+      
+      // Cellular Automata Smoothing (5 iterations)
+      for (let i = 0; i < 5; i++) {
+          const newGrid: boolean[][] = [];
+          for (let x = 0; x < cols; x++) {
+              newGrid[x] = [];
+              for (let y = 0; y < rows; y++) {
+                   let neighbors = 0;
+                   for (let nx = x - 1; nx <= x + 1; nx++) {
+                       for (let ny = y - 1; ny <= y + 1; ny++) {
+                           if (nx === x && ny === y) continue;
+                           // Edges are "water" (false) to create islands
+                           if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) {
+                               // neighbors += 0; 
+                           } else if (this.grid[nx][ny]) {
+                               neighbors++;
+                           }
+                       }
+                   }
+                   
+                   // The "4-5 rule": If > 4 neighbors are LAND, stay/become LAND.
+                   newGrid[x][y] = neighbors > 4;
+              }
+          }
+          this.grid = newGrid;
+      }
+      
+      // Draw
+      for (let x = 0; x < cols; x++) {
+          for (let y = 0; y < rows; y++) {
+              if (this.grid[x][y]) {
+                  this.foreground.rect(x * cellSize, y * cellSize, cellSize, cellSize).fill(CONFIG.LAND_COLOR);
+              }
+          }
+      }
+  }
+
   public isValidPosition(x: number, y: number): boolean {
      switch (this.mode) {
       case MapShape.FULL:
         return true;
-        
       case MapShape.RECT:
       case MapShape.SQUARE:
         return this.rectShape.contains(x, y);
-        
       case MapShape.CIRCLE:
         return this.circleShape.contains(x, y);
+      case MapShape.PROCGEN:
+        const cx = Math.floor(x / CONFIG.CELL_SIZE);
+        const cy = Math.floor(y / CONFIG.CELL_SIZE);
+        if (cx < 0 || cx >= this.gridWidth || cy < 0 || cy >= this.gridHeight) return false;
+        return this.grid[cx][cy];
         
       default:
         return true;
@@ -114,7 +179,6 @@ export class MapSystem {
       case MapShape.RECT:
       case MapShape.SQUARE:
         // Bounce
-        // We use a small epsilon or offset to prevent sticking if needed, but simple reflection is fine for now.
         if (position.x < this.rectShape.x) { 
             position.x = this.rectShape.x; 
             velocity.x *= -1; 
@@ -151,6 +215,26 @@ export class MapSystem {
              const dot = velocity.x * nx + velocity.y * ny;
              velocity.x -= 2 * dot * nx;
              velocity.y -= 2 * dot * ny;
+         }
+         break;
+         
+      case MapShape.PROCGEN:
+         const cx = Math.floor(position.x / CONFIG.CELL_SIZE);
+         const cy = Math.floor(position.y / CONFIG.CELL_SIZE);
+         
+         // If in void (false), bounce
+         if (cx < 0 || cx >= this.gridWidth || cy < 0 || cy >= this.gridHeight || !this.grid[cx][cy]) {
+             // Simple bounce: reverse velocity. 
+             // A better way is to find the normal, but that requires checking neighbors. 
+             // For 1000 units, simple reverse is fast and "okay".
+             // Better: push back to previous position? 
+             // Let's just reverse both for now, making them "bounce off the void".
+             velocity.x *= -1;
+             velocity.y *= -1;
+             
+             // Push back slightly to prevent sticking
+             position.x += velocity.x;
+             position.y += velocity.y;
          }
          break;
      }

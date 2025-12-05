@@ -42,6 +42,7 @@ async function main() {
         { key: '2', label: 'RECT', mode: MapShape.RECT },
         { key: '3', label: 'SQUARE', mode: MapShape.SQUARE },
         { key: '4', label: 'CIRCLE', mode: MapShape.CIRCLE },
+        { key: '5', label: 'PROCGEN', mode: MapShape.PROCGEN },
     ];
 
     const modeElements: HTMLDivElement[] = [];
@@ -96,6 +97,7 @@ async function main() {
                 case '2': mapSystem.setMode(MapShape.RECT); break;
                 case '3': mapSystem.setMode(MapShape.SQUARE); break;
                 case '4': mapSystem.setMode(MapShape.CIRCLE); break;
+                case '5': mapSystem.setMode(MapShape.PROCGEN); break;
             }
             updateDebugUI();
             inputState.debugKey = null;
