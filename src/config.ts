@@ -2,12 +2,12 @@
 
 export const CONFIG = {
   SPRIG_COUNT: 1500,
-  SPRIG_RADIUS: 2,
-  SPRIG_COLOR: 0x00ff00,
+  SPRIG_RADIUS: 4,
+  SPRIG_COLOR: 0x90EE90,
   SPRIG_FLASH_COLOR: 0xffffff,
   
   // Boids-lite behavior
-  SEPARATION_FORCE: 0.05,
+  SEPARATION_FORCE: 0.1,
   COHESION_FORCE: 0.01,
   ALIGNMENT_FORCE: 0.025,
   PERCEPTION_RADIUS: 20,
@@ -29,7 +29,7 @@ export const CONFIG = {
 
   // Map System
   LAND_COLOR: 0xa1855f, // Medium Tan - The play area
-  BG_COLOR: 0x9eb1cb,   // Blue-ish Grey - The void
+  BG_COLOR: 0x191940,   // Midnight blue - The void
   CELL_SIZE: 20,        // Resolution of the terrain chunks
   
   // Map Modes
