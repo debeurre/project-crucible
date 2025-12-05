@@ -103,8 +103,8 @@ export class MapSystem {
       for (let x = 0; x < cols; x++) {
           this.grid[x] = [];
           for (let y = 0; y < rows; y++) {
-              // 48% chance of Land initially
-              this.grid[x][y] = Math.random() > 0.52;
+              // 50% chance of Land initially (was 48%)
+              this.grid[x][y] = Math.random() < 0.50;
           }
       }
       
@@ -127,8 +127,8 @@ export class MapSystem {
                        }
                    }
                    
-                   // The "4-5 rule": If > 4 neighbors are LAND, stay/become LAND.
-                   newGrid[x][y] = neighbors > 4;
+                   // The "4-5 rule": If >= 4 neighbors are LAND, stay/become LAND.
+                   newGrid[x][y] = neighbors >= 4;
               }
           }
           this.grid = newGrid;
@@ -222,19 +222,25 @@ export class MapSystem {
          const cx = Math.floor(position.x / CONFIG.CELL_SIZE);
          const cy = Math.floor(position.y / CONFIG.CELL_SIZE);
          
-         // If in void (false), bounce
+         // If in void (false)
          if (cx < 0 || cx >= this.gridWidth || cy < 0 || cy >= this.gridHeight || !this.grid[cx][cy]) {
-             // Simple bounce: reverse velocity. 
-             // A better way is to find the normal, but that requires checking neighbors. 
-             // For 1000 units, simple reverse is fast and "okay".
-             // Better: push back to previous position? 
-             // Let's just reverse both for now, making them "bounce off the void".
+             // 1. Reverse velocity (Bounce)
              velocity.x *= -1;
              velocity.y *= -1;
              
-             // Push back slightly to prevent sticking
-             position.x += velocity.x;
-             position.y += velocity.y;
+             // 2. Emergency Push to Center (Unstick)
+             // If we are stuck inside a wall, we need to get out.
+             const centerX = this.app.screen.width / 2;
+             const centerY = this.app.screen.height / 2;
+             const dx = centerX - position.x;
+             const dy = centerY - position.y;
+             const dist = Math.sqrt(dx*dx + dy*dy);
+             
+             if (dist > 0) {
+                 // Push towards center aggressively to pop out of walls
+                 position.x += (dx / dist) * 2; 
+                 position.y += (dy / dist) * 2;
+             }
          }
          break;
      }
