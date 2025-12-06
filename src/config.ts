@@ -29,7 +29,7 @@ export const CONFIG = {
 
   // Map System
   LAND_COLOR: 0xa1855f, // Medium Tan - The play area
-  BG_COLOR: 0x191940,   // Midnight blue - The void
+  BG_COLOR: 0xA9A9A9,   // Dark Gray - The void
   CELL_SIZE: 20,        // Resolution of the terrain chunks
   
   // Map Modes
