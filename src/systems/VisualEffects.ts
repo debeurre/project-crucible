@@ -1,61 +1,14 @@
-import {
-    Container,
-    DisplacementFilter,
-    BlurFilter,
-    NoiseFilter,
-    Filter,
-    GlProgram,
-    Texture,
+import { 
+    Container, 
+    DisplacementFilter, 
+    BlurFilter, 
+    NoiseFilter, 
+    ColorMatrixFilter,
+    Filter, 
+    Texture, 
     Sprite
 } from 'pixi.js';
 import { CONFIG } from '../config';
-
-// Standard Pixi v8 Filter Vertex Shader
-const vertexShader = `
-in vec2 aPosition;
-out vec2 vTextureCoord;
-
-uniform vec4 uInputSize;
-uniform vec4 uOutputFrame;
-uniform vec4 uOutputTexture;
-
-vec4 filterVertexPosition( void )
-{
-    vec2 position = aPosition * uOutputFrame.zw + uOutputFrame.xy;
-    position.x = position.x * (2.0 / uOutputTexture.x) - 1.0;
-    position.y = position.y * (2.0*uOutputTexture.z / uOutputTexture.y) - uOutputTexture.w;
-    return vec4(position, 0.0, 1.0);
-}
-
-vec2 filterTextureCoord( void )
-{
-    return aPosition * (uOutputFrame.zw * uInputSize.zw);
-}
-
-void main(void)
-{
-    gl_Position = filterVertexPosition();
-    vTextureCoord = filterTextureCoord();
-}
-`;
-
-// Simple Alpha Threshold Shader (Liquid Effect)
-// This clips any pixel with alpha < 0.5, and forces alpha = 1.0 for the rest.
-// It preserves RGB values to prevent color shifting (White/Yellow land).
-const liquidFragment = `
-    in vec2 vTextureCoord;
-    out vec4 finalColor;
-    uniform sampler2D uTexture;
-
-    void main(void) {
-        vec4 color = texture(uTexture, vTextureCoord);
-        if (color.a > 0.5) {
-            finalColor = vec4(color.rgb, 1.0);
-        } else {
-            finalColor = vec4(0.0);
-        }
-    }
-`;
 
 export class VisualEffects {
     // Filters
@@ -65,11 +18,17 @@ export class VisualEffects {
     public displacement: DisplacementFilter;
     private displacementSprite: Sprite;
     
-    // State
-    public blurEnabled = true;
-    public thresholdEnabled = false; 
-    public displacementEnabled = false; // Default OFF
-    public noiseEnabled = false;        // Default OFF
+        // State
+    
+        public blurEnabled = false; // Default OFF
+    
+        public thresholdEnabled = false; 
+    
+        public displacementEnabled = false; 
+    
+        public noiseEnabled = false;        
+    
+            // Default OFF
     
     private container: Container | null = null;
 
@@ -79,12 +38,17 @@ export class VisualEffects {
         this.blur.strength = CONFIG.VISUALS.BLUR_STRENGTH;
 
         // 2. Threshold (Liquid Effect)
-        this.threshold = new Filter({
-            glProgram: new GlProgram({
-                vertex: vertexShader,
-                fragment: liquidFragment,
-            })
-        });
+        // Using ColorMatrixFilter with a custom matrix to handle Pre-Multiplied Alpha.
+        // We boost RGB and A equally so the color intensity is preserved when Alpha becomes 1.0.
+        this.threshold = new ColorMatrixFilter();
+        const m = 60; // Very steep curve to minimize the "dark halo" edge width
+        const o = -30; // Threshold at 0.5
+        (this.threshold as ColorMatrixFilter).matrix = [
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, m, o
+        ];
         
         // 3. Noise
         this.noise = new NoiseFilter({
@@ -105,6 +69,7 @@ export class VisualEffects {
              scale: CONFIG.VISUALS.DISPLACEMENT_SCALE * CONFIG.VISUALS.WIGGLE_STRENGTH
         });
     }
+
     private createNoiseTexture(): Texture {
         const size = 256;
         const canvas = document.createElement('canvas');
