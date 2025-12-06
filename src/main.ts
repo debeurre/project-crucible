@@ -23,6 +23,10 @@ async function main() {
 
     document.body.appendChild(app.canvas);
     
+    // Initialize Systems EARLY
+    const mapSystem = new MapSystem(app);
+    const visualEffects = new VisualEffects();
+
     // --- DEBUG UI ---
     const debugContainer = document.createElement('div');
     debugContainer.style.position = 'absolute';
@@ -30,7 +34,7 @@ async function main() {
     debugContainer.style.left = '20px';
     debugContainer.style.color = 'white';
     debugContainer.style.fontFamily = 'monospace';
-    debugContainer.style.fontSize = '16px';
+    debugContainer.style.fontSize = '14px'; // Slightly smaller
     debugContainer.style.pointerEvents = 'none';
     debugContainer.style.display = 'flex';
     debugContainer.style.flexDirection = 'column';
@@ -38,6 +42,7 @@ async function main() {
     debugContainer.style.textShadow = '1px 1px 0 #000';
     document.body.appendChild(debugContainer);
 
+    // Data for UI
     const modes = [
         { key: '1', label: 'FULL', mode: MapShape.FULL },
         { key: '2', label: 'RECT', mode: MapShape.RECT },
@@ -47,17 +52,40 @@ async function main() {
         { key: '6', label: 'MIRROR', mode: MapShape.MIRROR },
         { key: '7', label: 'RADIAL', mode: MapShape.RADIAL },
     ];
+    
+    const effects = [
+        { key: 'Q', label: 'BLUR', getter: () => visualEffects.blurEnabled },
+        { key: 'W', label: 'LIQUID', getter: () => visualEffects.contrastEnabled },
+        { key: 'E', label: 'WIGGLE', getter: () => visualEffects.displacementEnabled },
+        { key: 'R', label: 'GRAIN', getter: () => visualEffects.noiseEnabled },
+    ];
 
     const modeElements: HTMLDivElement[] = [];
+    const effectElements: HTMLDivElement[] = [];
 
+    // Create DOM for Modes
     modes.forEach(m => {
         const line = document.createElement('div');
         line.textContent = `${m.key} - MODE: ${m.label}`;
         debugContainer.appendChild(line);
         modeElements.push(line);
     });
+    
+    // Spacer
+    const spacer = document.createElement('div');
+    spacer.style.height = '10px';
+    debugContainer.appendChild(spacer);
+
+    // Create DOM for Effects
+    effects.forEach(eff => {
+        const line = document.createElement('div');
+        line.textContent = `${eff.key} - FX: ${eff.label}`;
+        debugContainer.appendChild(line);
+        effectElements.push(line);
+    });
 
     const updateDebugUI = () => {
+        // Update Modes
         modes.forEach((m, i) => {
             if (mapSystem.mode === m.mode) {
                 modeElements[i].style.opacity = '1.0';
@@ -69,12 +97,23 @@ async function main() {
                 modeElements[i].style.fontWeight = 'normal';
             }
         });
+        
+        // Update Effects
+        effects.forEach((eff, i) => {
+            if (eff.getter()) {
+                effectElements[i].style.opacity = '1.0';
+                effectElements[i].style.color = '#8f8'; // Greenish for ON
+                effectElements[i].style.fontWeight = 'bold';
+            } else {
+                effectElements[i].style.opacity = '0.5';
+                effectElements[i].style.color = '#aaa';
+                effectElements[i].style.fontWeight = 'normal';
+            }
+        });
     };
 
     const inputState = createInputManager(app); // Renamed to inputState
 
-    // Initialize Systems
-    const mapSystem = new MapSystem(app);
     updateDebugUI(); // Initial UI update
 
     // Background Layer (Separate from WorldContainer to avoid liquid blur)
@@ -97,7 +136,6 @@ async function main() {
     worldContainer.addChild(pheromonePath);
 
     // Apply Visual Effects (Shader Stack)
-    const visualEffects = new VisualEffects();
     visualEffects.applyTo(worldContainer);
 
     // Handle resize
@@ -120,6 +158,12 @@ async function main() {
                 case '5': mapSystem.setMode(MapShape.PROCGEN); break;
                 case '6': mapSystem.setMode(MapShape.MIRROR); break;
                 case '7': mapSystem.setMode(MapShape.RADIAL); break;
+                
+                // Effects
+                case 'Q': visualEffects.toggleBlur(); break;
+                case 'W': visualEffects.toggleContrast(); break;
+                case 'E': visualEffects.toggleDisplacement(); break;
+                case 'R': visualEffects.toggleNoise(); break;
             }
             updateDebugUI();
             inputState.debugKey = null;

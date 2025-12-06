@@ -60,8 +60,9 @@ export function createInputManager(app: Application): InputState {
     
     // Keyboard Listener
     window.addEventListener('keydown', (e) => {
-        if (e.key >= '1' && e.key <= '9') {
-            state.debugKey = e.key;
+        const k = e.key.toUpperCase();
+        if ((k >= '1' && k <= '9') || ['Q','W','E','R'].includes(k)) {
+            state.debugKey = k;
         }
     });
 

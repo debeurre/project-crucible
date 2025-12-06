@@ -10,31 +10,53 @@ import {
 import { CONFIG } from '../config';
 
 export class VisualEffects {
+    // Filters
+    public blur: BlurFilter;
+    public contrast: ColorMatrixFilter;
+    public noise: NoiseFilter;
+    public displacement: DisplacementFilter;
     private displacementSprite: Sprite;
-    private displacementFilter: DisplacementFilter;
     
+    // State
+    public blurEnabled = true;
+    public contrastEnabled = true;
+    public displacementEnabled = true;
+    public noiseEnabled = true;
+    
+    private container: Container | null = null;
+
     constructor() {
-        // 1. Generate Noise Texture for Displacement
-        const noiseTexture = this.createNoiseTexture();
+        // 1. Blur
+        this.blur = new BlurFilter();
+        this.blur.strength = CONFIG.VISUALS.BLUR_STRENGTH;
+
+        // 2. Contrast
+        this.contrast = new ColorMatrixFilter();
+        this.contrast.matrix = [
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, 15, -6
+        ];
         
-        // Set Wrap Mode to Repeat so we can scroll it infinitely
+        // 3. Noise
+        this.noise = new NoiseFilter({
+            noise: CONFIG.VISUALS.NOISE_STRENGTH
+        });
+
+        // 4. Displacement
+        const noiseTexture = this.createNoiseTexture();
         if (noiseTexture.source.style) {
             noiseTexture.source.style.addressMode = 'repeat';
         }
-
         this.displacementSprite = new Sprite(noiseTexture);
-        this.displacementSprite.scale.set(4); // Chunky noise
-        
-        // The displacement filter uses the sprite's texture and transform
-        this.displacementFilter = new DisplacementFilter(
+        this.displacementSprite.scale.set(4);
+        this.displacement = new DisplacementFilter(
              this.displacementSprite,
              CONFIG.VISUALS.DISPLACEMENT_SCALE * CONFIG.VISUALS.WIGGLE_STRENGTH
         );
-        
-        // We don't strictly need to add the sprite to the stage for the filter to work 
-        // (it uses the texture), but keeping it logically updated is good.
     }
-    
+
     private createNoiseTexture(): Texture {
         const size = 256;
         const canvas = document.createElement('canvas');
@@ -47,7 +69,6 @@ export class VisualEffects {
         const buffer32 = new Uint32Array(idata.data.buffer);
         
         for (let i = 0; i < buffer32.length; i++) {
-            // Random grayscale noise
             const v = Math.floor(Math.random() * 255);
             buffer32[i] = 0xff000000 | (v << 16) | (v << 8) | v; 
         }
@@ -57,33 +78,31 @@ export class VisualEffects {
     }
 
     public applyTo(container: Container) {
-        // Stack: Blur -> Contrast -> Displacement -> Noise
-        
-        // 1. Blur (Softens everything)
-        const blur = new BlurFilter();
-        blur.strength = CONFIG.VISUALS.BLUR_STRENGTH;
-        // Decrease quality for performance? default is fine.
-        
-        // 2. Contrast (Thresholding - creates "Liquid" blobs from blur)
-        const colorMatrix = new ColorMatrixFilter();
-        colorMatrix.contrast(CONFIG.VISUALS.CONTRAST_AMOUNT, false);
-        
-        // 3. Noise (Paper Grain texture)
-        const noise = new NoiseFilter({
-            noise: CONFIG.VISUALS.NOISE_STRENGTH
-        });
-        
-        // Apply in specific order
-        container.filters = [blur, colorMatrix, this.displacementFilter, noise];
+        this.container = container;
+        this.rebuildFilters();
+    }
+
+    public toggleBlur() { this.blurEnabled = !this.blurEnabled; this.rebuildFilters(); }
+    public toggleContrast() { this.contrastEnabled = !this.contrastEnabled; this.rebuildFilters(); }
+    public toggleDisplacement() { this.displacementEnabled = !this.displacementEnabled; this.rebuildFilters(); }
+    public toggleNoise() { this.noiseEnabled = !this.noiseEnabled; this.rebuildFilters(); }
+
+    private rebuildFilters() {
+        if (!this.container) return;
+        const filters = [];
+        if (this.blurEnabled) filters.push(this.blur);
+        if (this.contrastEnabled) filters.push(this.contrast);
+        if (this.displacementEnabled) filters.push(this.displacement);
+        if (this.noiseEnabled) filters.push(this.noise);
+        this.container.filters = filters;
     }
     
     public update(ticker: any) {
-        // Animate displacement (The "Wiggle" or "Boiling" effect)
+        if (!this.displacementEnabled) return;
         const speed = CONFIG.VISUALS.DISPLACEMENT_SPEED * ticker.deltaTime;
         this.displacementSprite.x += speed;
         this.displacementSprite.y += speed;
         
-        // Reset to prevent infinite growth
         if (this.displacementSprite.x > 256) this.displacementSprite.x -= 256;
         if (this.displacementSprite.y > 256) this.displacementSprite.y -= 256;
     }
