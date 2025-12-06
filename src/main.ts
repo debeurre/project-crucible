@@ -55,7 +55,7 @@ async function main() {
     
     const effects = [
         { key: 'Q', label: 'BLUR', getter: () => visualEffects.blurEnabled },
-        { key: 'W', label: 'LIQUID', getter: () => visualEffects.contrastEnabled },
+        { key: 'W', label: 'LIQUID', getter: () => visualEffects.thresholdEnabled },
         { key: 'E', label: 'WIGGLE', getter: () => visualEffects.displacementEnabled },
         { key: 'R', label: 'GRAIN', getter: () => visualEffects.noiseEnabled },
     ];
@@ -161,7 +161,7 @@ async function main() {
                 
                 // Effects
                 case 'Q': visualEffects.toggleBlur(); break;
-                case 'W': visualEffects.toggleContrast(); break;
+                case 'W': visualEffects.toggleThreshold(); break;
                 case 'E': visualEffects.toggleDisplacement(); break;
                 case 'R': visualEffects.toggleNoise(); break;
             }
