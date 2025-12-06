@@ -35,4 +35,14 @@ export const CONFIG = {
   // Map Modes
   MAP_WIDTH: 1600,
   MAP_HEIGHT: 800,
+
+  // Visual Effects
+  VISUALS: {
+      WIGGLE_STRENGTH: 1.0,       // Master scale for displacement
+      DISPLACEMENT_SCALE: 30,     // How much the lines distort
+      DISPLACEMENT_SPEED: 1.0,    // How fast the noise scrolls
+      BLUR_STRENGTH: 8,           // High blur for liquid blend
+      NOISE_STRENGTH: 0.1,        // Paper grain amount
+      CONTRAST_AMOUNT: 5,         // High contrast to sharpen blur into blobs
+  },
 };

@@ -1,9 +1,10 @@
 // src/main.ts
-import { Application, Graphics } from 'pixi.js'; // Named imports are better for tree-shaking
+import { Application, Graphics, Container } from 'pixi.js'; // Named imports are better for tree-shaking
 import { SprigSystem } from './SprigSystem';
 import { createInputManager } from './InputManager';
 import { CONFIG } from './config';
 import { MapSystem, MapShape } from './systems/MapSystem';
+import { VisualEffects } from './systems/VisualEffects';
 
 // State for screen shake (managed inside the loop now)
 let shakeIntensity = 0;
@@ -76,18 +77,28 @@ async function main() {
     const mapSystem = new MapSystem(app);
     updateDebugUI(); // Initial UI update
 
-    app.stage.addChild(mapSystem.container);
+    // Create World Container (The "Canvas" for our Living Painting)
+    const worldContainer = new Container();
+    app.stage.addChild(worldContainer);
 
-    const sprigSystem = new SprigSystem(app, mapSystem);
+    // Add Map to World
+    worldContainer.addChild(mapSystem.container);
+
+    // Sprigs go into World
+    const sprigSystem = new SprigSystem(app, mapSystem, worldContainer);
+    
+    // Graphics Setup (Pheromone Path)
+    const pheromonePath = new Graphics();
+    worldContainer.addChild(pheromonePath);
+
+    // Apply Visual Effects (Shader Stack)
+    const visualEffects = new VisualEffects();
+    visualEffects.applyTo(worldContainer);
 
     // Handle resize
     app.renderer.on('resize', () => {
         mapSystem.resize();
     });
-
-    // 3. Graphics Setup
-    const pheromonePath = new Graphics();
-    app.stage.addChild(pheromonePath);
 
     // 4. The Game Loop (Ticker)
     // v8 passes 'ticker' to the callback which contains deltaTime
@@ -108,6 +119,7 @@ async function main() {
         }
 
         sprigSystem.update(inputState);
+        visualEffects.update(ticker);
 
         // --- GRAPHICS UPDATE (The big v8 change) ---
         pheromonePath.clear();
@@ -138,6 +150,9 @@ async function main() {
 
         // Apply shake logic synced to the ticker (smoother than requestAnimationFrame)
         if (shakeIntensity > 0) {
+            // Shake the whole stage (including UI? No, usually just world)
+            // But here we shake app.stage. If we want UI to not shake, we need separate containers.
+            // For now, shaking the whole stage is fine as per original logic.
             app.stage.position.set(
                 (Math.random() - 0.5) * shakeIntensity,
                 (Math.random() - 0.5) * shakeIntensity

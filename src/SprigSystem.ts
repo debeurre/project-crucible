@@ -1,4 +1,4 @@
-import { Application, Graphics, Point } from 'pixi.js';
+import { Application, Graphics, Point, Container } from 'pixi.js';
 import { CONFIG } from './config';
 import { InputState } from './InputManager';
 import { MapSystem } from './systems/MapSystem';
@@ -15,10 +15,12 @@ export class SprigSystem {
     private sprigs: Sprig[] = [];
     private app: Application;
     private mapSystem: MapSystem;
+    private parentContainer: Container;
 
-    constructor(app: Application, mapSystem: MapSystem) {
+    constructor(app: Application, mapSystem: MapSystem, parentContainer: Container) {
         this.app = app;
         this.mapSystem = mapSystem;
+        this.parentContainer = parentContainer;
         this.initSprigs();
     }
 
@@ -47,7 +49,7 @@ export class SprigSystem {
                 flashTimer: 0
             });
 
-            this.app.stage.addChild(sprite);
+            this.parentContainer.addChild(sprite);
         }
     }
     
