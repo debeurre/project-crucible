@@ -77,6 +77,11 @@ async function main() {
     const mapSystem = new MapSystem(app);
     updateDebugUI(); // Initial UI update
 
+    // Background Layer (Separate from WorldContainer to avoid liquid blur)
+    const background = new Graphics();
+    background.rect(0, 0, app.screen.width, app.screen.height).fill(CONFIG.BG_COLOR);
+    app.stage.addChild(background);
+
     // Create World Container (The "Canvas" for our Living Painting)
     const worldContainer = new Container();
     app.stage.addChild(worldContainer);
@@ -97,6 +102,8 @@ async function main() {
 
     // Handle resize
     app.renderer.on('resize', () => {
+        background.clear();
+        background.rect(0, 0, app.screen.width, app.screen.height).fill(CONFIG.BG_COLOR);
         mapSystem.resize();
     });
 

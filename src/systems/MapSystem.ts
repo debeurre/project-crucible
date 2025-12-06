@@ -15,7 +15,6 @@ export class MapSystem {
   public container: Container;
   public mode: MapShape;
   private app: Application;
-  private background: Graphics;
   private foreground: Graphics;
   
   // Shapes
@@ -32,9 +31,7 @@ export class MapSystem {
     this.container = new Container();
     this.mode = MapShape.RECT; 
     
-    this.background = new Graphics();
     this.foreground = new Graphics();
-    this.container.addChild(this.background);
     this.container.addChild(this.foreground);
     
     // Initialize shapes with defaults, will be updated in resize()
@@ -53,9 +50,6 @@ export class MapSystem {
     const { width, height } = this.app.screen;
     const centerX = width / 2;
     const centerY = height / 2;
-
-    this.background.clear();
-    this.background.rect(0, 0, width, height).fill(CONFIG.BG_COLOR);
 
     this.foreground.clear();
     
