@@ -1,54 +1,26 @@
-import {
-    Container,
-    DisplacementFilter,
-    BlurFilter,
-    NoiseFilter,
-    Filter,
-    GlProgram,
-    Texture,
+import { 
+    Container, 
+    DisplacementFilter, 
+    BlurFilter, 
+    NoiseFilter, 
+    ColorMatrixFilter,
+    Filter, 
+    Texture, 
     Sprite
 } from 'pixi.js';
 import { CONFIG } from '../config';
 
-const vertexShader = `
-    attribute vec2 aVertexPosition;
-    attribute vec2 aTextureCoord;
-    uniform mat3 projectionMatrix;
-    varying vec2 vTextureCoord;
-    void main(void) {
-        gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
-        vTextureCoord = aTextureCoord;
-    }
-`;
-
-const fragmentShader = `
-    varying vec2 vTextureCoord;
-    uniform sampler2D uSampler;
-    
-    void main(void) {
-        vec4 color = texture2D(uSampler, vTextureCoord);
-        // Threshold at 0.5 alpha
-        if (color.a > 0.5) {
-            // Un-premultiply to recover original color brightness, then force full alpha
-            // Check for 0 alpha to avoid divide by zero (though > 0.5 implies != 0)
-            gl_FragColor = vec4(color.rgb / color.a, 1.0);
-        } else {
-            gl_FragColor = vec4(0.0);
-        }
-    }
-`;
-
 export class VisualEffects {
     // Filters
     public blur: BlurFilter;
-    public threshold: Filter; // Renamed from contrast
+    public threshold: Filter; 
     public noise: NoiseFilter;
     public displacement: DisplacementFilter;
     private displacementSprite: Sprite;
     
     // State
     public blurEnabled = true;
-    public thresholdEnabled = false; // Renamed from contrastEnabled
+    public thresholdEnabled = false; 
     public displacementEnabled = false; // Default OFF
     public noiseEnabled = false;        // Default OFF
     
@@ -59,13 +31,18 @@ export class VisualEffects {
         this.blur = new BlurFilter();
         this.blur.strength = CONFIG.VISUALS.BLUR_STRENGTH;
 
-        // 2. Threshold (Custom Shader for Liquid Effect)
-        this.threshold = new Filter({
-            glProgram: new GlProgram({
-                vertex: vertexShader,
-                fragment: fragmentShader
-            })
-        });
+        // 2. Threshold (Liquid Effect)
+        // Using ColorMatrixFilter with a custom matrix to handle Pre-Multiplied Alpha.
+        // We boost RGB and A equally so the color intensity is preserved when Alpha becomes 1.0.
+        this.threshold = new ColorMatrixFilter();
+        const m = 25;
+        const o = -12; 
+        (this.threshold as ColorMatrixFilter).matrix = [
+            m, 0, 0, 0, o,
+            0, m, 0, 0, o,
+            0, 0, m, 0, o,
+            0, 0, 0, m, o
+        ];
         
         // 3. Noise
         this.noise = new NoiseFilter({
@@ -79,10 +56,12 @@ export class VisualEffects {
         }
         this.displacementSprite = new Sprite(noiseTexture);
         this.displacementSprite.scale.set(4);
-        this.displacement = new DisplacementFilter(
-             this.displacementSprite,
-             CONFIG.VISUALS.DISPLACEMENT_SCALE * CONFIG.VISUALS.WIGGLE_STRENGTH
-        );
+        
+        // v8 uses options object
+        this.displacement = new DisplacementFilter({
+             sprite: this.displacementSprite,
+             scale: CONFIG.VISUALS.DISPLACEMENT_SCALE * CONFIG.VISUALS.WIGGLE_STRENGTH
+        });
     }
 
     private createNoiseTexture(): Texture {
