@@ -35,12 +35,12 @@ export class VisualEffects {
         // Using ColorMatrixFilter with a custom matrix to handle Pre-Multiplied Alpha.
         // We boost RGB and A equally so the color intensity is preserved when Alpha becomes 1.0.
         this.threshold = new ColorMatrixFilter();
-        const m = 25;
-        const o = -12; 
+        const m = 60; // Very steep curve to minimize the "dark halo" edge width
+        const o = -30; // Threshold at 0.5
         (this.threshold as ColorMatrixFilter).matrix = [
-            m, 0, 0, 0, o,
-            0, m, 0, 0, o,
-            0, 0, m, 0, o,
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
             0, 0, 0, m, o
         ];
         
