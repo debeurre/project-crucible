@@ -6,6 +6,8 @@ export interface InputState {
     path: Point[];      // The trail of points for the pheromone line
     pulse: Point | null; // The specific point where a "Tap" occurred
     debugKey: string | null;
+    isHolding: boolean;
+    mousePosition: Point; // New: Current mouse global position
 }
 
 export function createInputManager(app: Application): InputState {
@@ -15,6 +17,8 @@ export function createInputManager(app: Application): InputState {
         path: [],
         pulse: null,
         debugKey: null,
+        isHolding: false,
+        mousePosition: new Point(), // Initialize
     };
 
     // 1. Enable interactivity on the stage
@@ -29,11 +33,14 @@ export function createInputManager(app: Application): InputState {
     app.stage.on('pointerdown', (e: FederatedPointerEvent) => {
         state.isDown = true;
         state.isDragging = false;
+        state.isHolding = true;
+        state.mousePosition.copyFrom(e.global); // Update position
         // Store global coordinates
         state.path = [new Point(e.global.x, e.global.y)];
     });
 
     app.stage.on('pointermove', (e: FederatedPointerEvent) => {
+        state.mousePosition.copyFrom(e.global); // Update position
         if (state.isDown) {
             state.isDragging = true;
             // Add point to path
@@ -50,11 +57,13 @@ export function createInputManager(app: Application): InputState {
         
         // Reset drag state
         state.isDown = false;
+        state.isHolding = false;
         state.path = []; 
     });
 
     app.stage.on('pointerupoutside', () => {
         state.isDown = false;
+        state.isHolding = false;
         state.path = [];
     });
     

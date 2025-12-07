@@ -6,7 +6,7 @@ export const CONFIG = {
   SPRIG_SPAWN_VELOCITY_MAGNITUDE: 2, // New: initial pop velocity
 
   SPRIG_RADIUS: 6,
-  SPRIG_COLOR: 0x90EE90, // Light Green
+  SPRIG_COLOR: 0x228B22	, // Forest Green
   SPRIG_FLASH_COLOR: 0xffffff,
   
   // Boids-lite behavior
@@ -31,7 +31,7 @@ export const CONFIG = {
   GRAVITY: 0.0, // No gravity for now
 
   // Map System
-  LAND_COLOR: 0xa1855f, // Medium Tan - The play area
+  LAND_COLOR: 0xD2B48C, // Medium Tan - The play area
   BG_COLOR: 0xA9A9A9,   // Dark Gray - The void
   CELL_SIZE: 20,        // Resolution of the terrain chunks
   
