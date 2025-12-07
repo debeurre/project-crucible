@@ -23,7 +23,7 @@ export const CONFIG = {
   SCREEN_SHAKE_DECAY: 0.9,
 
   // Physics
-  MAX_SPEED: 2,
+  MAX_SPEED: 1,
   FRICTION: 0.95,
   GRAVITY: 0.0, // No gravity for now
 
@@ -38,10 +38,10 @@ export const CONFIG = {
 
   // Visual Effects
   VISUALS: {
-      WIGGLE_STRENGTH: 1.0,       // Master scale for displacement
+      WIGGLE_STRENGTH: 0.5,       // Master scale for displacement
       DISPLACEMENT_SCALE: 30,     // How much the lines distort
-      DISPLACEMENT_SPEED: 1.0,    // How fast the noise scrolls
-      BLUR_STRENGTH: 8,           // High blur for liquid blend
+      DISPLACEMENT_SPEED: 5,    // How fast the noise scrolls
+      BLUR_STRENGTH: 1,           // High blur for liquid blend
       NOISE_STRENGTH: 0.1,        // Paper grain amount
       CONTRAST_AMOUNT: 5,         // High contrast to sharpen blur into blobs
   },

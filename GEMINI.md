@@ -22,6 +22,8 @@
 ## 4. ARCHITECTURE & PERFORMANCE
 - **Simulation vs. Render:** Keep the math (logic) separate from the PixiJS (view).
 - **ECS-Lite:** Use a simple Entity-Component structure to handle 1000+ sprites efficiently.
+- **Data-Oriented Design (DOD):** Prefer **Structure of Arrays (SoA)** over Array of Structures (AoS).
+    - **Implementation:** Use flat `Float32Array` buffers for high-volume data (e.g., `positions[id * 2]`, `velocities[id * 2]`) rather than creating thousands of individual Sprig objects.
 - **Raw Math Only:** Do NOT use `PIXI.Point` methods for physics (e.g., NO `.add()`, `.magnitude()`, `.normalize()`). 
     - **Why?** They require the `math-extras` mixin and create garbage.
     - **Do:** Use raw `x` and `y` numbers in loops.
