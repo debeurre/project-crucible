@@ -22,6 +22,9 @@ async function main() {
     });
 
     document.body.appendChild(app.canvas);
+
+    // Disable right-click context menu
+    document.body.addEventListener('contextmenu', (e) => e.preventDefault());
     
     // Initialize Systems EARLY
     const mapSystem = new MapSystem(app);
@@ -128,6 +131,13 @@ async function main() {
     // Add Map to World
     worldContainer.addChild(mapSystem.container);
 
+    // Crucible (Spawn/Sink)
+    const crucible = new Graphics();
+    crucible.circle(0, 0, CONFIG.CRUCIBLE_RADIUS).fill(CONFIG.CRUCIBLE_COLOR);
+    crucible.x = app.screen.width / 2;
+    crucible.y = app.screen.height / 2;
+    worldContainer.addChild(crucible);
+
     // Sprigs go into World
     const sprigSystem = new SprigSystem(app, mapSystem, worldContainer);
     
@@ -143,7 +153,14 @@ async function main() {
         background.clear();
         background.rect(0, 0, app.screen.width, app.screen.height).fill(CONFIG.BG_COLOR);
         mapSystem.resize();
+        crucible.x = app.screen.width / 2; // Recenter crucible
+        crucible.y = app.screen.height / 2;
     });
+
+    // Spawning Logic
+    let spawnTimer = 0;
+    const spawnInterval = 1 / CONFIG.SPRIGS_PER_SECOND_SPAWN; // Time per sprig
+    let crucibleScaleY = 1.0; // For visual feedback
 
     // 4. The Game Loop (Ticker)
     // v8 passes 'ticker' to the callback which contains deltaTime
@@ -167,6 +184,37 @@ async function main() {
             }
             updateDebugUI();
             inputState.debugKey = null;
+        }
+
+        // --- SPAWNING LOGIC (Tap + Hold) ---
+        if (inputState.isHolding) {
+            // Check if mouse is over crucible
+            const dx = inputState.mousePosition.x - crucible.x;
+            const dy = inputState.mousePosition.y - crucible.y;
+            const distSq = dx*dx + dy*dy;
+            
+            if (distSq < CONFIG.CRUCIBLE_RADIUS**2) {
+                spawnTimer += ticker.deltaTime / 1000; // Convert to seconds
+                
+                // Crucible visual squash
+                crucibleScaleY = 0.9 + Math.sin(app.ticker.lastTime * 0.01) * 0.05; // Gentle pulsation
+                crucible.scale.set(1.0, crucibleScaleY);
+
+                while (spawnTimer >= spawnInterval) {
+                    sprigSystem.spawnSprig(crucible.x, crucible.y);
+                    spawnTimer -= spawnInterval;
+                }
+            } else {
+                // Not holding over crucible, reset timer and scale
+                spawnTimer = 0;
+                crucibleScaleY = 1.0;
+                crucible.scale.set(1.0, 1.0);
+            }
+        } else {
+            // Not holding, reset timer and scale
+            spawnTimer = 0;
+            crucibleScaleY = 1.0;
+            crucible.scale.set(1.0, 1.0);
         }
 
         sprigSystem.update(inputState);
@@ -201,9 +249,6 @@ async function main() {
 
         // Apply shake logic synced to the ticker (smoother than requestAnimationFrame)
         if (shakeIntensity > 0) {
-            // Shake the whole stage (including UI? No, usually just world)
-            // But here we shake app.stage. If we want UI to not shake, we need separate containers.
-            // For now, shaking the whole stage is fine as per original logic.
             app.stage.position.set(
                 (Math.random() - 0.5) * shakeIntensity,
                 (Math.random() - 0.5) * shakeIntensity
