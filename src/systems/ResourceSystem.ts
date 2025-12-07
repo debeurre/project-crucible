@@ -1,4 +1,4 @@
-import { Application, Graphics, Container, Point } from 'pixi.js';
+import { Application, Graphics, Point } from 'pixi.js';
 import { CONFIG } from '../config';
 
 export class ResourceSystem {
