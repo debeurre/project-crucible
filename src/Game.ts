@@ -166,6 +166,7 @@ export class Game {
                 while (this.spawnTimer >= spawnInterval) {
                     this.sprigSystem.spawnSprig(this.crucible.x, this.crucible.y);
                     this.spawnTimer -= spawnInterval;
+                    this.updateUI(); // Update UI to show new sprig count
                 }
             } else {
                 this.resetSpawnState();
