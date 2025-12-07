@@ -63,4 +63,8 @@ export const CONFIG = {
   FLOW_FIELD_VISUAL_ALPHA: 0.1, // Faintness of the arrows
   FLOW_FIELD_VISUAL_COLOR: 0x888888, // Grey arrows
   FLOW_FIELD_VISUAL_ARROW_LENGTH: 20,
+
+  // Sprig Cargo
+  SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo
+  SPRIG_CARGO_OFFSET_Y: -12, // Y-offset for cargo sprite relative to sprig
 };

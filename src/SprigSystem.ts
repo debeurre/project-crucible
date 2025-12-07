@@ -27,7 +27,7 @@ export class SprigSystem {
     private parentContainer: Container; // WorldContainer
 
     private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; // Max capacity
-    private activeSprigCount: number = 0; // Current number of active sprigs
+    public activeSprigCount: number = 0; // Current number of active sprigs
 
     constructor(app: Application, mapSystem: MapSystem, parentContainer: Container, flowFieldSystem: FlowFieldSystem) {
         this.app = app;
@@ -336,11 +336,34 @@ export class SprigSystem {
         }
 
         // --- CARGO VISUALS ---
-        if (this.cargos[idx] === 1) { // Wood cargo
+        if (this.cargos[idx] !== 0) { // If carrying any cargo
             cargoSprite.visible = true;
-            cargoSprite.tint = 0x8B4513; // Brown for wood
+            if (this.cargos[idx] === 1) { // Wood cargo
+                cargoSprite.tint = 0x8B4513; // Brown for wood
+            }
+            cargoSprite.y = CONFIG.SPRIG_CARGO_OFFSET_Y; // Apply offset from config
         } else {
             cargoSprite.visible = false;
         }
+    }
+
+    public isSprigActive(idx: number): boolean {
+        return idx < this.activeSprigCount;
+    }
+
+    public isCarrying(idx: number): boolean {
+        return this.cargos[idx] !== 0;
+    }
+
+    public setCargo(idx: number, cargoType: number) {
+        this.cargos[idx] = cargoType;
+    }
+
+    public getSprigBounds(idx: number): {x: number, y: number, radius: number} {
+        return {
+            x: this.positionsX[idx],
+            y: this.positionsY[idx],
+            radius: CONFIG.SPRIG_RADIUS
+        };
     }
 }
