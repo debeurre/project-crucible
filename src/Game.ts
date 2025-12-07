@@ -156,7 +156,7 @@ export class Game {
             const distSq = dx*dx + dy*dy;
             
             if (distSq < CONFIG.CRUCIBLE_RADIUS**2) {
-                this.spawnTimer += ticker.deltaTime / 1000;
+                this.spawnTimer += ticker.deltaMS / 1000;
                 
                 // Visual Squash
                 this.crucibleScaleY = 0.9 + Math.sin(this.app.ticker.lastTime * 0.01) * 0.05;
