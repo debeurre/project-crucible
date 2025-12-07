@@ -209,7 +209,7 @@ export class Game {
             }
         }
 
-        this.sprigSystem.update(this.inputState);
+        this.sprigSystem.update(this.inputState, ticker);
         this.visualEffects.update(ticker);
     }
 

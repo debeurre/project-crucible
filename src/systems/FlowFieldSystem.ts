@@ -49,7 +49,7 @@ export class FlowFieldSystem {
         this.updateVisuals();
     }
 
-    public applyFlow(sprigX: number, sprigY: number, currentVelX: number, currentVelY: number): {vx: number, vy: number} {
+    public applyFlow(sprigX: number, sprigY: number, currentVelX: number, currentVelY: number, dt: number): {vx: number, vy: number} {
         const col = Math.floor(sprigX / this.cellSize);
         const row = Math.floor(sprigY / this.cellSize);
 
@@ -61,8 +61,9 @@ export class FlowFieldSystem {
         const flowX = this.field[index];
         const flowY = this.field[index + 1];
 
-        currentVelX += flowX * CONFIG.FLOW_FIELD_FORCE_SCALE;
-        currentVelY += flowY * CONFIG.FLOW_FIELD_FORCE_SCALE;
+        // Apply flow force scaled by dt
+        currentVelX += flowX * CONFIG.FLOW_FIELD_FORCE_SCALE * dt;
+        currentVelY += flowY * CONFIG.FLOW_FIELD_FORCE_SCALE * dt;
 
         return {vx: currentVelX, vy: currentVelY};
     }

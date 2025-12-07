@@ -1,8 +1,8 @@
-import { Application, Graphics, Point, Container, Texture, Sprite } from 'pixi.js';
+import { Application, Graphics, Point, Container, Texture, Sprite, Ticker } from 'pixi.js';
 import { CONFIG } from './config';
 import { InputState } from './InputManager';
 import { MapSystem } from './systems/MapSystem';
-import { FlowFieldSystem } from './systems/FlowFieldSystem'; // New import
+import { FlowFieldSystem } from './systems/FlowFieldSystem';
 
 // No more Sprig interface in DOD
 
@@ -23,25 +23,25 @@ export class SprigSystem {
 
     private app: Application;
     private mapSystem: MapSystem;
-    private flowFieldSystem: FlowFieldSystem; // New: FlowFieldSystem
-    private parentContainer: Container; // WorldContainer
+    private flowFieldSystem: FlowFieldSystem; 
+    private parentContainer: Container; 
 
-    private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; // Max capacity
-    public activeSprigCount: number = 0; // Current number of active sprigs
+    private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; 
+    public activeSprigCount: number = 0; 
 
     constructor(app: Application, mapSystem: MapSystem, parentContainer: Container, flowFieldSystem: FlowFieldSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
         this.parentContainer = parentContainer;
-        this.flowFieldSystem = flowFieldSystem; // Store it
+        this.flowFieldSystem = flowFieldSystem; 
 
-        // Initialize typed arrays to MAX capacity
+        // Initialize typed arrays
         this.positionsX = new Float32Array(this.MAX_SPRIG_COUNT);
         this.positionsY = new Float32Array(this.MAX_SPRIG_COUNT);
         this.velocitiesX = new Float32Array(this.MAX_SPRIG_COUNT);
         this.velocitiesY = new Float32Array(this.MAX_SPRIG_COUNT);
         this.flashTimers = new Uint8Array(this.MAX_SPRIG_COUNT);
-        this.cargos = new Uint8Array(this.MAX_SPRIG_COUNT); // All start empty
+        this.cargos = new Uint8Array(this.MAX_SPRIG_COUNT); 
 
         this.sprigSprites = [];
         this.cargoSprites = [];
@@ -49,95 +49,102 @@ export class SprigSystem {
         this.cargoTexture = Texture.EMPTY; 
 
         this.initTextures();
-        this.initPool(); // Initialize a pool of sprites, but don't add to stage
+        this.initPool(); 
     }
 
     private initTextures() {
         // Generate a simple white circle texture for sprigs
         const sprigGraphics = new Graphics();
-        sprigGraphics.beginFill(0xFFFFFF); // White base color for easy tinting
+        sprigGraphics.beginFill(0xFFFFFF); 
         sprigGraphics.drawCircle(0, 0, CONFIG.SPRIG_RADIUS);
         sprigGraphics.endFill();
         this.sprigTexture = this.app.renderer.generateTexture(sprigGraphics);
 
         // Generate a simple white square texture for cargo
         const cargoGraphics = new Graphics();
-        cargoGraphics.beginFill(0xFFFFFF); // White base color for easy tinting
+        cargoGraphics.beginFill(0xFFFFFF); 
         cargoGraphics.drawRect(-CONFIG.SPRIG_RADIUS, -CONFIG.SPRIG_RADIUS, CONFIG.SPRIG_RADIUS * 2, CONFIG.SPRIG_RADIUS * 2);
         cargoGraphics.endFill();
         this.cargoTexture = this.app.renderer.generateTexture(cargoGraphics);
     }
 
 
-    private initPool() { // Initialize a pool of Sprites, all invisible
+    private initPool() { 
         for (let i = 0; i < this.MAX_SPRIG_COUNT; i++) {
             const sprigSprite = new Sprite(this.sprigTexture);
-            sprigSprite.tint = CONFIG.SPRIG_COLOR; // Default green
-            sprigSprite.anchor.set(0.5); // Center anchor
-            sprigSprite.visible = false; // Hide initially
+            sprigSprite.tint = CONFIG.SPRIG_COLOR; 
+            sprigSprite.anchor.set(0.5); 
+            sprigSprite.visible = false; 
             
             const cargoSprite = new Sprite(this.cargoTexture);
-            cargoSprite.anchor.set(0.5); // Center anchor
-            cargoSprite.visible = false; // Hidden by default
-            cargoSprite.y = -12; // Floating above sprig
+            cargoSprite.anchor.set(0.5); 
+            cargoSprite.visible = false; 
+            cargoSprite.y = -12; 
 
             this.sprigSprites.push(sprigSprite); 
             this.cargoSprites.push(cargoSprite);
-            this.parentContainer.addChild(sprigSprite); // Add to container
-            sprigSprite.addChild(cargoSprite); // Cargo is child of sprig
+            this.parentContainer.addChild(sprigSprite); 
+            sprigSprite.addChild(cargoSprite); 
         }
     }
 
     public spawnSprig(x: number, y: number) {
         if (this.activeSprigCount >= this.MAX_SPRIG_COUNT) {
-            return; // Pool is full
+            return; 
         }
 
-        const i = this.activeSprigCount; // Get next available index
+        const i = this.activeSprigCount; 
 
         this.positionsX[i] = x;
         this.positionsY[i] = y;
 
-        // Random velocity for "popping out"
         const angle = Math.random() * Math.PI * 2;
         this.velocitiesX[i] = Math.cos(angle) * CONFIG.SPRIG_SPAWN_VELOCITY_MAGNITUDE;
         this.velocitiesY[i] = Math.sin(angle) * CONFIG.SPRIG_SPAWN_VELOCITY_MAGNITUDE;
         
         this.flashTimers[i] = 0;
-        this.cargos[i] = 0; // No cargo
+        this.cargos[i] = 0; 
 
         this.sprigSprites[i].x = x;
         this.sprigSprites[i].y = y;
         this.sprigSprites[i].tint = CONFIG.SPRIG_COLOR;
-        this.sprigSprites[i].visible = true; // Make visible
-        this.cargoSprites[i].visible = false; // Ensure cargo is hidden
+        this.sprigSprites[i].visible = true; 
+        this.cargoSprites[i].visible = false; 
 
         this.activeSprigCount++;
     }
     
-    public update(inputState: InputState) {
-        for (let i = 0; i < this.activeSprigCount; i++) { // Iterate only active sprigs
-            this.applyBoids(i);
-            this.applyFlowField(i); // New logic: applyFlowField(i);
-            this.applyPheromonePath(i, inputState.path);
-            this.applyPulse(i, inputState.pulse);
-            this.updatePosition(i);
+    public update(inputState: InputState, ticker: Ticker) {
+        const dt = ticker.deltaTime; // Use scalar deltaTime (1.0 at target FPS)
+        
+        for (let i = 0; i < this.activeSprigCount; i++) { 
+            this.applyBoids(i, dt);
+            this.applyFlowField(i, dt); 
+            this.applyPheromonePath(i, inputState.path, dt);
+            this.applyPulse(i, inputState.pulse, dt);
+            this.updatePosition(i, dt);
             this.updateVisuals(i);
         }
     }
 
-    private applyFlowField(idx: number) {
+    private applyFlowField(idx: number, dt: number) {
         const sprigX = this.positionsX[idx];
         const sprigY = this.positionsY[idx];
         let sprigVelX = this.velocitiesX[idx];
         let sprigVelY = this.velocitiesY[idx];
 
-        const newVel = this.flowFieldSystem.applyFlow(sprigX, sprigY, sprigVelX, sprigVelY);
-        this.velocitiesX[idx] = newVel.vx;
+        const newVel = this.flowFieldSystem.applyFlow(sprigX, sprigY, sprigVelX, sprigVelY, dt);
+        // Flow field directly modifies velocity? Or applies force?
+        // The implementation of applyFlow modifies velocity directly currently.
+        // We should check FlowFieldSystem.
+        // But assuming it returns NEW velocity, we just assign it.
+        // Ideally flow field adds acceleration.
+        
+        this.velocitiesX[idx] = newVel.vx; 
         this.velocitiesY[idx] = newVel.vy;
     }
 
-    private applyBoids(idx: number) {
+    private applyBoids(idx: number, dt: number) {
         let sepX = 0, sepY = 0;
         let aliX = 0, aliY = 0;
         let cohX = 0, cohY = 0;
@@ -145,10 +152,10 @@ export class SprigSystem {
 
         const sprigX = this.positionsX[idx];
         const sprigY = this.positionsY[idx];
-        let sprigVelX = this.velocitiesX[idx]; // Make mutable
-        let sprigVelY = this.velocitiesY[idx]; // Make mutable
+        let sprigVelX = this.velocitiesX[idx]; 
+        let sprigVelY = this.velocitiesY[idx]; 
 
-        for (let otherIdx = 0; otherIdx < this.activeSprigCount; otherIdx++) { // Iterate only active sprigs
+        for (let otherIdx = 0; otherIdx < this.activeSprigCount; otherIdx++) { 
             if (idx === otherIdx) continue;
 
             const otherX = this.positionsX[otherIdx];
@@ -209,15 +216,16 @@ export class SprigSystem {
                 sepY = (sepY / sepLen) * CONFIG.SEPARATION_FORCE;
             }
 
-            sprigVelX += sepX + aliX + cohX;
-            sprigVelY += sepY + aliY + cohY;
+            // Apply Forces scaled by DeltaTime
+            sprigVelX += (sepX + aliX + cohX) * dt;
+            sprigVelY += (sepY + aliY + cohY) * dt;
         }
-        // Update arrays after all forces applied
+        
         this.velocitiesX[idx] = sprigVelX;
         this.velocitiesY[idx] = sprigVelY;
     }
 
-    private applyPheromonePath(idx: number, path: Point[]) {
+    private applyPheromonePath(idx: number, path: Point[], dt: number) {
         if (path.length === 0) return;
 
         let closestX = 0;
@@ -227,7 +235,6 @@ export class SprigSystem {
         const sprigX = this.positionsX[idx];
         const sprigY = this.positionsY[idx];
 
-        // Find closest point on path
         for (const point of path) {
             const dx = sprigX - point.x;
             const dy = sprigY - point.y;
@@ -239,11 +246,9 @@ export class SprigSystem {
             }
         }
 
-        // Check if within range (squared check is faster)
         const rangeSq = (CONFIG.PERCEPTION_RADIUS * 2) ** 2;
         
         if (minDistSq < rangeSq) {
-            // Attraction Force
             const dx = closestX - sprigX;
             const dy = closestY - sprigY;
             const dist = Math.sqrt(minDistSq);
@@ -252,16 +257,16 @@ export class SprigSystem {
                 const normX = dx / dist;
                 const normY = dy / dist;
                 
-                this.velocitiesX[idx] += normX * CONFIG.PHEROMONE_PATH_ATTRACTION;
-                this.velocitiesY[idx] += normY * CONFIG.PHEROMONE_PATH_ATTRACTION;
+                // Apply attraction force scaled by dt
+                this.velocitiesX[idx] += normX * CONFIG.PHEROMONE_PATH_ATTRACTION * dt;
+                this.velocitiesY[idx] += normY * CONFIG.PHEROMONE_PATH_ATTRACTION * dt;
             }
 
-            // Trigger visual flash
-            this.flashTimers[idx] = 5; // Flash for 5 frames
+            this.flashTimers[idx] = 5; 
         }
     }
 
-    private applyPulse(idx: number, pulse: Point | null) {
+    private applyPulse(idx: number, pulse: Point | null, dt: number) {
         if (!pulse) return;
 
         const sprigX = this.positionsX[idx];
@@ -277,18 +282,24 @@ export class SprigSystem {
             if (dist > 0) {
                 const normX = dx / dist;
                 const normY = dy / dist;
-                // Force falls off with distance
                 const force = CONFIG.PULSE_FORCE / (dist * 0.1 + 1);
                 
-                this.velocitiesX[idx] += normX * force;
-                this.velocitiesY[idx] += normY * force;
+                // Apply pulse force scaled by dt
+                this.velocitiesX[idx] += normX * force * dt;
+                this.velocitiesY[idx] += normY * force * dt;
             }
         }
     }
 
-    private updatePosition(idx: number) {
+    private updatePosition(idx: number, dt: number) {
         let velX = this.velocitiesX[idx];
         let velY = this.velocitiesY[idx];
+
+        // Apply cargo slowdown (Scale movement, don't reduce stored velocity permanently)
+        let effectiveSpeedScale = 1.0;
+        if (this.isCarrying(idx)) {
+            effectiveSpeedScale = CONFIG.SPRIG_CARGO_SLOWDOWN_FACTOR;
+        }
 
         // Calculate speed squared
         const speedSq = velX * velX + velY * velY;
@@ -301,12 +312,18 @@ export class SprigSystem {
             velX *= scale;
             velY *= scale;
         }
-        this.velocitiesX[idx] = velX;
-        this.velocitiesY[idx] = velY;
+        
+        // Update stored velocity (with damping/friction)
+        const frictionFactor = Math.pow(CONFIG.FRICTION, dt);
+        this.velocitiesX[idx] = velX * frictionFactor; 
+        this.velocitiesY[idx] = velY * frictionFactor;
 
-        // Move
-        this.positionsX[idx] += velX;
-        this.positionsY[idx] += velY;
+        // Move scaled by dt using the effective (slowed) velocity
+        const moveVelX = velX * effectiveSpeedScale;
+        const moveVelY = velY * effectiveSpeedScale;
+
+        this.positionsX[idx] += moveVelX * dt;
+        this.positionsY[idx] += moveVelY * dt;
 
         // Delegate boundary checks to MapSystem
         const tempPosition = {x: this.positionsX[idx], y: this.positionsY[idx]};
@@ -323,11 +340,9 @@ export class SprigSystem {
         const cargoSprite = this.cargoSprites[idx];
         const flashTimer = this.flashTimers[idx];
 
-        // Sync Sprite Position
         sprigSprite.x = this.positionsX[idx];
         sprigSprite.y = this.positionsY[idx];
 
-        // Handle Flash Effect
         if (flashTimer > 0) {
             sprigSprite.tint = CONFIG.SPRIG_FLASH_COLOR;
             this.flashTimers[idx]--;
@@ -335,13 +350,12 @@ export class SprigSystem {
             sprigSprite.tint = CONFIG.SPRIG_COLOR;
         }
 
-        // --- CARGO VISUALS ---
-        if (this.cargos[idx] !== 0) { // If carrying any cargo
+        if (this.cargos[idx] !== 0) { 
             cargoSprite.visible = true;
-            if (this.cargos[idx] === 1) { // Wood cargo
-                cargoSprite.tint = 0x8B4513; // Brown for wood
+            if (this.cargos[idx] === 1) { 
+                cargoSprite.tint = 0x8B4513; 
             }
-            cargoSprite.y = CONFIG.SPRIG_CARGO_OFFSET_Y; // Apply offset from config
+            cargoSprite.y = CONFIG.SPRIG_CARGO_OFFSET_Y; 
         } else {
             cargoSprite.visible = false;
         }
