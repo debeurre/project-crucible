@@ -1,9 +1,12 @@
 // src/config.ts
 
 export const CONFIG = {
-  SPRIG_COUNT: 1500,
-  SPRIG_RADIUS: 4,
-  SPRIG_COLOR: 0x90EE90,
+  MAX_SPRIG_COUNT: 5000, // Max capacity of the system
+  SPRIGS_PER_SECOND_SPAWN: 20, // New: how many per second to spawn on hold
+  SPRIG_SPAWN_VELOCITY_MAGNITUDE: 2, // New: initial pop velocity
+
+  SPRIG_RADIUS: 6,
+  SPRIG_COLOR: 0x90EE90, // Light Green
   SPRIG_FLASH_COLOR: 0xffffff,
   
   // Boids-lite behavior
@@ -45,4 +48,19 @@ export const CONFIG = {
       NOISE_STRENGTH: 0.1,        // Paper grain amount
       CONTRAST_AMOUNT: 5,         // High contrast to sharpen blur into blobs
   },
+
+  // Crucible (Sink)
+  CRUCIBLE_RADIUS: 25,
+  CRUCIBLE_COLOR: 0xFFD700, // Gold
+
+  // Resource Node (Wood Source)
+  RESOURCE_NODE_COLOR: 0xA52A2A, // Brown
+  RESOURCE_NODE_RADIUS: 50,
+
+  // Flow Field
+  FLOW_FIELD_CELL_SIZE: 40,
+  FLOW_FIELD_FORCE_SCALE: 0.1, // How much the flow field influences sprigs
+  FLOW_FIELD_VISUAL_ALPHA: 0.1, // Faintness of the arrows
+  FLOW_FIELD_VISUAL_COLOR: 0x888888, // Grey arrows
+  FLOW_FIELD_VISUAL_ARROW_LENGTH: 20,
 };

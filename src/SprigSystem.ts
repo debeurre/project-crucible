@@ -1,81 +1,163 @@
-import { Application, Graphics, Point, Container } from 'pixi.js';
+import { Application, Graphics, Point, Container, Texture, Sprite } from 'pixi.js';
 import { CONFIG } from './config';
 import { InputState } from './InputManager';
 import { MapSystem } from './systems/MapSystem';
+import { FlowFieldSystem } from './systems/FlowFieldSystem'; // New import
 
-interface Sprig {
-    sprite: Graphics;
-    position: Point;
-    velocity: Point;
-    trail: Point[];
-    flashTimer: number; // For visual feedback without setTimeout
-}
+// No more Sprig interface in DOD
 
 export class SprigSystem {
-    private sprigs: Sprig[] = [];
+    // Data-Oriented Storage
+    private positionsX: Float32Array;
+    private positionsY: Float32Array;
+    private velocitiesX: Float32Array;
+    private velocitiesY: Float32Array;
+    private flashTimers: Uint8Array;
+    private cargos: Uint8Array; // 0 = None, 1 = Wood
+    
+    // Visuals
+    private sprigSprites: Sprite[]; // Array of Pixi Sprite objects
+    private cargoSprites: Sprite[]; // Array of Pixi Sprite objects for cargo
+    private sprigTexture: Texture; 
+    private cargoTexture: Texture; 
+
     private app: Application;
     private mapSystem: MapSystem;
-    private parentContainer: Container;
+    private flowFieldSystem: FlowFieldSystem; // New: FlowFieldSystem
+    private parentContainer: Container; // WorldContainer
 
-    constructor(app: Application, mapSystem: MapSystem, parentContainer: Container) {
+    private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; // Max capacity
+    private activeSprigCount: number = 0; // Current number of active sprigs
+
+    constructor(app: Application, mapSystem: MapSystem, parentContainer: Container, flowFieldSystem: FlowFieldSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
         this.parentContainer = parentContainer;
-        this.initSprigs();
+        this.flowFieldSystem = flowFieldSystem; // Store it
+
+        // Initialize typed arrays to MAX capacity
+        this.positionsX = new Float32Array(this.MAX_SPRIG_COUNT);
+        this.positionsY = new Float32Array(this.MAX_SPRIG_COUNT);
+        this.velocitiesX = new Float32Array(this.MAX_SPRIG_COUNT);
+        this.velocitiesY = new Float32Array(this.MAX_SPRIG_COUNT);
+        this.flashTimers = new Uint8Array(this.MAX_SPRIG_COUNT);
+        this.cargos = new Uint8Array(this.MAX_SPRIG_COUNT); // All start empty
+
+        this.sprigSprites = [];
+        this.cargoSprites = [];
+        this.sprigTexture = Texture.EMPTY; 
+        this.cargoTexture = Texture.EMPTY; 
+
+        this.initTextures();
+        this.initPool(); // Initialize a pool of sprites, but don't add to stage
     }
 
-    private initSprigs() {
-        for (let i = 0; i < CONFIG.SPRIG_COUNT; i++) {
-            const sprite = new Graphics();
+    private initTextures() {
+        // Generate a simple white circle texture for sprigs
+        const sprigGraphics = new Graphics();
+        sprigGraphics.beginFill(0xFFFFFF); // White base color for easy tinting
+        sprigGraphics.drawCircle(0, 0, CONFIG.SPRIG_RADIUS);
+        sprigGraphics.endFill();
+        this.sprigTexture = this.app.renderer.generateTexture(sprigGraphics);
+
+        // Generate a simple white square texture for cargo
+        const cargoGraphics = new Graphics();
+        cargoGraphics.beginFill(0xFFFFFF); // White base color for easy tinting
+        cargoGraphics.drawRect(-CONFIG.SPRIG_RADIUS, -CONFIG.SPRIG_RADIUS, CONFIG.SPRIG_RADIUS * 2, CONFIG.SPRIG_RADIUS * 2);
+        cargoGraphics.endFill();
+        this.cargoTexture = this.app.renderer.generateTexture(cargoGraphics);
+    }
+
+
+    private initPool() { // Initialize a pool of Sprites, all invisible
+        for (let i = 0; i < this.MAX_SPRIG_COUNT; i++) {
+            const sprigSprite = new Sprite(this.sprigTexture);
+            sprigSprite.tint = CONFIG.SPRIG_COLOR; // Default green
+            sprigSprite.anchor.set(0.5); // Center anchor
+            sprigSprite.visible = false; // Hide initially
             
-            // Pixi v8 Style: Chainable geometry + fill
-            sprite.circle(0, 0, CONFIG.SPRIG_RADIUS)
-                  .fill(CONFIG.SPRIG_COLOR);
+            const cargoSprite = new Sprite(this.cargoTexture);
+            cargoSprite.anchor.set(0.5); // Center anchor
+            cargoSprite.visible = false; // Hidden by default
+            cargoSprite.y = -12; // Floating above sprig
 
-            // Random Position
-            const position = new Point(
-                Math.random() * this.app.screen.width,
-                Math.random() * this.app.screen.height
-            );
-            
-            // Set sprite position initially
-            sprite.position.copyFrom(position);
-
-            this.sprigs.push({
-                sprite,
-                position,
-                velocity: new Point(Math.random() * 2 - 1, Math.random() * 2 - 1),
-                trail: [],
-                flashTimer: 0
-            });
-
-            this.parentContainer.addChild(sprite);
+            this.sprigSprites.push(sprigSprite); 
+            this.cargoSprites.push(cargoSprite);
+            this.parentContainer.addChild(sprigSprite); // Add to container
+            sprigSprite.addChild(cargoSprite); // Cargo is child of sprig
         }
+    }
+
+    public spawnSprig(x: number, y: number) {
+        if (this.activeSprigCount >= this.MAX_SPRIG_COUNT) {
+            return; // Pool is full
+        }
+
+        const i = this.activeSprigCount; // Get next available index
+
+        this.positionsX[i] = x;
+        this.positionsY[i] = y;
+
+        // Random velocity for "popping out"
+        const angle = Math.random() * Math.PI * 2;
+        this.velocitiesX[i] = Math.cos(angle) * CONFIG.SPRIG_SPAWN_VELOCITY_MAGNITUDE;
+        this.velocitiesY[i] = Math.sin(angle) * CONFIG.SPRIG_SPAWN_VELOCITY_MAGNITUDE;
+        
+        this.flashTimers[i] = 0;
+        this.cargos[i] = 0; // No cargo
+
+        this.sprigSprites[i].x = x;
+        this.sprigSprites[i].y = y;
+        this.sprigSprites[i].tint = CONFIG.SPRIG_COLOR;
+        this.sprigSprites[i].visible = true; // Make visible
+        this.cargoSprites[i].visible = false; // Ensure cargo is hidden
+
+        this.activeSprigCount++;
     }
     
-    // ...
-
     public update(inputState: InputState) {
-        for (const sprig of this.sprigs) {
-            this.applyBoids(sprig);
-            this.applyPheromonePath(sprig, inputState.path);
-            this.applyPulse(sprig, inputState.pulse);
-            this.updatePosition(sprig);
-            this.updateVisuals(sprig); // Handle trails and colors
+        for (let i = 0; i < this.activeSprigCount; i++) { // Iterate only active sprigs
+            this.applyBoids(i);
+            this.applyFlowField(i); // New logic: applyFlowField(i);
+            this.applyPheromonePath(i, inputState.path);
+            this.applyPulse(i, inputState.pulse);
+            this.updatePosition(i);
+            this.updateVisuals(i);
         }
     }
 
-    private applyBoids(sprig: Sprig) {
+    private applyFlowField(idx: number) {
+        const sprigX = this.positionsX[idx];
+        const sprigY = this.positionsY[idx];
+        let sprigVelX = this.velocitiesX[idx];
+        let sprigVelY = this.velocitiesY[idx];
+
+        const newVel = this.flowFieldSystem.applyFlow(sprigX, sprigY, sprigVelX, sprigVelY);
+        this.velocitiesX[idx] = newVel.vx;
+        this.velocitiesY[idx] = newVel.vy;
+    }
+
+    private applyBoids(idx: number) {
         let sepX = 0, sepY = 0;
         let aliX = 0, aliY = 0;
         let cohX = 0, cohY = 0;
         let neighborCount = 0;
 
-        for (const other of this.sprigs) {
-            if (sprig === other) continue;
+        const sprigX = this.positionsX[idx];
+        const sprigY = this.positionsY[idx];
+        let sprigVelX = this.velocitiesX[idx]; // Make mutable
+        let sprigVelY = this.velocitiesY[idx]; // Make mutable
 
-            const dx = sprig.position.x - other.position.x;
-            const dy = sprig.position.y - other.position.y;
+        for (let otherIdx = 0; otherIdx < this.activeSprigCount; otherIdx++) { // Iterate only active sprigs
+            if (idx === otherIdx) continue;
+
+            const otherX = this.positionsX[otherIdx];
+            const otherY = this.positionsY[otherIdx];
+            const otherVelX = this.velocitiesX[otherIdx];
+            const otherVelY = this.velocitiesY[otherIdx];
+
+            const dx = sprigX - otherX;
+            const dy = sprigY - otherY;
             const distSq = dx * dx + dy * dy;
             const radiusSq = CONFIG.PERCEPTION_RADIUS * CONFIG.PERCEPTION_RADIUS;
 
@@ -87,12 +169,12 @@ export class SprigSystem {
                 sepY += (dy / distance) / distance;
 
                 // Alignment
-                aliX += other.velocity.x;
-                aliY += other.velocity.y;
+                aliX += otherVelX;
+                aliY += otherVelY;
 
                 // Cohesion
-                cohX += other.position.x;
-                cohY += other.position.y;
+                cohX += otherX;
+                cohY += otherY;
 
                 neighborCount++;
             }
@@ -112,8 +194,8 @@ export class SprigSystem {
             // 2. Cohesion
             cohX /= neighborCount;
             cohY /= neighborCount;
-            cohX -= sprig.position.x;
-            cohY -= sprig.position.y;
+            cohX -= sprigX;
+            cohY -= sprigY;
             const cohLen = Math.sqrt(cohX * cohX + cohY * cohY);
             if (cohLen > 0) {
                 cohX = (cohX / cohLen) * CONFIG.COHESION_FORCE;
@@ -127,22 +209,28 @@ export class SprigSystem {
                 sepY = (sepY / sepLen) * CONFIG.SEPARATION_FORCE;
             }
 
-            sprig.velocity.x += sepX + aliX + cohX;
-            sprig.velocity.y += sepY + aliY + cohY;
+            sprigVelX += sepX + aliX + cohX;
+            sprigVelY += sepY + aliY + cohY;
         }
+        // Update arrays after all forces applied
+        this.velocitiesX[idx] = sprigVelX;
+        this.velocitiesY[idx] = sprigVelY;
     }
 
-    private applyPheromonePath(sprig: Sprig, path: Point[]) {
+    private applyPheromonePath(idx: number, path: Point[]) {
         if (path.length === 0) return;
 
         let closestX = 0;
         let closestY = 0;
         let minDistSq = Infinity;
 
+        const sprigX = this.positionsX[idx];
+        const sprigY = this.positionsY[idx];
+
         // Find closest point on path
         for (const point of path) {
-            const dx = sprig.position.x - point.x;
-            const dy = sprig.position.y - point.y;
+            const dx = sprigX - point.x;
+            const dy = sprigY - point.y;
             const dSq = dx * dx + dy * dy;
             if (dSq < minDistSq) {
                 minDistSq = dSq;
@@ -156,28 +244,31 @@ export class SprigSystem {
         
         if (minDistSq < rangeSq) {
             // Attraction Force
-            const dx = closestX - sprig.position.x;
-            const dy = closestY - sprig.position.y;
+            const dx = closestX - sprigX;
+            const dy = closestY - sprigY;
             const dist = Math.sqrt(minDistSq);
             
             if (dist > 0) {
                 const normX = dx / dist;
                 const normY = dy / dist;
                 
-                sprig.velocity.x += normX * CONFIG.PHEROMONE_PATH_ATTRACTION;
-                sprig.velocity.y += normY * CONFIG.PHEROMONE_PATH_ATTRACTION;
+                this.velocitiesX[idx] += normX * CONFIG.PHEROMONE_PATH_ATTRACTION;
+                this.velocitiesY[idx] += normY * CONFIG.PHEROMONE_PATH_ATTRACTION;
             }
 
             // Trigger visual flash
-            sprig.flashTimer = 5; // Flash for 5 frames
+            this.flashTimers[idx] = 5; // Flash for 5 frames
         }
     }
 
-    private applyPulse(sprig: Sprig, pulse: Point | null) {
+    private applyPulse(idx: number, pulse: Point | null) {
         if (!pulse) return;
 
-        const dx = sprig.position.x - pulse.x;
-        const dy = sprig.position.y - pulse.y;
+        const sprigX = this.positionsX[idx];
+        const sprigY = this.positionsY[idx];
+
+        const dx = sprigX - pulse.x;
+        const dy = sprigY - pulse.y;
         const distSq = dx * dx + dy * dy;
         const radiusSq = CONFIG.PULSE_RADIUS * CONFIG.PULSE_RADIUS;
 
@@ -189,53 +280,67 @@ export class SprigSystem {
                 // Force falls off with distance
                 const force = CONFIG.PULSE_FORCE / (dist * 0.1 + 1);
                 
-                sprig.velocity.x += normX * force;
-                sprig.velocity.y += normY * force;
+                this.velocitiesX[idx] += normX * force;
+                this.velocitiesY[idx] += normY * force;
             }
         }
     }
 
-    private updatePosition(sprig: Sprig) {
+    private updatePosition(idx: number) {
+        let velX = this.velocitiesX[idx];
+        let velY = this.velocitiesY[idx];
+
         // Calculate speed squared
-        const speedSq = sprig.velocity.x * sprig.velocity.x + sprig.velocity.y * sprig.velocity.y;
+        const speedSq = velX * velX + velY * velY;
         const maxSq = CONFIG.MAX_SPEED * CONFIG.MAX_SPEED;
 
         // Clamp speed
         if (speedSq > maxSq) {
             const speed = Math.sqrt(speedSq);
             const scale = CONFIG.MAX_SPEED / speed;
-            sprig.velocity.x *= scale;
-            sprig.velocity.y *= scale;
+            velX *= scale;
+            velY *= scale;
         }
+        this.velocitiesX[idx] = velX;
+        this.velocitiesY[idx] = velY;
 
         // Move
-        sprig.position.x += sprig.velocity.x;
-        sprig.position.y += sprig.velocity.y;
+        this.positionsX[idx] += velX;
+        this.positionsY[idx] += velY;
 
         // Delegate boundary checks to MapSystem
-        this.mapSystem.constrain(sprig.position, sprig.velocity);
+        const tempPosition = {x: this.positionsX[idx], y: this.positionsY[idx]};
+        const tempVelocity = {x: this.velocitiesX[idx], y: this.velocitiesY[idx]};
+        this.mapSystem.constrain(tempPosition, tempVelocity);
+        this.positionsX[idx] = tempPosition.x;
+        this.positionsY[idx] = tempPosition.y;
+        this.velocitiesX[idx] = tempVelocity.x;
+        this.velocitiesY[idx] = tempVelocity.y;
     }
 
-    private updateVisuals(sprig: Sprig) {
+    private updateVisuals(idx: number) {
+        const sprigSprite = this.sprigSprites[idx];
+        const cargoSprite = this.cargoSprites[idx];
+        const flashTimer = this.flashTimers[idx];
+
         // Sync Sprite Position
-        sprig.sprite.x = sprig.position.x;
-        sprig.sprite.y = sprig.position.y;
+        sprigSprite.x = this.positionsX[idx];
+        sprigSprite.y = this.positionsY[idx];
 
         // Handle Flash Effect
-        if (sprig.flashTimer > 0) {
-            sprig.sprite.tint = CONFIG.SPRIG_FLASH_COLOR;
-            sprig.flashTimer--;
+        if (flashTimer > 0) {
+            sprigSprite.tint = CONFIG.SPRIG_FLASH_COLOR;
+            this.flashTimers[idx]--;
         } else {
-            sprig.sprite.tint = CONFIG.SPRIG_COLOR;
+            sprigSprite.tint = CONFIG.SPRIG_COLOR;
         }
 
-        // Update Trail (Simple version)
-        // Only add point every 5 frames to save memory? 
-        // For now, simple push/shift is okay for small trails.
-        // We clone explicitly because 'position' changes every frame.
-        sprig.trail.push(new Point(sprig.position.x, sprig.position.y));
-        if (sprig.trail.length > CONFIG.TRAIL_LENGTH) {
-            sprig.trail.shift();
+        // --- CARGO VISUALS ---
+        if (this.cargos[idx] === 1) { // Wood cargo
+            cargoSprite.visible = true;
+            cargoSprite.tint = 0x8B4513; // Brown for wood
+        } else {
+            cargoSprite.visible = false;
         }
     }
 }

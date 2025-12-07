@@ -1,10 +1,11 @@
 // src/main.ts
-import { Application, Graphics, Container } from 'pixi.js'; // Named imports are better for tree-shaking
+import { Application, Graphics, Container, Point } from 'pixi.js'; // Named imports are better for tree-shaking
 import { SprigSystem } from './SprigSystem';
 import { createInputManager } from './InputManager';
 import { CONFIG } from './config';
 import { MapSystem, MapShape } from './systems/MapSystem';
 import { VisualEffects } from './systems/VisualEffects';
+import { FlowFieldSystem } from './systems/FlowFieldSystem';
 
 // State for screen shake (managed inside the loop now)
 let shakeIntensity = 0;
@@ -29,6 +30,7 @@ async function main() {
     // Initialize Systems EARLY
     const mapSystem = new MapSystem(app);
     const visualEffects = new VisualEffects();
+    const flowFieldSystem = new FlowFieldSystem(app); // New: FlowFieldSystem
 
     // --- DEBUG UI ---
     const debugContainer = document.createElement('div');
@@ -131,6 +133,9 @@ async function main() {
     // Add Map to World
     worldContainer.addChild(mapSystem.container);
 
+    // Add Flow Field visuals to World
+    worldContainer.addChild(flowFieldSystem.container); // New: FlowField visuals
+
     // Crucible (Spawn/Sink)
     const crucible = new Graphics();
     crucible.circle(0, 0, CONFIG.CRUCIBLE_RADIUS).fill(CONFIG.CRUCIBLE_COLOR);
@@ -139,7 +144,7 @@ async function main() {
     worldContainer.addChild(crucible);
 
     // Sprigs go into World
-    const sprigSystem = new SprigSystem(app, mapSystem, worldContainer);
+    const sprigSystem = new SprigSystem(app, mapSystem, worldContainer, flowFieldSystem);
     
     // Graphics Setup (Pheromone Path)
     const pheromonePath = new Graphics();
@@ -153,6 +158,7 @@ async function main() {
         background.clear();
         background.rect(0, 0, app.screen.width, app.screen.height).fill(CONFIG.BG_COLOR);
         mapSystem.resize();
+        flowFieldSystem.resize(); // New: Resize flow field
         crucible.x = app.screen.width / 2; // Recenter crucible
         crucible.y = app.screen.height / 2;
     });
@@ -161,6 +167,9 @@ async function main() {
     let spawnTimer = 0;
     const spawnInterval = 1 / CONFIG.SPRIGS_PER_SECOND_SPAWN; // Time per sprig
     let crucibleScaleY = 1.0; // For visual feedback
+
+    // --- Flow Field Painting State ---
+    let lastMousePos: Point | null = null;
 
     // 4. The Game Loop (Ticker)
     // v8 passes 'ticker' to the callback which contains deltaTime
@@ -185,6 +194,22 @@ async function main() {
             updateDebugUI();
             inputState.debugKey = null;
         }
+
+        // --- FLOW FIELD PAINTING ---
+        if (inputState.isDown && !inputState.isHolding && !inputState.isDragging && lastMousePos) {
+            // New drag for painting flow
+            const dragVecX = inputState.mousePosition.x - lastMousePos.x;
+            const dragVecY = inputState.mousePosition.y - lastMousePos.y;
+
+            // Only paint if not over crucible (Crucible is not a paintable area)
+            const dx = inputState.mousePosition.x - crucible.x;
+            const dy = inputState.mousePosition.y - crucible.y;
+            const distSq = dx*dx + dy*dy;
+            if (distSq > CONFIG.CRUCIBLE_RADIUS**2) { // Only paint if NOT over crucible
+                 flowFieldSystem.paintFlow(inputState.mousePosition.x, inputState.mousePosition.y, dragVecX, dragVecY);
+            }
+        }
+        lastMousePos = inputState.mousePosition.clone(); // Store current mouse position for next frame's drag vector
 
         // --- SPAWNING LOGIC (Tap + Hold) ---
         if (inputState.isHolding) {
