@@ -95,18 +95,22 @@ export class SprigSystem {
 
         const i = this.activeSprigCount; 
 
-        this.positionsX[i] = x;
-        this.positionsY[i] = y;
-
+        // Spawn at random angle around the crucible with padding
         const angle = Math.random() * Math.PI * 2;
-        this.velocitiesX[i] = Math.cos(angle) * CONFIG.SPRIG_SPAWN_VELOCITY_MAGNITUDE;
-        this.velocitiesY[i] = Math.sin(angle) * CONFIG.SPRIG_SPAWN_VELOCITY_MAGNITUDE;
+        const dist = CONFIG.CRUCIBLE_RADIUS + CONFIG.CRUCIBLE_SPAWN_PADDING;
+        
+        this.positionsX[i] = x + Math.cos(angle) * dist;
+        this.positionsY[i] = y + Math.sin(angle) * dist;
+
+        // Zero initial velocity (idling)
+        this.velocitiesX[i] = 0;
+        this.velocitiesY[i] = 0;
         
         this.flashTimers[i] = 0;
         this.cargos[i] = 0; 
 
-        this.sprigSprites[i].x = x;
-        this.sprigSprites[i].y = y;
+        this.sprigSprites[i].x = this.positionsX[i];
+        this.sprigSprites[i].y = this.positionsY[i];
         this.sprigSprites[i].tint = CONFIG.SPRIG_COLOR;
         this.sprigSprites[i].visible = true; 
         this.cargoSprites[i].visible = false; 

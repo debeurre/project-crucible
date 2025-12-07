@@ -3,7 +3,6 @@
 export const CONFIG = {
   MAX_SPRIG_COUNT: 5000, // Max capacity of the system
   SPRIGS_PER_SECOND_SPAWN: 20, // New: how many per second to spawn on hold
-  SPRIG_SPAWN_VELOCITY_MAGNITUDE: 2, // New: initial pop velocity
 
   SPRIG_RADIUS: 6,
   SPRIG_COLOR: 0x228B22	, // Forest Green
@@ -52,6 +51,7 @@ export const CONFIG = {
   // Crucible (Sink)
   CRUCIBLE_RADIUS: 25,
   CRUCIBLE_COLOR: 0xFFD700, // Gold
+  CRUCIBLE_SPAWN_PADDING: 10, // Distance from crucible edge to spawn sprigs
 
   // Resource Node (Wood Source)
   RESOURCE_NODE_COLOR: 0xA52A2A, // Brown
