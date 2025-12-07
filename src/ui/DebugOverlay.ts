@@ -5,6 +5,7 @@ export class DebugOverlay {
     private modeElements: HTMLDivElement[] = [];
     private effectElements: HTMLDivElement[] = [];
     private scoreElement: HTMLDivElement;
+    private sprigCountElement: HTMLDivElement; // New
 
     // Config data for UI
     private readonly modes = [
@@ -31,9 +32,13 @@ export class DebugOverlay {
         
         this.scoreElement = document.createElement('div');
         this.scoreElement.textContent = 'SCORE: 0';
+
+        this.sprigCountElement = document.createElement('div'); // New
+        this.sprigCountElement.textContent = 'SPRIGS: 0';      // New
         
         this.initElements();
         this.container.appendChild(this.scoreElement);
+        this.container.appendChild(this.sprigCountElement); // Append after score
     }
 
     private applyContainerStyles() {
@@ -74,7 +79,7 @@ export class DebugOverlay {
         });
     }
 
-    public update(score: number, currentMode: MapShape, effectStates: { blur: boolean, threshold: boolean, displacement: boolean, noise: boolean }) {
+    public update(score: number, sprigCount: number, currentMode: MapShape, effectStates: { blur: boolean, threshold: boolean, displacement: boolean, noise: boolean }) {
         // Update Modes
         this.modes.forEach((m, i) => {
             const el = this.modeElements[i];
@@ -105,5 +110,6 @@ export class DebugOverlay {
         });
 
         this.scoreElement.textContent = `SCORE: ${score}`;
+        this.sprigCountElement.textContent = `SPRIGS: ${sprigCount}`; // Update sprig count
     }
 }

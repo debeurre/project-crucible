@@ -244,6 +244,7 @@ export class Game {
     private updateUI() {
         this.debugOverlay.update(
             this.score,
+            this.sprigSystem.activeSprigCount, // New argument
             this.mapSystem.mode,
             {
                 blur: this.visualEffects.blurEnabled,
