@@ -33,3 +33,4 @@
 - **Graphics API:** `lineStyle` is deprecated. Use `moveTo` -> `lineTo` -> `stroke({ width, color, alpha })`.
 - **Events:** `interactive = true` is deprecated. Use `eventMode = 'static'` (for background/stage) or `'dynamic'`.
 - **Hit Testing:** The Stage needs `app.stage.hitArea = app.screen` to detect clicks on empty space.
+- **Texture Generation (Robustness):** When creating simple shapes for tinting (e.g., Sprigs, Cargo), prefer using `new PIXI.Graphics().drawCircle().fill()` directly for each object rather than `app.renderer.generateTexture(graphics)` for a base texture. The latter can be prone to timing or rendering context issues with v8's `generateTexture` if not managed carefully, leading to invisible sprites. Using direct `Graphics` ensures immediate and reliable rendering.
