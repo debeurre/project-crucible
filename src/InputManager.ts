@@ -3,8 +3,6 @@ import { Application, Point, FederatedPointerEvent } from 'pixi.js';
 export interface InputState {
     isDown: boolean;
     isDragging: boolean;
-    path: Point[];      // The trail of points for the pheromone line
-    pulse: Point | null; // The specific point where a "Tap" occurred
     debugKey: string | null;
     isHolding: boolean;
     mousePosition: Point; // New: Current mouse global position
@@ -14,8 +12,6 @@ export function createInputManager(app: Application): InputState {
     const state: InputState = {
         isDown: false,
         isDragging: false,
-        path: [],
-        pulse: null,
         debugKey: null,
         isHolding: false,
         mousePosition: new Point(), // Initialize
@@ -35,36 +31,24 @@ export function createInputManager(app: Application): InputState {
         state.isDragging = false;
         state.isHolding = true;
         state.mousePosition.copyFrom(e.global); // Update position
-        // Store global coordinates
-        state.path = [new Point(e.global.x, e.global.y)];
     });
 
     app.stage.on('pointermove', (e: FederatedPointerEvent) => {
         state.mousePosition.copyFrom(e.global); // Update position
         if (state.isDown) {
             state.isDragging = true;
-            // Add point to path
-            state.path.push(new Point(e.global.x, e.global.y));
         }
     });
 
-    app.stage.on('pointerup', (e: FederatedPointerEvent) => {
-        if (!state.isDragging) {
-            // It was a quick tap, not a drag. 
-            // Save the LOCATION of the tap into 'pulse'
-            state.pulse = new Point(e.global.x, e.global.y);
-        }
-        
+    app.stage.on('pointerup', () => {
         // Reset drag state
         state.isDown = false;
         state.isHolding = false;
-        state.path = []; 
     });
 
     app.stage.on('pointerupoutside', () => {
         state.isDown = false;
         state.isHolding = false;
-        state.path = [];
     });
     
     // Keyboard Listener

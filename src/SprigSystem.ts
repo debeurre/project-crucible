@@ -1,6 +1,5 @@
-import { Application, Graphics, Point, Container, Texture, Sprite, Ticker } from 'pixi.js';
+import { Application, Graphics, Container, Texture, Sprite, Ticker } from 'pixi.js';
 import { CONFIG } from './config';
-import { InputState } from './InputManager';
 import { MapSystem } from './systems/MapSystem';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 
@@ -118,14 +117,12 @@ export class SprigSystem {
         this.activeSprigCount++;
     }
     
-    public update(inputState: InputState, ticker: Ticker) {
+    public update(ticker: Ticker) {
         const dt = ticker.deltaTime; // Use scalar deltaTime (1.0 at target FPS)
         
         for (let i = 0; i < this.activeSprigCount; i++) { 
             this.applyBoids(i, dt);
             this.applyFlowField(i, dt); 
-            this.applyPheromonePath(i, inputState.path, dt);
-            this.applyPulse(i, inputState.pulse, dt);
             this.updatePosition(i, dt);
             this.updateVisuals(i);
         }
@@ -227,72 +224,6 @@ export class SprigSystem {
         
         this.velocitiesX[idx] = sprigVelX;
         this.velocitiesY[idx] = sprigVelY;
-    }
-
-    private applyPheromonePath(idx: number, path: Point[], dt: number) {
-        if (path.length === 0) return;
-
-        let closestX = 0;
-        let closestY = 0;
-        let minDistSq = Infinity;
-
-        const sprigX = this.positionsX[idx];
-        const sprigY = this.positionsY[idx];
-
-        for (const point of path) {
-            const dx = sprigX - point.x;
-            const dy = sprigY - point.y;
-            const dSq = dx * dx + dy * dy;
-            if (dSq < minDistSq) {
-                minDistSq = dSq;
-                closestX = point.x;
-                closestY = point.y;
-            }
-        }
-
-        const rangeSq = (CONFIG.PERCEPTION_RADIUS * 2) ** 2;
-        
-        if (minDistSq < rangeSq) {
-            const dx = closestX - sprigX;
-            const dy = closestY - sprigY;
-            const dist = Math.sqrt(minDistSq);
-            
-            if (dist > 0) {
-                const normX = dx / dist;
-                const normY = dy / dist;
-                
-                // Apply attraction force scaled by dt
-                this.velocitiesX[idx] += normX * CONFIG.PHEROMONE_PATH_ATTRACTION * dt;
-                this.velocitiesY[idx] += normY * CONFIG.PHEROMONE_PATH_ATTRACTION * dt;
-            }
-
-            this.flashTimers[idx] = 5; 
-        }
-    }
-
-    private applyPulse(idx: number, pulse: Point | null, dt: number) {
-        if (!pulse) return;
-
-        const sprigX = this.positionsX[idx];
-        const sprigY = this.positionsY[idx];
-
-        const dx = sprigX - pulse.x;
-        const dy = sprigY - pulse.y;
-        const distSq = dx * dx + dy * dy;
-        const radiusSq = CONFIG.PULSE_RADIUS * CONFIG.PULSE_RADIUS;
-
-        if (distSq < radiusSq) {
-            const dist = Math.sqrt(distSq);
-            if (dist > 0) {
-                const normX = dx / dist;
-                const normY = dy / dist;
-                const force = CONFIG.PULSE_FORCE / (dist * 0.1 + 1);
-                
-                // Apply pulse force scaled by dt
-                this.velocitiesX[idx] += normX * force * dt;
-                this.velocitiesY[idx] += normY * force * dt;
-            }
-        }
     }
 
     private updatePosition(idx: number, dt: number) {

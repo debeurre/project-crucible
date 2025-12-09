@@ -13,7 +13,6 @@ export class Game {
     private worldContainer: Container;
     private background: Graphics;
     private crucible: Graphics;
-    private pheromonePath: Graphics;
     
     // Systems
     private mapSystem: MapSystem;
@@ -26,7 +25,6 @@ export class Game {
 
     // State
     private score = 0;
-    private shakeIntensity = 0;
     private spawnTimer = 0;
     private crucibleScaleY = 1.0;
     private lastMousePos: Point | null = null;
@@ -47,7 +45,6 @@ export class Game {
         this.background = new Graphics();
         this.worldContainer = new Container();
         this.crucible = new Graphics();
-        this.pheromonePath = new Graphics();
         
         this.setupWorld();
         
@@ -81,9 +78,6 @@ export class Game {
         this.crucible.circle(0, 0, CONFIG.CRUCIBLE_RADIUS).fill(CONFIG.CRUCIBLE_COLOR);
         this.worldContainer.addChild(this.crucible);
         
-        // 5. Pheromone Path
-        this.worldContainer.addChild(this.pheromonePath);
-
         // 6. Apply Effects
         this.visualEffects.applyTo(this.worldContainer);
     }
@@ -103,7 +97,7 @@ export class Game {
     private update(ticker: Ticker) {
         this.handleInput(ticker);
         this.updateGameLogic(ticker);
-        this.renderVisuals(ticker);
+        this.renderVisuals();
     }
 
     private handleInput(ticker: Ticker) {
@@ -210,42 +204,18 @@ export class Game {
             }
         }
 
-        this.sprigSystem.update(this.inputState, ticker);
+        this.sprigSystem.update(ticker);
         this.visualEffects.update(ticker);
     }
 
-    private renderVisuals(ticker: Ticker) {
-        // Update Pheromone Path Visuals
-        this.pheromonePath.clear();
-        if (this.inputState.path.length > 1) {
-            this.pheromonePath.moveTo(this.inputState.path[0].x, this.inputState.path[0].y);
-            for (let i = 1; i < this.inputState.path.length; i++) {
-                this.pheromonePath.lineTo(this.inputState.path[i].x, this.inputState.path[i].y);
-            }
-            this.pheromonePath.stroke({ width: 2, color: 0xffffff, alpha: 0.5 });
-        }
-
-        // Screen Shake
-        if (this.inputState.pulse) {
-            this.shakeIntensity = CONFIG.SCREEN_SHAKE_INTENSITY;
-            this.inputState.pulse = null;
-        }
-
-        if (this.shakeIntensity > 0) {
-            this.app.stage.position.set(
-                (Math.random() - 0.5) * this.shakeIntensity,
-                (Math.random() - 0.5) * this.shakeIntensity
-            );
-            this.shakeIntensity -= CONFIG.SCREEN_SHAKE_DECAY * ticker.deltaTime;
-        } else {
-            this.app.stage.position.set(0, 0);
-        }
+    private renderVisuals() {
+        // Placeholder for future visuals
     }
 
     private updateUI() {
         this.debugOverlay.update(
             this.score,
-            this.sprigSystem.activeSprigCount, // New argument
+            this.sprigSystem.activeSprigCount, 
             this.mapSystem.mode,
             {
                 blur: this.visualEffects.blurEnabled,

@@ -5,7 +5,7 @@ export const CONFIG = {
   SPRIGS_PER_SECOND_SPAWN: 20, // New: how many per second to spawn on hold
 
   SPRIG_RADIUS: 6,
-  SPRIG_COLOR: 0x228B22	, // Forest Green
+  SPRIG_COLOR: 0x90EE90, // Light Green
   SPRIG_FLASH_COLOR: 0xffffff,
   
   // Boids-lite behavior
@@ -14,16 +14,6 @@ export const CONFIG = {
   ALIGNMENT_FORCE: 0.025,
   PERCEPTION_RADIUS: 20,
   
-  // Interaction
-  PHEROMONE_PATH_ATTRACTION: 0.1,
-  PULSE_FORCE: 50,
-  PULSE_RADIUS: 100,
-  
-  // Visuals
-  TRAIL_LENGTH: 10,
-  SCREEN_SHAKE_INTENSITY: 5,
-  SCREEN_SHAKE_DECAY: 0.9,
-
   // Physics
   MAX_SPEED: 1,
   FRICTION: 0.95,
@@ -51,7 +41,7 @@ export const CONFIG = {
   // Crucible (Sink)
   CRUCIBLE_RADIUS: 25,
   CRUCIBLE_COLOR: 0xFFD700, // Gold
-  CRUCIBLE_SPAWN_PADDING: 10, // Distance from crucible edge to spawn sprigs
+  CRUCIBLE_SPAWN_PADDING: 20, // Distance from crucible edge to spawn sprigs
 
   // Resource Node (Wood Source)
   RESOURCE_NODE_COLOR: 0xA52A2A, // Brown
