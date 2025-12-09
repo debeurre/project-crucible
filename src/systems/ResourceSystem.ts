@@ -1,13 +1,17 @@
 import { Application, Graphics, Point } from 'pixi.js';
 import { CONFIG } from '../config';
 
+import { MapSystem } from './MapSystem';
+
 export class ResourceSystem {
     public container: Graphics; // Single Graphics object for the node
     private app: Application;
+    private mapSystem: MapSystem;
     private nodePosition: Point; // Position of the node
 
-    constructor(app: Application) {
+    constructor(app: Application, mapSystem: MapSystem) {
         this.app = app;
+        this.mapSystem = mapSystem;
         this.container = new Graphics();
         this.nodePosition = new Point(
             app.screen.width * 0.25, // Example position
@@ -19,6 +23,15 @@ export class ResourceSystem {
         // Handle resize
         this.app.renderer.on('resize', this.resize.bind(this));
         this.resize();
+    }
+    
+    public validatePosition() {
+        // Enforce map bounds on the static node
+        this.mapSystem.clampPosition(this.nodePosition);
+        
+        // Update visual position
+        this.container.x = this.nodePosition.x;
+        this.container.y = this.nodePosition.y;
     }
 
     private drawNode() {

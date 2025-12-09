@@ -210,6 +210,10 @@ export class MapSystem {
 
   // Helper to bounce/clamp position
   public constrain(position: {x: number, y: number}, velocity: {x: number, y: number}) {
+     this.clampPosition(position, velocity);
+  }
+
+  public clampPosition(position: {x: number, y: number}, velocity?: {x: number, y: number}) {
      switch (this.mode) {
       case MapShape.FULL:
         // Wrap
@@ -225,18 +229,18 @@ export class MapSystem {
         // Bounce
         if (position.x < this.rectShape.x) { 
             position.x = this.rectShape.x; 
-            velocity.x *= -1; 
+            if (velocity) velocity.x *= -1; 
         } else if (position.x > this.rectShape.x + this.rectShape.width) { 
             position.x = this.rectShape.x + this.rectShape.width; 
-            velocity.x *= -1; 
+            if (velocity) velocity.x *= -1; 
         }
         
         if (position.y < this.rectShape.y) { 
             position.y = this.rectShape.y; 
-            velocity.y *= -1; 
+            if (velocity) velocity.y *= -1; 
         } else if (position.y > this.rectShape.y + this.rectShape.height) { 
             position.y = this.rectShape.y + this.rectShape.height; 
-            velocity.y *= -1; 
+            if (velocity) velocity.y *= -1; 
         }
         break;
 
@@ -254,11 +258,13 @@ export class MapSystem {
             position.y = this.circleShape.y + Math.sin(angle) * this.circleShape.radius;
             
             // Reflect velocity
-             const nx = dx / dist;
-             const ny = dy / dist;
-             const dot = velocity.x * nx + velocity.y * ny;
-             velocity.x -= 2 * dot * nx;
-             velocity.y -= 2 * dot * ny;
+             if (velocity) {
+                 const nx = dx / dist;
+                 const ny = dy / dist;
+                 const dot = velocity.x * nx + velocity.y * ny;
+                 velocity.x -= 2 * dot * nx;
+                 velocity.y -= 2 * dot * ny;
+             }
          }
          break;
          
@@ -271,13 +277,14 @@ export class MapSystem {
          // If in void (false)
          if (cx < 0 || cx >= this.gridWidth || cy < 0 || cy >= this.gridHeight || !this.grid[cx][cy]) {
              // 1. Reverse velocity (Bounce)
-             velocity.x *= -1;
-             velocity.y *= -1;
-             
-             // 2. Undo the last move (Backtrack)
-             // Since we reversed velocity, adding it now moves us "backwards" in time
-             position.x += velocity.x;
-             position.y += velocity.y;
+             if (velocity) {
+                 velocity.x *= -1;
+                 velocity.y *= -1;
+                 
+                 // 2. Undo the last move (Backtrack)
+                 position.x += velocity.x;
+                 position.y += velocity.y;
+             }
 
              // 3. Check if we are still stuck (e.g. spawned in void)
              const ncx = Math.floor(position.x / CONFIG.CELL_SIZE);
@@ -304,6 +311,12 @@ export class MapSystem {
                          if (found) break;
                      }
                      if (found) break;
+                 }
+                 
+                 // If absolutely no land found nearby, clamp to center of screen as fail-safe
+                 if (!found) {
+                      position.x = this.app.screen.width / 2;
+                      position.y = this.app.screen.height / 2;
                  }
              }
          }

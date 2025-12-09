@@ -46,7 +46,7 @@ export class Game {
         this.mapSystem = new MapSystem(app);
         this.visualEffects = new VisualEffects();
         this.flowFieldSystem = new FlowFieldSystem(app);
-        this.resourceSystem = new ResourceSystem(app);
+        this.resourceSystem = new ResourceSystem(app, this.mapSystem);
 
         // Initialize Visual Containers
         this.background = new Graphics();
@@ -112,13 +112,13 @@ export class Game {
         if (this.inputState.debugKey) {
             const k = this.inputState.debugKey;
             switch (k) {
-                case '1': this.mapSystem.setMode(MapShape.FULL); break;
-                case '2': this.mapSystem.setMode(MapShape.RECT); break;
-                case '3': this.mapSystem.setMode(MapShape.SQUARE); break;
-                case '4': this.mapSystem.setMode(MapShape.CIRCLE); break;
-                case '5': this.mapSystem.setMode(MapShape.PROCGEN); break;
-                case '6': this.mapSystem.setMode(MapShape.MIRROR); break;
-                case '7': this.mapSystem.setMode(MapShape.RADIAL); break;
+                case '1': this.mapSystem.setMode(MapShape.FULL); this.resourceSystem.validatePosition(); break;
+                case '2': this.mapSystem.setMode(MapShape.RECT); this.resourceSystem.validatePosition(); break;
+                case '3': this.mapSystem.setMode(MapShape.SQUARE); this.resourceSystem.validatePosition(); break;
+                case '4': this.mapSystem.setMode(MapShape.CIRCLE); this.resourceSystem.validatePosition(); break;
+                case '5': this.mapSystem.setMode(MapShape.PROCGEN); this.resourceSystem.validatePosition(); break;
+                case '6': this.mapSystem.setMode(MapShape.MIRROR); this.resourceSystem.validatePosition(); break;
+                case '7': this.mapSystem.setMode(MapShape.RADIAL); this.resourceSystem.validatePosition(); break;
                 
                 case 'Q': this.visualEffects.toggleBlur(); break;
                 case 'W': this.visualEffects.toggleThreshold(); break;
