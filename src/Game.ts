@@ -240,31 +240,32 @@ export class Game {
     }
 
     private updateCrucibleAnimation(ticker: Ticker) {
-        const dt = ticker.deltaTime / 60; // Approximate seconds
         let scaleX = 1.0;
 
         // 1. Tap Animation (Priority)
         if (this.tapAnimProgress < 1.0) {
-            this.tapAnimProgress += dt * 5; // ~0.2s duration
+            // Progress = Time / Duration
+            this.tapAnimProgress += ticker.deltaMS / CONFIG.CRUCIBLE_ANIMATION.TAP_DURATION_MS;
             if (this.tapAnimProgress > 1.0) this.tapAnimProgress = 1.0;
 
             // Sine hump: 0 -> 1 -> 0
             const t = Math.sin(this.tapAnimProgress * Math.PI); 
-            // Squeeze significantly: 1.0 -> 0.6 -> 1.0
-            scaleX = 1.0 - (t * 0.4); 
+            // Squeeze
+            scaleX = 1.0 - (t * CONFIG.CRUCIBLE_ANIMATION.TAP_SQUEEZE_FACTOR); 
         } 
         // 2. Hold Animation (Rhythmic)
         else if (this.interactionMode === 'CRUCIBLE' && (performance.now() - this.inputDownTime) >= CONFIG.TAP_THRESHOLD_MS) {
-            this.holdAnimPhase += dt * 20; // ~3 Hz
+            // Phase increment = (dt / cycle_duration) * 2PI
+            const phaseInc = (ticker.deltaMS / CONFIG.CRUCIBLE_ANIMATION.HOLD_CYCLE_DURATION_MS) * 2 * Math.PI;
+            this.holdAnimPhase += phaseInc;
+            
             // Sine wave 0..1
             const t = (Math.sin(this.holdAnimPhase) + 1) / 2;
-            // Squeeze gently: 1.0 -> 0.85 -> 1.0
-            scaleX = 1.0 - (t * 0.15);
+            // Squeeze
+            scaleX = 1.0 - (t * CONFIG.CRUCIBLE_ANIMATION.HOLD_SQUEEZE_FACTOR);
         }
         // 3. Idle / Recovery
         else {
-             // Reset phase so it starts clean next time? Or keep it running? 
-             // Let's reset phase on idle to start at 0 (neutral)
              this.holdAnimPhase = 0;
         }
         

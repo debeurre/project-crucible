@@ -2,8 +2,8 @@
 
 export const CONFIG = {
   MAX_SPRIG_COUNT: 5000, // Max capacity of the system
-  SPRIGS_PER_SECOND_HELD: 20, // New: how many per second to spawn on hold
-  SPRIGS_PER_TAP: 5, // Spawn count on tap
+  SPRIGS_PER_SECOND_HELD: 10, // New: how many per second to spawn on hold
+  SPRIGS_PER_TAP: 2, // Spawn count on tap
   TAP_THRESHOLD_MS: 200, // Max duration for a tap
 
   SPRIG_RADIUS: 6,
@@ -44,6 +44,13 @@ export const CONFIG = {
   CRUCIBLE_RADIUS: 25,
   CRUCIBLE_COLOR: 0xFFD700, // Gold
   CRUCIBLE_SPAWN_PADDING: 20, // Distance from crucible edge to spawn sprigs
+  
+  CRUCIBLE_ANIMATION: {
+    TAP_SQUEEZE_FACTOR: 0.4, // How much to squeeze (1.0 - factor)
+    TAP_DURATION_MS: 200,    // Length of tap animation
+    HOLD_SQUEEZE_FACTOR: 0.15, 
+    HOLD_CYCLE_DURATION_MS: 300, // Length of one sine wave cycle
+  },
 
   // Resource Node (Wood Source)
   RESOURCE_NODE_COLOR: 0xA52A2A, // Brown
