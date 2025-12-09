@@ -77,6 +77,7 @@ export class SprigSystem {
             
             const cargoSprite = new Sprite(this.cargoTexture);
             cargoSprite.anchor.set(0.5); 
+            cargoSprite.scale.set(CONFIG.SPRIG_CARGO_SCALE);
             cargoSprite.visible = false; 
             cargoSprite.y = -12; 
 

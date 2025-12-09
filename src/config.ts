@@ -46,7 +46,7 @@ export const CONFIG = {
   CRUCIBLE_SPAWN_PADDING: 20, // Distance from crucible edge to spawn sprigs
   
   CRUCIBLE_ANIMATION: {
-    TAP_SQUEEZE_FACTOR: 0.4, // How much to squeeze (1.0 - factor)
+    TAP_SQUEEZE_FACTOR: 0.3, // How much to squeeze (1.0 - factor)
     TAP_DURATION_MS: 200,    // Length of tap animation
     HOLD_SQUEEZE_FACTOR: 0.15, 
     HOLD_CYCLE_DURATION_MS: 300, // Length of one sine wave cycle
@@ -66,4 +66,5 @@ export const CONFIG = {
   // Sprig Cargo
   SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo
   SPRIG_CARGO_OFFSET_Y: -12, // Y-offset for cargo sprite relative to sprig
+  SPRIG_CARGO_SCALE: 0.5, // Scale of the cargo sprite
 };
