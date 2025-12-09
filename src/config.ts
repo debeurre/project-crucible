@@ -5,7 +5,7 @@ export const CONFIG = {
   SPRIGS_PER_SECOND_SPAWN: 20, // New: how many per second to spawn on hold
 
   SPRIG_RADIUS: 6,
-  SPRIG_COLOR: 0x90EE90, // Light Green
+  SPRIG_COLOR: 0x228B22, // Forest Green
   SPRIG_FLASH_COLOR: 0xffffff,
   
   // Boids-lite behavior
@@ -50,8 +50,8 @@ export const CONFIG = {
   // Flow Field
   FLOW_FIELD_CELL_SIZE: 40,
   FLOW_FIELD_FORCE_SCALE: 0.1, // How much the flow field influences sprigs
-  FLOW_FIELD_VISUAL_ALPHA: 0.1, // Faintness of the arrows
-  FLOW_FIELD_VISUAL_COLOR: 0x888888, // Grey arrows
+  FLOW_FIELD_VISUAL_ALPHA: 0.5, // Increased visibility
+  FLOW_FIELD_VISUAL_COLOR: 0xFF0000, // Red for debug
   FLOW_FIELD_VISUAL_ARROW_LENGTH: 20,
 
   // Sprig Cargo
