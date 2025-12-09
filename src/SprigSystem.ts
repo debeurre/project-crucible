@@ -15,8 +15,9 @@ export class SprigSystem {
     private cargos: Uint8Array; // 0 = None, 1 = Wood
     
     // Visuals
-    private sprigSprites: Sprite[]; // Array of Pixi Sprite objects
-    private cargoSprites: Sprite[]; // Array of Pixi Sprite objects for cargo
+    private sprigContainers: Container[]; // Main container for each sprig
+    private sprigBodySprites: Sprite[];   // The body sprite (for tinting)
+    private cargoSprites: Sprite[];       // The cargo sprite
     private sprigTexture: Texture; 
     private cargoTexture: Texture; 
 
@@ -42,7 +43,8 @@ export class SprigSystem {
         this.flashTimers = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.cargos = new Uint8Array(this.MAX_SPRIG_COUNT); 
 
-        this.sprigSprites = [];
+        this.sprigContainers = [];
+        this.sprigBodySprites = [];
         this.cargoSprites = [];
         this.sprigTexture = Texture.EMPTY; 
         this.cargoTexture = Texture.EMPTY; 
@@ -54,36 +56,38 @@ export class SprigSystem {
     private initTextures() {
         // Generate a simple white circle texture for sprigs
         const sprigGraphics = new Graphics();
-        sprigGraphics.beginFill(0xFFFFFF); 
-        sprigGraphics.drawCircle(0, 0, CONFIG.SPRIG_RADIUS);
-        sprigGraphics.endFill();
+        sprigGraphics.circle(0, 0, CONFIG.SPRIG_RADIUS).fill(0xFFFFFF);
         this.sprigTexture = this.app.renderer.generateTexture(sprigGraphics);
 
         // Generate a simple white square texture for cargo
         const cargoGraphics = new Graphics();
-        cargoGraphics.beginFill(0xFFFFFF); 
-        cargoGraphics.drawRect(-CONFIG.SPRIG_RADIUS, -CONFIG.SPRIG_RADIUS, CONFIG.SPRIG_RADIUS * 2, CONFIG.SPRIG_RADIUS * 2);
-        cargoGraphics.endFill();
+        cargoGraphics.rect(-CONFIG.SPRIG_RADIUS, -CONFIG.SPRIG_RADIUS, CONFIG.SPRIG_RADIUS * 2, CONFIG.SPRIG_RADIUS * 2).fill(0xFFFFFF);
         this.cargoTexture = this.app.renderer.generateTexture(cargoGraphics);
     }
 
 
     private initPool() { 
         for (let i = 0; i < this.MAX_SPRIG_COUNT; i++) {
-            const sprigSprite = new Sprite(this.sprigTexture);
-            sprigSprite.tint = CONFIG.SPRIG_COLOR; 
-            sprigSprite.anchor.set(0.5); 
-            sprigSprite.visible = false; 
+            const container = new Container();
+            container.visible = false;
+
+            const bodySprite = new Sprite(this.sprigTexture);
+            bodySprite.tint = CONFIG.SPRIG_COLOR; 
+            bodySprite.anchor.set(0.5); 
             
             const cargoSprite = new Sprite(this.cargoTexture);
             cargoSprite.anchor.set(0.5); 
             cargoSprite.visible = false; 
             cargoSprite.y = -12; 
 
-            this.sprigSprites.push(sprigSprite); 
+            container.addChild(bodySprite);
+            container.addChild(cargoSprite);
+
+            this.sprigContainers.push(container);
+            this.sprigBodySprites.push(bodySprite);
             this.cargoSprites.push(cargoSprite);
-            this.parentContainer.addChild(sprigSprite); 
-            sprigSprite.addChild(cargoSprite); 
+            
+            this.parentContainer.addChild(container); 
         }
     }
 
@@ -108,10 +112,11 @@ export class SprigSystem {
         this.flashTimers[i] = 0;
         this.cargos[i] = 0; 
 
-        this.sprigSprites[i].x = this.positionsX[i];
-        this.sprigSprites[i].y = this.positionsY[i];
-        this.sprigSprites[i].tint = CONFIG.SPRIG_COLOR;
-        this.sprigSprites[i].visible = true; 
+        this.sprigContainers[i].x = this.positionsX[i];
+        this.sprigContainers[i].y = this.positionsY[i];
+        this.sprigContainers[i].visible = true;
+        
+        this.sprigBodySprites[i].tint = CONFIG.SPRIG_COLOR;
         this.cargoSprites[i].visible = false; 
 
         this.activeSprigCount++;
@@ -127,6 +132,8 @@ export class SprigSystem {
             this.updateVisuals(i);
         }
     }
+    
+    // ... (applyFlowField, applyBoids, updatePosition methods remain same, skipping to updateVisuals)
 
     private applyFlowField(idx: number, dt: number) {
         const sprigX = this.positionsX[idx];
@@ -135,11 +142,6 @@ export class SprigSystem {
         let sprigVelY = this.velocitiesY[idx];
 
         const newVel = this.flowFieldSystem.applyFlow(sprigX, sprigY, sprigVelX, sprigVelY, dt);
-        // Flow field directly modifies velocity? Or applies force?
-        // The implementation of applyFlow modifies velocity directly currently.
-        // We should check FlowFieldSystem.
-        // But assuming it returns NEW velocity, we just assign it.
-        // Ideally flow field adds acceleration.
         
         this.velocitiesX[idx] = newVel.vx; 
         this.velocitiesY[idx] = newVel.vy;
@@ -271,18 +273,19 @@ export class SprigSystem {
     }
 
     private updateVisuals(idx: number) {
-        const sprigSprite = this.sprigSprites[idx];
+        const container = this.sprigContainers[idx];
+        const bodySprite = this.sprigBodySprites[idx];
         const cargoSprite = this.cargoSprites[idx];
         const flashTimer = this.flashTimers[idx];
 
-        sprigSprite.x = this.positionsX[idx];
-        sprigSprite.y = this.positionsY[idx];
+        container.x = this.positionsX[idx];
+        container.y = this.positionsY[idx];
 
         if (flashTimer > 0) {
-            sprigSprite.tint = CONFIG.SPRIG_FLASH_COLOR;
+            bodySprite.tint = CONFIG.SPRIG_FLASH_COLOR;
             this.flashTimers[idx]--;
         } else {
-            sprigSprite.tint = CONFIG.SPRIG_COLOR;
+            bodySprite.tint = CONFIG.SPRIG_COLOR;
         }
 
         if (this.cargos[idx] !== 0) { 
@@ -318,11 +321,11 @@ export class SprigSystem {
 
     public clearAll() {
         this.activeSprigCount = 0;
-        for(const sprite of this.sprigSprites) {
-            sprite.visible = false;
+        for(const container of this.sprigContainers) {
+            container.visible = false;
         }
-        for(const cargo of this.cargoSprites) {
-            cargo.visible = false;
-        }
+        // No need to hide cargo explicitly as the container is hidden, 
+        // but resetting state might be good. 
+        // Cargo visibility is managed in updateVisuals anyway when active.
     }
 }

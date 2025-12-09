@@ -23,7 +23,7 @@ export class ResourceSystem {
 
     private drawNode() {
         this.container.clear();
-        this.container.beginFill(CONFIG.RESOURCE_NODE_COLOR);
+        
         // Draw a trapezoid: (0,0), (width,0), (width-offset, height), (offset, height)
         const radius = CONFIG.RESOURCE_NODE_RADIUS;
         const width = radius * 2;
@@ -35,7 +35,9 @@ export class ResourceSystem {
         this.container.lineTo(width - offset, height);
         this.container.lineTo(offset, height);
         this.container.closePath();
-        this.container.endFill();
+        
+        // v8: Use fill() at the end
+        this.container.fill(CONFIG.RESOURCE_NODE_COLOR);
 
         this.container.x = this.nodePosition.x - width / 2; // Center the graphics
         this.container.y = this.nodePosition.y - height / 2;
