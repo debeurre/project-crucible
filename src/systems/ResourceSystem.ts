@@ -24,23 +24,28 @@ export class ResourceSystem {
     private drawNode() {
         this.container.clear();
         
-        // Draw a trapezoid: (0,0), (width,0), (width-offset, height), (offset, height)
+        // Draw a trapezoid centered at 0,0
         const radius = CONFIG.RESOURCE_NODE_RADIUS;
         const width = radius * 2;
         const height = radius * 1.5;
         const offset = radius * 0.5;
 
-        this.container.moveTo(0, 0);
-        this.container.lineTo(width, 0);
-        this.container.lineTo(width - offset, height);
-        this.container.lineTo(offset, height);
+        // Top-Left at (-width/2, -height/2)
+        const x = -width / 2;
+        const y = -height / 2;
+
+        this.container.moveTo(x, y);
+        this.container.lineTo(x + width, y);
+        this.container.lineTo(x + width - offset, y + height);
+        this.container.lineTo(x + offset, y + height);
         this.container.closePath();
         
         // v8: Use fill() at the end
         this.container.fill(CONFIG.RESOURCE_NODE_COLOR);
 
-        this.container.x = this.nodePosition.x - width / 2; // Center the graphics
-        this.container.y = this.nodePosition.y - height / 2;
+        this.container.x = this.nodePosition.x;
+        this.container.y = this.nodePosition.y;
+        this.container.rotation = CONFIG.RESOURCE_NODE_ROTATION;
     }
 
     public getPosition(): Point {
@@ -48,9 +53,8 @@ export class ResourceSystem {
     }
 
     public isInside(x: number, y: number): boolean {
-        // Simple circle check for now, for performance/simplicity
-        // AABB check is also possible but circle is easier for now.
-        const dx = x - this.nodePosition.x - (this.container.width / 2 - CONFIG.RESOURCE_NODE_RADIUS * 0.5); // Adjust for trapezoid offset. Needs re-eval
+        // Simple circle check from center
+        const dx = x - this.nodePosition.x;
         const dy = y - this.nodePosition.y;
         return (dx * dx + dy * dy) < CONFIG.RESOURCE_NODE_RADIUS**2;
     }

@@ -55,6 +55,7 @@ export const CONFIG = {
   // Resource Node (Wood Source)
   RESOURCE_NODE_COLOR: 0xA52A2A, // Brown
   RESOURCE_NODE_RADIUS: 50,
+  RESOURCE_NODE_ROTATION: Math.PI,
 
   // Flow Field
   FLOW_FIELD_CELL_SIZE: 10,
@@ -66,6 +67,6 @@ export const CONFIG = {
   // Sprig Cargo
   SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo
   SPRIG_CARGO_OFFSET_Y: -12, // Y-offset for cargo sprite relative to sprig
-  SPRIG_CARGO_SCALE: 0.5, // Scale of the cargo sprite
-  SPRIG_SQUASH_Y_WITH_CARGO: 0.75, // Y-scale of sprig when carrying cargo (volume preserved via X-scale)
+  SPRIG_CARGO_SCALE: 0.75, // Scale of the cargo sprite
+  SPRIG_SQUASH_Y_WITH_CARGO: 0.9, // Y-scale of sprig when carrying cargo (volume preserved via X-scale)
 };
