@@ -123,6 +123,7 @@ export class FlowFieldSystem {
         const arrowLength = CONFIG.FLOW_FIELD_VISUAL_ARROW_LENGTH;
         const arrowColor = CONFIG.FLOW_FIELD_VISUAL_COLOR;
 
+        // Build the geometry for all arrows
         for (let row = 0; row < this.gridRows; row++) {
             for (let col = 0; col < this.gridCols; col++) {
                 const index = (row * this.gridCols + col) * 2;
@@ -130,7 +131,7 @@ export class FlowFieldSystem {
                 const flowY = this.field[index + 1];
 
                 // Only draw if there's significant flow
-                if (flowX === 0 && flowY === 0) continue;
+                if (Math.abs(flowX) < 0.1 && Math.abs(flowY) < 0.1) continue;
 
                 const centerX = col * this.cellSize + this.cellSize / 2;
                 const centerY = row * this.cellSize + this.cellSize / 2;
@@ -138,18 +139,20 @@ export class FlowFieldSystem {
                 const endX = centerX + flowX * arrowLength;
                 const endY = centerY + flowY * arrowLength;
                 
-                this.container.stroke({ width: 1, color: arrowColor });
+                // Main arrow shaft
                 this.container.moveTo(centerX, centerY);
                 this.container.lineTo(endX, endY);
                 
-                // Draw arrowhead (simple V shape)
+                // Arrowhead
                 const angle = Math.atan2(flowY, flowX);
                 const arrowHeadLength = arrowLength * 0.3;
+                
                 this.container.moveTo(endX, endY);
                 this.container.lineTo(
                     endX - arrowHeadLength * Math.cos(angle - Math.PI / 6),
                     endY - arrowHeadLength * Math.sin(angle - Math.PI / 6)
                 );
+                
                 this.container.moveTo(endX, endY);
                 this.container.lineTo(
                     endX - arrowHeadLength * Math.cos(angle + Math.PI / 6),
@@ -157,5 +160,8 @@ export class FlowFieldSystem {
                 );
             }
         }
+        
+        // Stroke everything at once
+        this.container.stroke({ width: 1, color: arrowColor });
     }
 }
