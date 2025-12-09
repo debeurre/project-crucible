@@ -56,6 +56,7 @@ export const CONFIG = {
   RESOURCE_NODE_COLOR: 0xA52A2A, // Brown
   RESOURCE_NODE_RADIUS: 50,
   RESOURCE_NODE_ROTATION: Math.PI,
+  RESOURCE_NODE_SPAWN_MARGIN: 50, // Extra padding from edges when spawning
 
   // Flow Field
   FLOW_FIELD_CELL_SIZE: 10,

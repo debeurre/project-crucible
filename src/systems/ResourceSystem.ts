@@ -25,9 +25,11 @@ export class ResourceSystem {
         this.resize();
     }
     
-    public validatePosition() {
-        // Enforce map bounds on the static node
-        this.mapSystem.clampPosition(this.nodePosition, undefined, CONFIG.RESOURCE_NODE_RADIUS);
+    public spawnRandomly() {
+        const padding = CONFIG.RESOURCE_NODE_RADIUS + CONFIG.RESOURCE_NODE_SPAWN_MARGIN;
+        const newPos = this.mapSystem.getRandomPoint(padding);
+        
+        this.nodePosition.copyFrom(newPos);
         
         // Update visual position
         this.container.x = this.nodePosition.x;

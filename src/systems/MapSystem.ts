@@ -331,4 +331,54 @@ export class MapSystem {
          break;
      }
   }
+
+  public getRandomPoint(padding: number): {x: number, y: number} {
+      const { width, height } = this.app.screen;
+      const point = { x: width / 2, y: height / 2 };
+
+      switch (this.mode) {
+          case MapShape.FULL:
+              point.x = padding + Math.random() * (width - 2 * padding);
+              point.y = padding + Math.random() * (height - 2 * padding);
+              break;
+          
+          case MapShape.RECT:
+          case MapShape.SQUARE:
+              point.x = this.rectShape.x + padding + Math.random() * (this.rectShape.width - 2 * padding);
+              point.y = this.rectShape.y + padding + Math.random() * (this.rectShape.height - 2 * padding);
+              break;
+              
+          case MapShape.CIRCLE:
+              const maxR = Math.max(0, this.circleShape.radius - padding);
+              // Uniform distribution
+              const r = maxR * Math.sqrt(Math.random());
+              const theta = Math.random() * 2 * Math.PI;
+              point.x = this.circleShape.x + r * Math.cos(theta);
+              point.y = this.circleShape.y + r * Math.sin(theta);
+              break;
+
+          case MapShape.PROCGEN:
+          case MapShape.MIRROR:
+          case MapShape.RADIAL:
+              // Try to find a valid land cell
+              for(let i=0; i<50; i++) {
+                  const cx = Math.floor(Math.random() * this.gridWidth);
+                  const cy = Math.floor(Math.random() * this.gridHeight);
+                  if (this.grid[cx] && this.grid[cx][cy]) {
+                      // Check margin from grid edges roughly
+                      if (cx * CONFIG.CELL_SIZE < padding || (this.gridWidth - cx) * CONFIG.CELL_SIZE < padding ||
+                          cy * CONFIG.CELL_SIZE < padding || (this.gridHeight - cy) * CONFIG.CELL_SIZE < padding) {
+                              continue; 
+                          }
+                      
+                      point.x = cx * CONFIG.CELL_SIZE + CONFIG.CELL_SIZE / 2;
+                      point.y = cy * CONFIG.CELL_SIZE + CONFIG.CELL_SIZE / 2;
+                      return point;
+                  }
+              }
+              // Fallback to center if fails
+              break;
+      }
+      return point;
+  }
 }
