@@ -28,6 +28,11 @@ export class Game {
     private spawnTimer = 0;
     private crucibleScaleY = 1.0;
     private lastMousePos: Point | null = null;
+    
+    // Input Logic State
+    private wasDown = false;
+    private inputDownTime = 0;
+    private interactionMode: 'NONE' | 'CRUCIBLE' | 'FLOW' = 'NONE';
 
     constructor(app: Application) {
         this.app = app;
@@ -124,31 +129,46 @@ export class Game {
             this.inputState.debugKey = null;
         }
 
-        // Main Interaction Logic
-        if (this.inputState.isDown) {
+        const isDown = this.inputState.isDown;
+        const now = performance.now();
+
+        // 1. Just Pressed
+        if (isDown && !this.wasDown) {
+            this.inputDownTime = now;
+            
             const dx = this.inputState.mousePosition.x - this.crucible.x;
             const dy = this.inputState.mousePosition.y - this.crucible.y;
             const distSq = dx*dx + dy*dy;
-            
-            // Interaction Zone Logic
+
             if (distSq < CONFIG.CRUCIBLE_RADIUS**2) {
-                // --- ZONE: CRUCIBLE (SPAWNING) ---
-                this.spawnTimer += ticker.deltaMS / 1000;
-                
-                // Visual Squash
-                this.crucibleScaleY = 0.9 + Math.sin(this.app.ticker.lastTime * 0.01) * 0.05;
-                this.crucible.scale.set(1.0, this.crucibleScaleY);
-
-                const spawnInterval = 1 / CONFIG.SPRIGS_PER_SECOND_SPAWN;
-                while (this.spawnTimer >= spawnInterval) {
-                    this.sprigSystem.spawnSprig(this.crucible.x, this.crucible.y);
-                    this.spawnTimer -= spawnInterval;
-                    this.updateUI(); // Update UI to show new sprig count
-                }
+                this.interactionMode = 'CRUCIBLE';
             } else {
-                // --- ZONE: WORLD (FLOW FIELD) ---
-                this.resetSpawnState(); // Stop spawning if we drift out
+                this.interactionMode = 'FLOW';
+            }
+        }
 
+        // 2. Holding
+        if (isDown) {
+            if (this.interactionMode === 'CRUCIBLE') {
+                const holdDuration = now - this.inputDownTime;
+                
+                if (holdDuration >= CONFIG.TAP_THRESHOLD_MS) {
+                    // HOLD ACTION: Continuous Spawn
+                    this.spawnTimer += ticker.deltaMS / 1000;
+                    
+                    // Visual Squash
+                    this.crucibleScaleY = 0.9 + Math.sin(this.app.ticker.lastTime * 0.01) * 0.05;
+                    this.crucible.scale.set(1.0, this.crucibleScaleY);
+
+                    const spawnInterval = 1 / CONFIG.SPRIGS_PER_SECOND_HELD;
+                    while (this.spawnTimer >= spawnInterval) {
+                        this.sprigSystem.spawnSprig(this.crucible.x, this.crucible.y);
+                        this.spawnTimer -= spawnInterval;
+                        this.updateUI();
+                    }
+                }
+            } else if (this.interactionMode === 'FLOW') {
+                // DRAG ACTION: Flow Field (Immediate)
                 const dragVecX = this.inputState.mousePosition.x - (this.lastMousePos?.x ?? this.inputState.mousePosition.x);
                 const dragVecY = this.inputState.mousePosition.y - (this.lastMousePos?.y ?? this.inputState.mousePosition.y);
 
@@ -156,12 +176,31 @@ export class Game {
                      this.flowFieldSystem.paintFlow(this.inputState.mousePosition.x, this.inputState.mousePosition.y, dragVecX, dragVecY);
                 }
             }
-        } else {
-            // Mouse Up / No Input
+        }
+
+        // 3. Just Released
+        if (!isDown && this.wasDown) {
+            if (this.interactionMode === 'CRUCIBLE') {
+                const holdDuration = now - this.inputDownTime;
+                if (holdDuration < CONFIG.TAP_THRESHOLD_MS) {
+                    // TAP ACTION: Burst Spawn
+                    for(let i=0; i<CONFIG.SPRIGS_PER_TAP; i++) {
+                         this.sprigSystem.spawnSprig(this.crucible.x, this.crucible.y);
+                    }
+                    this.updateUI();
+                    
+                    // Visual Bump
+                    this.crucible.scale.set(1.2, 0.8);
+                    setTimeout(() => this.crucible.scale.set(1.0, 1.0), 100);
+                }
+            }
+            
+            // Reset
+            this.interactionMode = 'NONE';
             this.resetSpawnState();
         }
-        
-        // Update history
+
+        this.wasDown = isDown;
         this.lastMousePos = this.inputState.mousePosition.clone();
     }
 

@@ -2,7 +2,9 @@
 
 export const CONFIG = {
   MAX_SPRIG_COUNT: 5000, // Max capacity of the system
-  SPRIGS_PER_SECOND_SPAWN: 20, // New: how many per second to spawn on hold
+  SPRIGS_PER_SECOND_HELD: 20, // New: how many per second to spawn on hold
+  SPRIGS_PER_TAP: 5, // Spawn count on tap
+  TAP_THRESHOLD_MS: 200, // Max duration for a tap
 
   SPRIG_RADIUS: 6,
   SPRIG_COLOR: 0x228B22, // Forest Green
