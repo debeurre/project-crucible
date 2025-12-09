@@ -48,11 +48,11 @@ export const CONFIG = {
   RESOURCE_NODE_RADIUS: 50,
 
   // Flow Field
-  FLOW_FIELD_CELL_SIZE: 40,
+  FLOW_FIELD_CELL_SIZE: 10,
   FLOW_FIELD_FORCE_SCALE: 0.1, // How much the flow field influences sprigs
   FLOW_FIELD_VISUAL_ALPHA: 0.5, // Increased visibility
   FLOW_FIELD_VISUAL_COLOR: 0xFF0000, // Red for debug
-  FLOW_FIELD_VISUAL_ARROW_LENGTH: 20,
+  FLOW_FIELD_VISUAL_ARROW_LENGTH: 5,
 
   // Sprig Cargo
   SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo

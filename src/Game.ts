@@ -28,7 +28,6 @@ export class Game {
     private spawnTimer = 0;
     private crucibleScaleY = 1.0;
     private lastMousePos: Point | null = null;
-    private dragStartPos: Point | null = null;
 
     constructor(app: Application) {
         this.app = app;
@@ -117,39 +116,23 @@ export class Game {
                 case 'W': this.visualEffects.toggleThreshold(); break;
                 case 'E': this.visualEffects.toggleDisplacement(); break;
                 case 'R': this.visualEffects.toggleNoise(); break;
+
+                case 'F': this.flowFieldSystem.clearAll(); break;
+                case 'S': this.sprigSystem.clearAll(); break;
             }
             this.updateUI();
             this.inputState.debugKey = null;
         }
 
-        // Flow Field Input
-        if (this.inputState.isDown && !this.inputState.isHolding) {
-             if (!this.inputState.isDragging && !this.dragStartPos) {
-                 this.dragStartPos = this.inputState.mousePosition.clone();
-             }
-            
-            const dragVecX = this.inputState.mousePosition.x - (this.lastMousePos?.x ?? this.inputState.mousePosition.x);
-            const dragVecY = this.inputState.mousePosition.y - (this.lastMousePos?.y ?? this.inputState.mousePosition.y);
-
-            const dx = this.inputState.mousePosition.x - this.crucible.x;
-            const dy = this.inputState.mousePosition.y - this.crucible.y;
-            const distSq = dx*dx + dy*dy;
-
-            if (distSq > CONFIG.CRUCIBLE_RADIUS**2) {
-                 this.flowFieldSystem.paintFlow(this.inputState.mousePosition.x, this.inputState.mousePosition.y, dragVecX, dragVecY);
-            }
-        } else {
-            this.dragStartPos = null;
-        }
-        this.lastMousePos = this.inputState.mousePosition.clone();
-
-        // Spawning Input
-        if (this.inputState.isHolding) {
+        // Main Interaction Logic
+        if (this.inputState.isDown) {
             const dx = this.inputState.mousePosition.x - this.crucible.x;
             const dy = this.inputState.mousePosition.y - this.crucible.y;
             const distSq = dx*dx + dy*dy;
             
+            // Interaction Zone Logic
             if (distSq < CONFIG.CRUCIBLE_RADIUS**2) {
+                // --- ZONE: CRUCIBLE (SPAWNING) ---
                 this.spawnTimer += ticker.deltaMS / 1000;
                 
                 // Visual Squash
@@ -163,11 +146,23 @@ export class Game {
                     this.updateUI(); // Update UI to show new sprig count
                 }
             } else {
-                this.resetSpawnState();
+                // --- ZONE: WORLD (FLOW FIELD) ---
+                this.resetSpawnState(); // Stop spawning if we drift out
+
+                const dragVecX = this.inputState.mousePosition.x - (this.lastMousePos?.x ?? this.inputState.mousePosition.x);
+                const dragVecY = this.inputState.mousePosition.y - (this.lastMousePos?.y ?? this.inputState.mousePosition.y);
+
+                if (dragVecX !== 0 || dragVecY !== 0) {
+                     this.flowFieldSystem.paintFlow(this.inputState.mousePosition.x, this.inputState.mousePosition.y, dragVecX, dragVecY);
+                }
             }
         } else {
+            // Mouse Up / No Input
             this.resetSpawnState();
         }
+        
+        // Update history
+        this.lastMousePos = this.inputState.mousePosition.clone();
     }
 
     private resetSpawnState() {

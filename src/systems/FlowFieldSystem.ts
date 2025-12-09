@@ -115,6 +115,13 @@ export class FlowFieldSystem {
         this.updateVisuals();
     }
 
+    public clearAll() {
+        for(let i = 0; i < this.field.length; i++) {
+            this.field[i] = 0;
+        }
+        this.updateVisuals();
+    }
+
 
     public updateVisuals() {
         this.container.clear();

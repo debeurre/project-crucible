@@ -315,4 +315,14 @@ export class SprigSystem {
             radius: CONFIG.SPRIG_RADIUS
         };
     }
+
+    public clearAll() {
+        this.activeSprigCount = 0;
+        for(const sprite of this.sprigSprites) {
+            sprite.visible = false;
+        }
+        for(const cargo of this.cargoSprites) {
+            cargo.visible = false;
+        }
+    }
 }
