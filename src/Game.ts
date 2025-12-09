@@ -26,7 +26,7 @@ export class Game {
     // State
     private score = 0;
     private spawnTimer = 0;
-    private crucibleScaleY = 1.0;
+    private crucibleScaleX = 1.0;
     private lastMousePos: Point | null = null;
     
     // Input Logic State
@@ -157,8 +157,8 @@ export class Game {
                     this.spawnTimer += ticker.deltaMS / 1000;
                     
                     // Visual Squash
-                    this.crucibleScaleY = 0.9 + Math.sin(this.app.ticker.lastTime * 0.01) * 0.05;
-                    this.crucible.scale.set(1.0, this.crucibleScaleY);
+                    this.crucibleScaleX = 0.9 + Math.sin(this.app.ticker.lastTime * 0.01) * 0.05;
+                    this.crucible.scale.set(this.crucibleScaleX, 1.0 / this.crucibleScaleX);
 
                     const spawnInterval = 1 / CONFIG.SPRIGS_PER_SECOND_HELD;
                     while (this.spawnTimer >= spawnInterval) {
@@ -190,7 +190,7 @@ export class Game {
                     this.updateUI();
                     
                     // Visual Bump
-                    this.crucible.scale.set(1.2, 0.8);
+                    this.crucible.scale.set(0.8, 1.2);
                     setTimeout(() => this.crucible.scale.set(1.0, 1.0), 100);
                 }
             }
@@ -206,7 +206,7 @@ export class Game {
 
     private resetSpawnState() {
         this.spawnTimer = 0;
-        this.crucibleScaleY = 1.0;
+        this.crucibleScaleX = 1.0;
         this.crucible.scale.set(1.0, 1.0);
     }
 
