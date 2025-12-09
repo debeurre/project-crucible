@@ -26,8 +26,11 @@ export class Game {
     // State
     private score = 0;
     private spawnTimer = 0;
-    private crucibleScaleX = 1.0;
     private lastMousePos: Point | null = null;
+    
+    // Animation State
+    private tapAnimProgress = 1.0;
+    private holdAnimPhase = 0;
     
     // Input Logic State
     private wasDown = false;
@@ -101,7 +104,7 @@ export class Game {
     private update(ticker: Ticker) {
         this.handleInput(ticker);
         this.updateGameLogic(ticker);
-        this.renderVisuals();
+        this.renderVisuals(ticker);
     }
 
     private handleInput(ticker: Ticker) {
@@ -156,10 +159,6 @@ export class Game {
                     // HOLD ACTION: Continuous Spawn
                     this.spawnTimer += ticker.deltaMS / 1000;
                     
-                    // Visual Squash
-                    this.crucibleScaleX = 0.9 + Math.sin(this.app.ticker.lastTime * 0.01) * 0.05;
-                    this.crucible.scale.set(this.crucibleScaleX, 1.0 / this.crucibleScaleX);
-
                     const spawnInterval = 1 / CONFIG.SPRIGS_PER_SECOND_HELD;
                     while (this.spawnTimer >= spawnInterval) {
                         this.sprigSystem.spawnSprig(this.crucible.x, this.crucible.y);
@@ -189,9 +188,8 @@ export class Game {
                     }
                     this.updateUI();
                     
-                    // Visual Bump
-                    this.crucible.scale.set(0.8, 1.2);
-                    setTimeout(() => this.crucible.scale.set(1.0, 1.0), 100);
+                    // Restart Tap Animation
+                    this.tapAnimProgress = 0;
                 }
             }
             
@@ -206,8 +204,6 @@ export class Game {
 
     private resetSpawnState() {
         this.spawnTimer = 0;
-        this.crucibleScaleX = 1.0;
-        this.crucible.scale.set(1.0, 1.0);
     }
 
     private updateGameLogic(ticker: Ticker) {
@@ -231,10 +227,6 @@ export class Game {
                 this.sprigSystem.setCargo(i, 0);
                 this.score++;
                 this.updateUI();
-
-                // Feedback
-                this.crucible.scale.set(1.1, 0.9);
-                setTimeout(() => this.crucible.scale.set(1.0, 1.0), 100);
             }
         }
 
@@ -242,8 +234,45 @@ export class Game {
         this.visualEffects.update(ticker);
     }
 
-    private renderVisuals() {
-        // Placeholder for future visuals
+    private renderVisuals(ticker: Ticker) {
+        // We pass ticker here now
+        this.updateCrucibleAnimation(ticker);
+    }
+
+    private updateCrucibleAnimation(ticker: Ticker) {
+        const dt = ticker.deltaTime / 60; // Approximate seconds
+        let scaleX = 1.0;
+
+        // 1. Tap Animation (Priority)
+        if (this.tapAnimProgress < 1.0) {
+            this.tapAnimProgress += dt * 5; // ~0.2s duration
+            if (this.tapAnimProgress > 1.0) this.tapAnimProgress = 1.0;
+
+            // Sine hump: 0 -> 1 -> 0
+            const t = Math.sin(this.tapAnimProgress * Math.PI); 
+            // Squeeze significantly: 1.0 -> 0.6 -> 1.0
+            scaleX = 1.0 - (t * 0.4); 
+        } 
+        // 2. Hold Animation (Rhythmic)
+        else if (this.interactionMode === 'CRUCIBLE' && (performance.now() - this.inputDownTime) >= CONFIG.TAP_THRESHOLD_MS) {
+            this.holdAnimPhase += dt * 20; // ~3 Hz
+            // Sine wave 0..1
+            const t = (Math.sin(this.holdAnimPhase) + 1) / 2;
+            // Squeeze gently: 1.0 -> 0.85 -> 1.0
+            scaleX = 1.0 - (t * 0.15);
+        }
+        // 3. Idle / Recovery
+        else {
+             // Reset phase so it starts clean next time? Or keep it running? 
+             // Let's reset phase on idle to start at 0 (neutral)
+             this.holdAnimPhase = 0;
+        }
+        
+        // Apply Volume-Preserving Stretch
+        // If scaleX decreases (squeeze), scaleY increases (stretch)
+        const scaleY = 1.0 / Math.max(0.1, scaleX); 
+        
+        this.crucible.scale.set(scaleX, scaleY);
     }
 
     private updateUI() {
