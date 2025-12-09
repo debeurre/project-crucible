@@ -67,4 +67,5 @@ export const CONFIG = {
   SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo
   SPRIG_CARGO_OFFSET_Y: -12, // Y-offset for cargo sprite relative to sprig
   SPRIG_CARGO_SCALE: 0.5, // Scale of the cargo sprite
+  SPRIG_SQUASH_Y_WITH_CARGO: 0.75, // Y-scale of sprig when carrying cargo (volume preserved via X-scale)
 };

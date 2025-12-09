@@ -294,9 +294,17 @@ export class SprigSystem {
             if (this.cargos[idx] === 1) { 
                 cargoSprite.tint = 0x8B4513; 
             }
-            cargoSprite.y = CONFIG.SPRIG_CARGO_OFFSET_Y; 
+            cargoSprite.y = CONFIG.SPRIG_CARGO_OFFSET_Y;
+
+            // Apply Cargo Squash (Volume Preserved)
+            const sy = CONFIG.SPRIG_SQUASH_Y_WITH_CARGO;
+            const sx = 1.0 / sy;
+            bodySprite.scale.set(sx, sy);
+
         } else {
             cargoSprite.visible = false;
+            // Reset Scale
+            bodySprite.scale.set(1.0, 1.0);
         }
     }
 
