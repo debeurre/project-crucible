@@ -27,7 +27,7 @@ export class ResourceSystem {
     
     public validatePosition() {
         // Enforce map bounds on the static node
-        this.mapSystem.clampPosition(this.nodePosition);
+        this.mapSystem.clampPosition(this.nodePosition, undefined, CONFIG.RESOURCE_NODE_RADIUS);
         
         // Update visual position
         this.container.x = this.nodePosition.x;

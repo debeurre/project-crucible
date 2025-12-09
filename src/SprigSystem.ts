@@ -266,7 +266,7 @@ export class SprigSystem {
         // Delegate boundary checks to MapSystem
         const tempPosition = {x: this.positionsX[idx], y: this.positionsY[idx]};
         const tempVelocity = {x: this.velocitiesX[idx], y: this.velocitiesY[idx]};
-        this.mapSystem.constrain(tempPosition, tempVelocity);
+        this.mapSystem.constrain(tempPosition, tempVelocity, CONFIG.SPRIG_RADIUS);
         this.positionsX[idx] = tempPosition.x;
         this.positionsY[idx] = tempPosition.y;
         this.velocitiesX[idx] = tempVelocity.x;

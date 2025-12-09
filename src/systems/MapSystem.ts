@@ -209,11 +209,11 @@ export class MapSystem {
   }
 
   // Helper to bounce/clamp position
-  public constrain(position: {x: number, y: number}, velocity: {x: number, y: number}) {
-     this.clampPosition(position, velocity);
+  public constrain(position: {x: number, y: number}, velocity: {x: number, y: number}, radius: number = 0) {
+     this.clampPosition(position, velocity, radius);
   }
 
-  public clampPosition(position: {x: number, y: number}, velocity?: {x: number, y: number}) {
+  public clampPosition(position: {x: number, y: number}, velocity?: {x: number, y: number}, radius: number = 0) {
      switch (this.mode) {
       case MapShape.FULL:
         // Wrap
@@ -226,45 +226,53 @@ export class MapSystem {
 
       case MapShape.RECT:
       case MapShape.SQUARE:
-        // Bounce
-        if (position.x < this.rectShape.x) { 
-            position.x = this.rectShape.x; 
+        // Bounce / Clamp with Radius
+        const minX = this.rectShape.x + radius;
+        const maxX = this.rectShape.x + this.rectShape.width - radius;
+        const minY = this.rectShape.y + radius;
+        const maxY = this.rectShape.y + this.rectShape.height - radius;
+
+        if (position.x < minX) { 
+            position.x = minX; 
             if (velocity) velocity.x *= -1; 
-        } else if (position.x > this.rectShape.x + this.rectShape.width) { 
-            position.x = this.rectShape.x + this.rectShape.width; 
+        } else if (position.x > maxX) { 
+            position.x = maxX; 
             if (velocity) velocity.x *= -1; 
         }
         
-        if (position.y < this.rectShape.y) { 
-            position.y = this.rectShape.y; 
+        if (position.y < minY) { 
+            position.y = minY; 
             if (velocity) velocity.y *= -1; 
-        } else if (position.y > this.rectShape.y + this.rectShape.height) { 
-            position.y = this.rectShape.y + this.rectShape.height; 
+        } else if (position.y > maxY) { 
+            position.y = maxY; 
             if (velocity) velocity.y *= -1; 
         }
         break;
 
       case MapShape.CIRCLE:
-         // Radial push
+         // Radial push with Radius
          const dx = position.x - this.circleShape.x;
          const dy = position.y - this.circleShape.y;
          const distSq = dx * dx + dy * dy;
-         const radiusSq = this.circleShape.radius * this.circleShape.radius;
+         
+         // Effective radius for the object center
+         const effectiveRadius = Math.max(0, this.circleShape.radius - radius);
+         const effectiveRadiusSq = effectiveRadius * effectiveRadius;
 
-         if (distSq > radiusSq) {
+         if (distSq > effectiveRadiusSq) {
             const dist = Math.sqrt(distSq);
             const angle = Math.atan2(dy, dx);
-            position.x = this.circleShape.x + Math.cos(angle) * this.circleShape.radius;
-            position.y = this.circleShape.y + Math.sin(angle) * this.circleShape.radius;
+            position.x = this.circleShape.x + Math.cos(angle) * effectiveRadius;
+            position.y = this.circleShape.y + Math.sin(angle) * effectiveRadius;
             
-            // Reflect velocity
-             if (velocity) {
+            if (velocity) {
+                // Reflect velocity
                  const nx = dx / dist;
                  const ny = dy / dist;
                  const dot = velocity.x * nx + velocity.y * ny;
                  velocity.x -= 2 * dot * nx;
                  velocity.y -= 2 * dot * ny;
-             }
+            }
          }
          break;
          
