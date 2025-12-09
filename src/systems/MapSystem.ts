@@ -279,57 +279,86 @@ export class MapSystem {
       case MapShape.PROCGEN:
       case MapShape.MIRROR:
       case MapShape.RADIAL:
-         const cx = Math.floor(position.x / CONFIG.CELL_SIZE);
-         const cy = Math.floor(position.y / CONFIG.CELL_SIZE);
+         let targetCx = Math.floor(position.x / CONFIG.CELL_SIZE);
+         let targetCy = Math.floor(position.y / CONFIG.CELL_SIZE);
          
-         // If in void (false)
-         if (cx < 0 || cx >= this.gridWidth || cy < 0 || cy >= this.gridHeight || !this.grid[cx][cy]) {
-             // 1. Reverse velocity (Bounce)
+         let needsRelocation = false;
+
+         // Check if current position (center) is even on the grid or is in water
+         if (targetCx < 0 || targetCx >= this.gridWidth || targetCy < 0 || targetCy >= this.gridHeight || 
+             !this.grid[targetCx][targetCy]) {
+             needsRelocation = true; // Center is in void
+         } else if (!this.isClearForRadius(targetCx, targetCy, radius)) {
+             needsRelocation = true; // Center is land, but area around it is not clear for the object's radius
+         }
+         
+         if (needsRelocation) {
+             // If velocity is provided, apply a bounce for dynamic objects
              if (velocity) {
                  velocity.x *= -1;
                  velocity.y *= -1;
-                 
-                 // 2. Undo the last move (Backtrack)
-                 position.x += velocity.x;
+                 position.x += velocity.x; // Backtrack
                  position.y += velocity.y;
              }
 
-             // 3. Check if we are still stuck (e.g. spawned in void)
-             const ncx = Math.floor(position.x / CONFIG.CELL_SIZE);
-             const ncy = Math.floor(position.y / CONFIG.CELL_SIZE);
+             // Search for a nearby clear area
+             let foundClearArea = false;
+             let searchStartCx = Math.floor(position.x / CONFIG.CELL_SIZE); // Start search from potentially backtracked position
+             let searchStartCy = Math.floor(position.y / CONFIG.CELL_SIZE);
 
-             if (ncx < 0 || ncx >= this.gridWidth || ncy < 0 || ncy >= this.gridHeight || !this.grid[ncx][ncy]) {
-                 // We are still stuck. Find nearest VALID land cell.
-                 let found = false;
-                 const range = 4; // Look up to 4 cells away
+             const range = 10; // Search a larger area for clear space (e.g., 10 cells out)
+             for (let r = 0; r <= range; r++) { 
+                 for (let dx = -r; dx <= r; dx++) {
+                     for (let dy = -r; dy <= r; dy++) {
+                         const checkCx = searchStartCx + dx; 
+                         const checkCy = searchStartCy + dy;
 
-                 for (let r = 1; r <= range; r++) {
-                     for (let dx = -r; dx <= r; dx++) {
-                         for (let dy = -r; dy <= r; dy++) {
-                             const nx = cx + dx;
-                             const ny = cy + dy;
-                             if (nx >= 0 && nx < this.gridWidth && ny >= 0 && ny < this.gridHeight && this.grid[nx][ny]) {
-                                 // Found land! Teleport to center of that cell
-                                 position.x = (nx * CONFIG.CELL_SIZE) + (CONFIG.CELL_SIZE / 2);
-                                 position.y = (ny * CONFIG.CELL_SIZE) + (CONFIG.CELL_SIZE / 2);
-                                 found = true;
+                         if (checkCx >= 0 && checkCx < this.gridWidth && checkCy >= 0 && checkCy < this.gridHeight) {
+                             if (this.isClearForRadius(checkCx, checkCy, radius)) {
+                                 position.x = (checkCx * CONFIG.CELL_SIZE) + (CONFIG.CELL_SIZE / 2);
+                                 position.y = (checkCy * CONFIG.CELL_SIZE) + (CONFIG.CELL_SIZE / 2);
+                                 foundClearArea = true;
                                  break;
                              }
                          }
-                         if (found) break;
                      }
-                     if (found) break;
+                     if (foundClearArea) break;
                  }
-                 
-                 // If absolutely no land found nearby, clamp to center of screen as fail-safe
-                 if (!found) {
-                      position.x = this.app.screen.width / 2;
-                      position.y = this.app.screen.height / 2;
-                 }
+                 if (foundClearArea) break;
+             }
+             
+             // Fallback to center if no clear area found
+             if (!foundClearArea) {
+                 position.x = this.app.screen.width / 2;
+                 position.y = this.app.screen.height / 2;
              }
          }
          break;
      }
+  }
+
+  // Helper to check if an area around a cell is entirely land for a given radius
+  private isClearForRadius(centerX: number, centerY: number, radius: number): boolean {
+    if (radius === 0) return true; // No radius means no extra check needed
+
+    // Convert radius to number of cells to check outwards
+    const cellsNeeded = Math.ceil(radius / CONFIG.CELL_SIZE);
+
+    // Check cells in a square region around the center cell
+    for (let dx = -cellsNeeded; dx <= cellsNeeded; dx++) {
+      for (let dy = -cellsNeeded; dy <= cellsNeeded; dy++) {
+        const checkCx = centerX + dx;
+        const checkCy = centerY + dy;
+
+        // If any cell in the required area is outside grid bounds or is water
+        if (checkCx < 0 || checkCx >= this.gridWidth || 
+            checkCy < 0 || checkCy >= this.gridHeight || 
+            !this.grid[checkCx][checkCy]) {
+          return false; // Not clear
+        }
+      }
+    }
+    return true; // All cells in the region are land
   }
 
   public getRandomPoint(padding: number): {x: number, y: number} {
