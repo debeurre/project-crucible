@@ -48,8 +48,8 @@ export class FloatingTextSystem {
         // Spec says "Scale expansion... overshoot". back.out handles overshoot.
         // We'll target scale 1.0. The ease "back.out(3)" is quite bouncy, effectively going to 0 -> 1.X -> 1.
         tl.to(bmpText.scale, {
-            x: 1.0,
-            y: 1.0,
+            x: CONFIG.FLOATING_TEXT.POP_TARGET_SCALE,
+            y: CONFIG.FLOATING_TEXT.POP_TARGET_SCALE,
             duration: CONFIG.FLOATING_TEXT.POP_DURATION,
             ease: CONFIG.FLOATING_TEXT.POP_EASE
         });

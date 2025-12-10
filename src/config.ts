@@ -75,11 +75,12 @@ export const CONFIG = {
   FLOATING_TEXT: {
       TEXT: '+1',
       FONT_FAMILY: 'Virgil',
-      FONT_SIZE: 24,
+      FONT_SIZE: 20,
       POP_DURATION: 0.3,
-      FLOAT_DURATION: 0.8,
+      FLOAT_DURATION: 0.9,
       FLOAT_DISTANCE: 40,
       POP_EASE: "back.out(3)",
-      FLOAT_EASE: "power1.in"
+      FLOAT_EASE: "power1.in",
+      POP_TARGET_SCALE: 1.2
   }
 };
