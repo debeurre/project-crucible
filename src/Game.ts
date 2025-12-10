@@ -117,6 +117,7 @@ export class Game {
         this.mapSystem.resize();
         this.flowFieldSystem.resize();
         this.resourceSystem.resize();
+        this.sprigSystem.resize();
         
         this.crucible.x = this.app.screen.width / 2;
         this.crucible.y = this.app.screen.height / 2;

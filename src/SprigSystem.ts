@@ -14,6 +14,13 @@ export class SprigSystem {
     private flashTimers: Uint8Array;
     private cargos: Uint8Array; // 0 = None, 1 = Wood
     
+    // Spatial Hash Grid
+    private gridHead: Int32Array;
+    private gridNext: Int32Array;
+    private gridCols: number = 0;
+    private gridRows: number = 0;
+    private readonly cellSize: number = CONFIG.PERCEPTION_RADIUS;
+
     // Visuals
     private sprigContainers: Container[]; // Main container for each sprig
     private sprigBodySprites: Sprite[];   // The body sprite (for tinting)
@@ -42,6 +49,11 @@ export class SprigSystem {
         this.velocitiesY = new Float32Array(this.MAX_SPRIG_COUNT);
         this.flashTimers = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.cargos = new Uint8Array(this.MAX_SPRIG_COUNT); 
+        
+        // Initialize Spatial Hash Arrays (sized for max potential usage, resized in resize())
+        this.gridNext = new Int32Array(this.MAX_SPRIG_COUNT);
+        // Initial dummy size for gridHead, will be properly sized in resize()
+        this.gridHead = new Int32Array(0);
 
         this.sprigContainers = [];
         this.sprigBodySprites = [];
@@ -51,6 +63,20 @@ export class SprigSystem {
 
         this.initTextures();
         this.initPool(); 
+        this.resize(); // Setup grid based on initial screen size
+    }
+
+    public resize() {
+        // Calculate grid dimensions
+        this.gridCols = Math.ceil(this.app.screen.width / this.cellSize);
+        this.gridRows = Math.ceil(this.app.screen.height / this.cellSize);
+        
+        const cellCount = this.gridCols * this.gridRows;
+        
+        // Reallocate gridHead if necessary
+        if (this.gridHead.length < cellCount) {
+            this.gridHead = new Int32Array(cellCount);
+        }
     }
 
     private initTextures() {
@@ -126,11 +152,41 @@ export class SprigSystem {
     public update(ticker: Ticker) {
         const dt = ticker.deltaTime; // Use scalar deltaTime (1.0 at target FPS)
         
+        this.updateSpatialHash();
+
         for (let i = 0; i < this.activeSprigCount; i++) { 
             this.applyBoids(i, dt);
             this.applyFlowField(i, dt); 
             this.updatePosition(i, dt);
             this.updateVisuals(i);
+        }
+    }
+
+    private updateSpatialHash() {
+        // Reset grid heads for the active cells
+        // Note: Filling the entire array might be slow if the world is huge, 
+        // but for screen-sized grids (e.g. 80x40 = 3200 cells) it's fast.
+        const activeCells = this.gridCols * this.gridRows;
+        this.gridHead.fill(-1, 0, activeCells);
+
+        for (let i = 0; i < this.activeSprigCount; i++) {
+            const x = this.positionsX[i];
+            const y = this.positionsY[i];
+
+            // Clamp to grid bounds
+            let cx = Math.floor(x / this.cellSize);
+            let cy = Math.floor(y / this.cellSize);
+
+            if (cx < 0) cx = 0;
+            if (cx >= this.gridCols) cx = this.gridCols - 1;
+            if (cy < 0) cy = 0;
+            if (cy >= this.gridRows) cy = this.gridRows - 1;
+
+            const cellIndex = cy * this.gridCols + cx;
+
+            // Insert into linked list
+            this.gridNext[i] = this.gridHead[cellIndex];
+            this.gridHead[cellIndex] = i;
         }
     }
     
@@ -159,35 +215,58 @@ export class SprigSystem {
         let sprigVelX = this.velocitiesX[idx]; 
         let sprigVelY = this.velocitiesY[idx]; 
 
-        for (let otherIdx = 0; otherIdx < this.activeSprigCount; otherIdx++) { 
-            if (idx === otherIdx) continue;
+        // Calculate own grid position
+        let cx = Math.floor(sprigX / this.cellSize);
+        let cy = Math.floor(sprigY / this.cellSize);
+        
+        // Clamp (though should match updateSpatialHash)
+        if (cx < 0) cx = 0;
+        if (cx >= this.gridCols) cx = this.gridCols - 1;
+        if (cy < 0) cy = 0;
+        if (cy >= this.gridRows) cy = this.gridRows - 1;
 
-            const otherX = this.positionsX[otherIdx];
-            const otherY = this.positionsY[otherIdx];
-            const otherVelX = this.velocitiesX[otherIdx];
-            const otherVelY = this.velocitiesY[otherIdx];
+        const radiusSq = CONFIG.PERCEPTION_RADIUS * CONFIG.PERCEPTION_RADIUS;
 
-            const dx = sprigX - otherX;
-            const dy = sprigY - otherY;
-            const distSq = dx * dx + dy * dy;
-            const radiusSq = CONFIG.PERCEPTION_RADIUS * CONFIG.PERCEPTION_RADIUS;
+        // Check 3x3 Neighbor Cells
+        const startX = Math.max(0, cx - 1);
+        const endX = Math.min(this.gridCols - 1, cx + 1);
+        const startY = Math.max(0, cy - 1);
+        const endY = Math.min(this.gridRows - 1, cy + 1);
 
-            if (distSq > 0 && distSq < radiusSq) {
-                const distance = Math.sqrt(distSq);
+        for (let ny = startY; ny <= endY; ny++) {
+            for (let nx = startX; nx <= endX; nx++) {
+                const cellIndex = ny * this.gridCols + nx;
+                let otherIdx = this.gridHead[cellIndex];
 
-                // Separation
-                sepX += (dx / distance) / distance;
-                sepY += (dy / distance) / distance;
+                while (otherIdx !== -1) {
+                    if (idx !== otherIdx) {
+                        const otherX = this.positionsX[otherIdx];
+                        const otherY = this.positionsY[otherIdx];
+                        
+                        const dx = sprigX - otherX;
+                        const dy = sprigY - otherY;
+                        const distSq = dx * dx + dy * dy;
 
-                // Alignment
-                aliX += otherVelX;
-                aliY += otherVelY;
+                        if (distSq > 0 && distSq < radiusSq) {
+                            const distance = Math.sqrt(distSq);
 
-                // Cohesion
-                cohX += otherX;
-                cohY += otherY;
+                            // Separation
+                            sepX += (dx / distance) / distance;
+                            sepY += (dy / distance) / distance;
 
-                neighborCount++;
+                            // Alignment
+                            aliX += this.velocitiesX[otherIdx];
+                            aliY += this.velocitiesY[otherIdx];
+
+                            // Cohesion
+                            cohX += otherX;
+                            cohY += otherY;
+
+                            neighborCount++;
+                        }
+                    }
+                    otherIdx = this.gridNext[otherIdx];
+                }
             }
         }
 
