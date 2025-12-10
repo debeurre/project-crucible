@@ -83,11 +83,13 @@ export class Game {
         this.worldContainer.addChild(this.mapSystem.container);
         this.worldContainer.addChild(this.flowFieldSystem.container);
         this.worldContainer.addChild(this.resourceSystem.container);
-        this.worldContainer.addChild(this.floatingTextSystem.container);
         
         // 4. Crucible
         this.crucible.circle(0, 0, CONFIG.CRUCIBLE_RADIUS).fill(CONFIG.CRUCIBLE_COLOR);
         this.worldContainer.addChild(this.crucible);
+
+        // 5. Floating Text (Always on top)
+        this.worldContainer.addChild(this.floatingTextSystem.container);
         
         // 6. Apply Effects
         this.visualEffects.applyTo(this.worldContainer);
