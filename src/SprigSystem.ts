@@ -80,15 +80,31 @@ export class SprigSystem {
     }
 
     private initTextures() {
-        // Generate a simple white circle texture for sprigs
-        const sprigGraphics = new Graphics();
-        sprigGraphics.circle(0, 0, CONFIG.SPRIG_RADIUS).fill(0xFFFFFF);
-        this.sprigTexture = this.app.renderer.generateTexture(sprigGraphics);
+        // Sprig Texture (Circle) via Canvas for robustness
+        const r = CONFIG.SPRIG_RADIUS;
+        const d = r * 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = d;
+        canvas.height = d;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(r, r, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        this.sprigTexture = Texture.from(canvas);
 
-        // Generate a simple white square texture for cargo
-        const cargoGraphics = new Graphics();
-        cargoGraphics.rect(-CONFIG.SPRIG_RADIUS, -CONFIG.SPRIG_RADIUS, CONFIG.SPRIG_RADIUS * 2, CONFIG.SPRIG_RADIUS * 2).fill(0xFFFFFF);
-        this.cargoTexture = this.app.renderer.generateTexture(cargoGraphics);
+        // Cargo Texture (Square) via Canvas
+        const canvas2 = document.createElement('canvas');
+        canvas2.width = d;
+        canvas2.height = d;
+        const ctx2 = canvas2.getContext('2d');
+        if (ctx2) {
+            ctx2.fillStyle = '#ffffff';
+            ctx2.fillRect(0, 0, d, d);
+        }
+        this.cargoTexture = Texture.from(canvas2);
     }
 
 

@@ -217,15 +217,11 @@ export class Game {
             
             // Reset
             this.interactionMode = 'NONE';
-            this.resetSpawnState();
+            this.spawnTimer = 0;
         }
 
         this.wasDown = isDown;
         this.lastMousePos = this.inputState.mousePosition.clone();
-    }
-
-    private resetSpawnState() {
-        this.spawnTimer = 0;
     }
 
     private updateGameLogic(ticker: Ticker) {
