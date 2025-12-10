@@ -27,6 +27,9 @@
 - **Raw Math Only:** Do NOT use `PIXI.Point` methods for physics (e.g., NO `.add()`, `.magnitude()`, `.normalize()`). 
     - **Why?** They require the `math-extras` mixin and create garbage.
     - **Do:** Use raw `x` and `y` numbers in loops.
+- **Spatial Optimization:**
+    - **Neighbor Lookups:** Use a **Spatial Hash Grid** (buckets) in `SprigSystem` to keep neighbor checks at $O(N)$.
+    - **Constraints:** Use **Iterative Solvers** (e.g., small nudges) in `MapSystem` to resolve collisions. Avoid expensive "search for free space" loops.
 
 ## 5. PIXIJS V8 SPECIFICS (STRICT)
 - **Initialization:** `Application` startup is ASYNC. Use `await app.init({ resizeTo: window })`.
