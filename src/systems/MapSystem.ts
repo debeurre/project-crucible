@@ -293,44 +293,48 @@ export class MapSystem {
          }
          
          if (needsRelocation) {
-             // If velocity is provided, apply a bounce for dynamic objects
+             // 1. Bounce Velocity
              if (velocity) {
                  velocity.x *= -1;
                  velocity.y *= -1;
-                 position.x += velocity.x; // Backtrack
+                 // Backtrack one step
+                 position.x += velocity.x; 
                  position.y += velocity.y;
              }
 
-             // Search for a nearby clear area
-             let foundClearArea = false;
-             let searchStartCx = Math.floor(position.x / CONFIG.CELL_SIZE); // Start search from potentially backtracked position
-             let searchStartCy = Math.floor(position.y / CONFIG.CELL_SIZE);
-
-             const range = 10; // Search a larger area for clear space (e.g., 10 cells out)
-             for (let r = 0; r <= range; r++) { 
-                 for (let dx = -r; dx <= r; dx++) {
-                     for (let dy = -r; dy <= r; dy++) {
-                         const checkCx = searchStartCx + dx; 
-                         const checkCy = searchStartCy + dy;
-
-                         if (checkCx >= 0 && checkCx < this.gridWidth && checkCy >= 0 && checkCy < this.gridHeight) {
-                             if (this.isClearForRadius(checkCx, checkCy, radius)) {
-                                 position.x = (checkCx * CONFIG.CELL_SIZE) + (CONFIG.CELL_SIZE / 2);
-                                 position.y = (checkCy * CONFIG.CELL_SIZE) + (CONFIG.CELL_SIZE / 2);
-                                 foundClearArea = true;
-                                 break;
-                             }
-                         }
-                     }
-                     if (foundClearArea) break;
-                 }
-                 if (foundClearArea) break;
-             }
+             // 2. Re-verify if the backtrack fixed it
+             targetCx = Math.floor(position.x / CONFIG.CELL_SIZE);
+             targetCy = Math.floor(position.y / CONFIG.CELL_SIZE);
              
-             // Fallback to center if no clear area found
-             if (!foundClearArea) {
-                 position.x = this.app.screen.width / 2;
-                 position.y = this.app.screen.height / 2;
+             let stillInvalid = false;
+             if (targetCx < 0 || targetCx >= this.gridWidth || targetCy < 0 || targetCy >= this.gridHeight || 
+                 !this.grid[targetCx][targetCy]) {
+                 stillInvalid = true;
+             } else if (!this.isClearForRadius(targetCx, targetCy, radius)) {
+                 stillInvalid = true;
+             }
+
+             // 3. Emergency Nudge (Iterative Solver)
+             // If still stuck, push towards map center instead of searching 400+ cells.
+             // This distributes the "search" over multiple frames.
+             if (stillInvalid) {
+                 const centerX = this.app.screen.width / 2;
+                 const centerY = this.app.screen.height / 2;
+                 const dx = centerX - position.x;
+                 const dy = centerY - position.y;
+                 const dist = Math.sqrt(dx*dx + dy*dy);
+                 
+                 if (dist > 1) {
+                     // Push by one cell size to try and clear the obstacle
+                     const nudge = CONFIG.CELL_SIZE; 
+                     position.x += (dx / dist) * nudge;
+                     position.y += (dy / dist) * nudge;
+                 } else {
+                     // Exactly at center but invalid (e.g. center is water). 
+                     // Force jump to 0,0 (top left) or just ignore to prevent NaN.
+                     position.x = centerX;
+                     position.y = centerY;
+                 }
              }
          }
          break;
