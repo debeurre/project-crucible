@@ -70,4 +70,16 @@ export const CONFIG = {
   SPRIG_CARGO_OFFSET_Y: -12, // Y-offset for cargo sprite relative to sprig
   SPRIG_CARGO_SCALE: 0.75, // Scale of the cargo sprite
   SPRIG_SQUASH_Y_WITH_CARGO: 0.9, // Y-scale of sprig when carrying cargo (volume preserved via X-scale)
+
+  // Floating Text (+1 Pop)
+  FLOATING_TEXT: {
+      TEXT: '+1',
+      FONT_FAMILY: 'Virgil',
+      FONT_SIZE: 24,
+      POP_DURATION: 0.3,
+      FLOAT_DURATION: 0.8,
+      FLOAT_DISTANCE: 40,
+      POP_EASE: "back.out(3)",
+      FLOAT_EASE: "power1.in"
+  }
 };

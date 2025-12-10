@@ -6,6 +6,7 @@ import { MapSystem, MapShape } from './systems/MapSystem';
 import { VisualEffects } from './systems/VisualEffects';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { ResourceSystem } from './systems/ResourceSystem';
+import { FloatingTextSystem } from './systems/FloatingTextSystem';
 import { DebugOverlay } from './ui/DebugOverlay';
 
 export class Game {
@@ -20,6 +21,7 @@ export class Game {
     private visualEffects: VisualEffects;
     private flowFieldSystem: FlowFieldSystem;
     private resourceSystem: ResourceSystem;
+    private floatingTextSystem: FloatingTextSystem;
     private inputState: InputState;
     private debugOverlay: DebugOverlay;
 
@@ -47,6 +49,7 @@ export class Game {
         this.visualEffects = new VisualEffects();
         this.flowFieldSystem = new FlowFieldSystem(app);
         this.resourceSystem = new ResourceSystem(app, this.mapSystem);
+        this.floatingTextSystem = new FloatingTextSystem();
 
         // Initialize Visual Containers
         this.background = new Graphics();
@@ -80,6 +83,7 @@ export class Game {
         this.worldContainer.addChild(this.mapSystem.container);
         this.worldContainer.addChild(this.flowFieldSystem.container);
         this.worldContainer.addChild(this.resourceSystem.container);
+        this.worldContainer.addChild(this.floatingTextSystem.container);
         
         // 4. Crucible
         this.crucible.circle(0, 0, CONFIG.CRUCIBLE_RADIUS).fill(CONFIG.CRUCIBLE_COLOR);
@@ -88,6 +92,21 @@ export class Game {
         // 6. Apply Effects
         this.visualEffects.applyTo(this.worldContainer);
     }
+    
+    // ... rest of class until updateGameLogic
+    
+    // I need to be careful with replace range. I'll replace the updateGameLogic method entirely if needed, or better, replace just the property definitions and constructor, then the setupWorld, then updateGameLogic.
+    // Actually, I can replace the whole file content I retrieved, but I should try to replace smaller blocks if possible.
+    // The previous read_file output is truncated in my memory? No, I have full content in last turn.
+    // I will replace `updateGameLogic` separately.
+    
+    // First replacement: Imports and Properties and Constructor and SetupWorld.
+    // Wait, replacing half the file is risky if indentation is slightly off.
+    // I'll replace the *entire* file content from `import ...` down to `setupWorld() { ... }` block end? No.
+    // Let's do imports + class def first.
+    
+    // Actually, I will replace the imports and property list first.
+
 
     private onResize() {
         this.background.clear();
@@ -227,6 +246,14 @@ export class Game {
                 this.sprigSystem.setCargo(i, 0);
                 this.score++;
                 this.updateUI();
+                
+                // Spawn Floating Text (+1 Pop)
+                this.floatingTextSystem.spawn(
+                    this.crucible.x, 
+                    this.crucible.y, 
+                    CONFIG.FLOATING_TEXT.TEXT, 
+                    CONFIG.RESOURCE_NODE_COLOR // Use resource color for text
+                );
             }
         }
 

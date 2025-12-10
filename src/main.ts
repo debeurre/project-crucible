@@ -1,4 +1,4 @@
-import { Application } from 'pixi.js';
+import { Application, Assets, BitmapFont } from 'pixi.js';
 import { Game } from './Game';
 
 async function main() {
@@ -15,6 +15,19 @@ async function main() {
     // Disable right-click context menu
     document.body.addEventListener('contextmenu', (e) => e.preventDefault());
     
+    // Load Font
+    await Assets.load('./fonts/Virgil.woff2');
+    
+    // Register as BitmapFont for performance
+    BitmapFont.install({
+        name: 'Virgil',
+        style: {
+            fontFamily: 'Virgil',
+            fontSize: 32, 
+            fill: 0xffffff, 
+        }
+    });
+
     new Game(app);
 }
 
