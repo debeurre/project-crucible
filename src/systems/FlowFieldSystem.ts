@@ -1,8 +1,10 @@
-import { Application, Graphics } from 'pixi.js';
+import { Application, Graphics, Container } from 'pixi.js';
 import { CONFIG } from '../config';
 
 export class FlowFieldSystem {
-    public container: Graphics;
+    public container: Container;
+    private arrowGraphics: Graphics;
+    private gridGraphics: Graphics;
     private app: Application;
     
     // Flow field data: [vectorX, vectorY, vectorX, vectorY, ...]
@@ -14,7 +16,15 @@ export class FlowFieldSystem {
 
     constructor(app: Application) {
         this.app = app;
-        this.container = new Graphics();
+        this.container = new Container();
+        this.arrowGraphics = new Graphics();
+        this.gridGraphics = new Graphics();
+        
+        this.container.addChild(this.gridGraphics);
+        this.container.addChild(this.arrowGraphics);
+        
+        this.gridGraphics.visible = this.showGrid;
+
         this.cellSize = CONFIG.FLOW_FIELD_CELL_SIZE;
         
         // Calculate grid dimensions based on screen size
@@ -47,7 +57,28 @@ export class FlowFieldSystem {
                 this.field[i] = 0;
             }
         }
+        
+        this.drawGrid();
         this.updateVisuals();
+    }
+    
+    private drawGrid() {
+        this.gridGraphics.clear();
+        const width = this.gridCols * this.cellSize;
+        const height = this.gridRows * this.cellSize;
+        
+        // Vertical lines
+        for (let col = 0; col <= this.gridCols; col++) {
+            this.gridGraphics.moveTo(col * this.cellSize, 0);
+            this.gridGraphics.lineTo(col * this.cellSize, height);
+        }
+        // Horizontal lines
+        for (let row = 0; row <= this.gridRows; row++) {
+            this.gridGraphics.moveTo(0, row * this.cellSize);
+            this.gridGraphics.lineTo(width, row * this.cellSize);
+        }
+        
+        this.gridGraphics.stroke({ width: 1, color: CONFIG.FLOW_FIELD_GRID_COLOR, alpha: CONFIG.FLOW_FIELD_GRID_ALPHA });
     }
 
     public applyFlow(sprigX: number, sprigY: number, currentVelX: number, currentVelY: number, dt: number): {vx: number, vy: number} {
@@ -125,37 +156,17 @@ export class FlowFieldSystem {
 
     public toggleGrid() {
         this.showGrid = !this.showGrid;
-        this.updateVisuals();
+        this.gridGraphics.visible = this.showGrid;
     }
 
     public updateVisuals() {
-        this.container.clear();
-        this.container.alpha = CONFIG.FLOW_FIELD_VISUAL_ALPHA;
+        this.arrowGraphics.clear();
+        this.arrowGraphics.alpha = CONFIG.FLOW_FIELD_VISUAL_ALPHA;
         
         const arrowLength = CONFIG.FLOW_FIELD_VISUAL_ARROW_LENGTH;
         const arrowColor = CONFIG.FLOW_FIELD_VISUAL_COLOR;
         const stride = CONFIG.FLOW_FIELD_VISUAL_STRIDE;
         
-        // Draw Grid
-        if (this.showGrid) {
-            const width = this.gridCols * this.cellSize;
-            const height = this.gridRows * this.cellSize;
-            
-            // Vertical lines
-            for (let col = 0; col <= this.gridCols; col++) {
-                this.container.moveTo(col * this.cellSize, 0);
-                this.container.lineTo(col * this.cellSize, height);
-            }
-            // Horizontal lines
-            for (let row = 0; row <= this.gridRows; row++) {
-                this.container.moveTo(0, row * this.cellSize);
-                this.container.lineTo(width, row * this.cellSize);
-            }
-            
-            // Use configurable grid color
-            this.container.stroke({ width: 1, color: CONFIG.FLOW_FIELD_GRID_COLOR, alpha: CONFIG.FLOW_FIELD_GRID_ALPHA });
-        }
-
         // Always draw thick arrows with filled heads (user requirement)
         for (let row = 0; row < this.gridRows; row += stride) {
             for (let col = 0; col < this.gridCols; col += stride) {
@@ -173,8 +184,8 @@ export class FlowFieldSystem {
                 const endY = centerY + flowY * arrowLength;
                 
                 // Main arrow shaft (thick)
-                this.container.moveTo(centerX, centerY);
-                this.container.lineTo(endX, endY);
+                this.arrowGraphics.moveTo(centerX, centerY);
+                this.arrowGraphics.lineTo(endX, endY);
                 
                 // Arrowhead - filled triangle
                 const angle = Math.atan2(flowY, flowX);
@@ -193,14 +204,14 @@ export class FlowFieldSystem {
                 const p2x = baseMidX - halfWidthX;
                 const p2y = baseMidY - halfWidthY;
                 
-                this.container.beginFill(arrowColor);
-                this.container.moveTo(endX, endY); 
-                this.container.lineTo(p1x, p1y);   
-                this.container.lineTo(p2x, p2y);   
-                this.container.closePath();
-                this.container.endFill();
+                this.arrowGraphics.beginFill(arrowColor);
+                this.arrowGraphics.moveTo(endX, endY); 
+                this.arrowGraphics.lineTo(p1x, p1y);   
+                this.arrowGraphics.lineTo(p2x, p2y);   
+                this.arrowGraphics.closePath();
+                this.arrowGraphics.endFill();
             }
         }
         // Stroke all thick arrow shafts at once
-        this.container.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
+        this.arrowGraphics.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
     }}
