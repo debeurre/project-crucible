@@ -151,21 +151,30 @@ export class FlowFieldSystem {
                 this.container.moveTo(centerX, centerY);
                 this.container.lineTo(endX, endY);
                 
-                // Arrowhead
+                // Arrowhead - solid triangle
                 const angle = Math.atan2(flowY, flowX);
-                const arrowHeadLength = arrowLength * 0.4;
-                
+                const arrowHeadSize = CONFIG.FLOW_FIELD_VISUAL_THICKNESS * 2; // Size of the triangle base
+                const arrowHeadLengthFactor = 1.5; // How far back the base is from the tip
+
+                // Calculate base midpoint
+                const baseMidX = endX - arrowHeadSize * arrowHeadLengthFactor * Math.cos(angle);
+                const baseMidY = endY - arrowHeadSize * arrowHeadLengthFactor * Math.sin(angle);
+
+                // Calculate perpendicular offset for base points
+                const perpOffsetX = arrowHeadSize * Math.sin(angle);
+                const perpOffsetY = arrowHeadSize * -Math.cos(angle);
+
+                const p1x = baseMidX + perpOffsetX;
+                const p1y = baseMidY + perpOffsetY;
+
+                const p2x = baseMidX - perpOffsetX;
+                const p2y = baseMidY - perpOffsetY;
+
                 this.container.moveTo(endX, endY);
-                this.container.lineTo(
-                    endX - arrowHeadLength * Math.cos(angle - Math.PI / 5),
-                    endY - arrowHeadLength * Math.sin(angle - Math.PI / 5)
-                );
-                
-                this.container.moveTo(endX, endY);
-                this.container.lineTo(
-                    endX - arrowHeadLength * Math.cos(angle + Math.PI / 5),
-                    endY - arrowHeadLength * Math.sin(angle + Math.PI / 5)
-                );
+                this.container.lineTo(p1x, p1y);
+                this.container.lineTo(p2x, p2y);
+                this.container.closePath(); // Closes the triangle to the starting point (endX, endY)
+                this.container.fill(arrowColor); // Fill the triangle
             }
         }
         
