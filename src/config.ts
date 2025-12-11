@@ -66,6 +66,7 @@ export const CONFIG = {
   FLOW_FIELD_VISUAL_ARROW_LENGTH: 15, // Longer arrows
   FLOW_FIELD_VISUAL_THICKNESS: 2, // Thicker lines
   FLOW_FIELD_VISUAL_STRIDE: 4, // Draw every 4th cell for cleaner look
+  FLOW_FIELD_GRID_ALPHA: 0.1, // Alpha for the debug grid
 
   // Sprig Cargo
   SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo

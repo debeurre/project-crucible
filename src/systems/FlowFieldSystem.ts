@@ -10,6 +10,7 @@ export class FlowFieldSystem {
     private gridCols: number;
     private gridRows: number;
     private cellSize: number;
+    public showGrid: boolean = false;
 
     constructor(app: Application) {
         this.app = app;
@@ -122,6 +123,10 @@ export class FlowFieldSystem {
         this.updateVisuals();
     }
 
+    public toggleGrid() {
+        this.showGrid = !this.showGrid;
+        this.updateVisuals();
+    }
 
     public updateVisuals() {
         this.container.clear();
@@ -131,6 +136,25 @@ export class FlowFieldSystem {
         const arrowColor = CONFIG.FLOW_FIELD_VISUAL_COLOR;
         const stride = CONFIG.FLOW_FIELD_VISUAL_STRIDE;
         
+        // Draw Grid
+        if (this.showGrid) {
+            const width = this.gridCols * this.cellSize;
+            const height = this.gridRows * this.cellSize;
+            
+            // Vertical lines
+            for (let col = 0; col <= this.gridCols; col++) {
+                this.container.moveTo(col * this.cellSize, 0);
+                this.container.lineTo(col * this.cellSize, height);
+            }
+            // Horizontal lines
+            for (let row = 0; row <= this.gridRows; row++) {
+                this.container.moveTo(0, row * this.cellSize);
+                this.container.lineTo(width, row * this.cellSize);
+            }
+            
+            this.container.stroke({ width: 1, color: 0xFFFFFF, alpha: CONFIG.FLOW_FIELD_GRID_ALPHA });
+        }
+
         // Build the geometry for all arrows
         for (let row = 0; row < this.gridRows; row += stride) {
             for (let col = 0; col < this.gridCols; col += stride) {

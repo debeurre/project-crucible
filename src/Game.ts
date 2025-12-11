@@ -146,6 +146,8 @@ export class Game {
                 case 'W': this.visualEffects.toggleThreshold(); break;
                 case 'E': this.visualEffects.toggleDisplacement(); break;
                 case 'R': this.visualEffects.toggleNoise(); break;
+                
+                case 'G': this.flowFieldSystem.toggleGrid(); break;
 
                 case 'F': this.flowFieldSystem.clearAll(); break;
                 case 'S': this.sprigSystem.clearAll(); break;
