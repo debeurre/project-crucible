@@ -151,30 +151,38 @@ export class FlowFieldSystem {
                 this.container.moveTo(centerX, centerY);
                 this.container.lineTo(endX, endY);
                 
-                // Arrowhead - solid triangle
+                // Arrowhead - filled triangle
                 const angle = Math.atan2(flowY, flowX);
-                const arrowHeadSize = CONFIG.FLOW_FIELD_VISUAL_THICKNESS * 2; // Size of the triangle base
-                const arrowHeadLengthFactor = 1.5; // How far back the base is from the tip
+                const arrowHeadWidth = CONFIG.FLOW_FIELD_VISUAL_THICKNESS * 2.5; // Base width of the triangle
+                const arrowHeadLength = arrowHeadWidth * 1.0; // Length of the triangle from tip to base midpoint
 
-                // Calculate base midpoint
-                const baseMidX = endX - arrowHeadSize * arrowHeadLengthFactor * Math.cos(angle);
-                const baseMidY = endY - arrowHeadSize * arrowHeadLengthFactor * Math.sin(angle);
+                // Calculate base midpoint (offset back from the end of the shaft)
+                const baseMidX = endX - arrowHeadLength * Math.cos(angle);
+                const baseMidY = endY - arrowHeadLength * Math.sin(angle);
 
                 // Calculate perpendicular offset for base points
-                const perpOffsetX = arrowHeadSize * Math.sin(angle);
-                const perpOffsetY = arrowHeadSize * -Math.cos(angle);
+                // Rotate vector (0, 1) by angle, scale by half width
+                const halfWidthX = (arrowHeadWidth / 2) * Math.sin(angle);
+                const halfWidthY = (arrowHeadWidth / 2) * -Math.cos(angle);
 
-                const p1x = baseMidX + perpOffsetX;
-                const p1y = baseMidY + perpOffsetY;
+                const p1x = baseMidX + halfWidthX;
+                const p1y = baseMidY + halfWidthY;
 
-                const p2x = baseMidX - perpOffsetX;
-                const p2y = baseMidY - perpOffsetY;
-
-                this.container.moveTo(endX, endY);
-                this.container.lineTo(p1x, p1y);
-                this.container.lineTo(p2x, p2y);
-                this.container.closePath(); // Closes the triangle to the starting point (endX, endY)
-                this.container.fill(arrowColor); // Fill the triangle
+                const p2x = baseMidX - halfWidthX;
+                const p2y = baseMidY - halfWidthY;
+                
+                this.container.beginFill(arrowColor);
+                this.container.moveTo(endX, endY); // Tip of the arrow
+                this.container.lineTo(p1x, p1y);   // One base point
+                this.container.lineTo(p2x, p2y);   // Other base point
+                this.container.closePath();
+                this.container.endFill();
+            }
+        }
+        
+        // Stroke everything at once (this draws the shafts)
+        this.container.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
+    }
             }
         }
         
