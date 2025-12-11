@@ -63,7 +63,9 @@ export const CONFIG = {
   FLOW_FIELD_FORCE_SCALE: 0.1, // How much the flow field influences sprigs
   FLOW_FIELD_VISUAL_ALPHA: 0.5, // Increased visibility
   FLOW_FIELD_VISUAL_COLOR: 0xFF0000, // Red for debug
-  FLOW_FIELD_VISUAL_ARROW_LENGTH: 5,
+  FLOW_FIELD_VISUAL_ARROW_LENGTH: 15, // Longer arrows
+  FLOW_FIELD_VISUAL_THICKNESS: 2, // Thicker lines
+  FLOW_FIELD_VISUAL_STRIDE: 4, // Draw every 4th cell for cleaner look
 
   // Sprig Cargo
   SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo

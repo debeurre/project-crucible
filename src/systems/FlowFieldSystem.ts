@@ -129,10 +129,11 @@ export class FlowFieldSystem {
         
         const arrowLength = CONFIG.FLOW_FIELD_VISUAL_ARROW_LENGTH;
         const arrowColor = CONFIG.FLOW_FIELD_VISUAL_COLOR;
-
+        const stride = CONFIG.FLOW_FIELD_VISUAL_STRIDE;
+        
         // Build the geometry for all arrows
-        for (let row = 0; row < this.gridRows; row++) {
-            for (let col = 0; col < this.gridCols; col++) {
+        for (let row = 0; row < this.gridRows; row += stride) {
+            for (let col = 0; col < this.gridCols; col += stride) {
                 const index = (row * this.gridCols + col) * 2;
                 const flowX = this.field[index];
                 const flowY = this.field[index + 1];
@@ -140,8 +141,8 @@ export class FlowFieldSystem {
                 // Only draw if there's significant flow
                 if (Math.abs(flowX) < 0.1 && Math.abs(flowY) < 0.1) continue;
 
-                const centerX = col * this.cellSize + this.cellSize / 2;
-                const centerY = row * this.cellSize + this.cellSize / 2;
+                const centerX = col * this.cellSize + (this.cellSize * stride) / 2;
+                const centerY = row * this.cellSize + (this.cellSize * stride) / 2;
 
                 const endX = centerX + flowX * arrowLength;
                 const endY = centerY + flowY * arrowLength;
@@ -152,23 +153,23 @@ export class FlowFieldSystem {
                 
                 // Arrowhead
                 const angle = Math.atan2(flowY, flowX);
-                const arrowHeadLength = arrowLength * 0.3;
+                const arrowHeadLength = arrowLength * 0.4;
                 
                 this.container.moveTo(endX, endY);
                 this.container.lineTo(
-                    endX - arrowHeadLength * Math.cos(angle - Math.PI / 6),
-                    endY - arrowHeadLength * Math.sin(angle - Math.PI / 6)
+                    endX - arrowHeadLength * Math.cos(angle - Math.PI / 5),
+                    endY - arrowHeadLength * Math.sin(angle - Math.PI / 5)
                 );
                 
                 this.container.moveTo(endX, endY);
                 this.container.lineTo(
-                    endX - arrowHeadLength * Math.cos(angle + Math.PI / 6),
-                    endY - arrowHeadLength * Math.sin(angle + Math.PI / 6)
+                    endX - arrowHeadLength * Math.cos(angle + Math.PI / 5),
+                    endY - arrowHeadLength * Math.sin(angle + Math.PI / 5)
                 );
             }
         }
         
         // Stroke everything at once
-        this.container.stroke({ width: 1, color: arrowColor });
+        this.container.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
     }
 }
