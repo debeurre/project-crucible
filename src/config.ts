@@ -68,6 +68,7 @@ export const CONFIG = {
   FLOW_FIELD_VISUAL_STRIDE: 1, 
   FLOW_FIELD_GRID_ALPHA: 0.5, // Alpha for the debug grid
   FLOW_FIELD_GRID_COLOR: 0x808080, // Default gray for grid lines
+  FLOW_FIELD_MAGNETISM: 0.1, // Strength of attraction to the center of the flow path
 
   // Sprig Cargo
   SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo
@@ -85,6 +86,6 @@ export const CONFIG = {
       FLOAT_DISTANCE: 40,
       POP_EASE: "back.out(3)",
       FLOAT_EASE: "power1.in",
-      POP_TARGET_SCALE: 1.2
+      POP_TARGET_SCALE: 1.5
   }
 };

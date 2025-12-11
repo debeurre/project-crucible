@@ -97,6 +97,37 @@ export class FlowFieldSystem {
         currentVelX += flowX * CONFIG.FLOW_FIELD_FORCE_SCALE * dt;
         currentVelY += flowY * CONFIG.FLOW_FIELD_FORCE_SCALE * dt;
 
+        // Apply Magnetism (Attract to flow axis)
+        // If there is significant flow, push particle towards the "center line" of the flow in this cell
+        const magSq = flowX * flowX + flowY * flowY;
+        if (magSq > 0.01) { // Only apply if flow is strong enough
+            const mag = Math.sqrt(magSq);
+            // Normalized flow direction
+            const nx = flowX / mag;
+            const ny = flowY / mag;
+            
+            // Cell center
+            const centerX = col * this.cellSize + this.cellSize / 2;
+            const centerY = row * this.cellSize + this.cellSize / 2;
+            
+            // Vector from center to sprig
+            const dx = sprigX - centerX;
+            const dy = sprigY - centerY;
+            
+            // Project offset onto flow direction (dot product)
+            const dot = dx * nx + dy * ny;
+            
+            // Calculate perpendicular component (distance from axis)
+            // perp = offset - (offset . dir) * dir
+            const perpX = dx - dot * nx;
+            const perpY = dy - dot * ny;
+            
+            // Apply restoring force opposing the perpendicular offset
+            // Force = -perp * Strength * dt
+            currentVelX -= perpX * CONFIG.FLOW_FIELD_MAGNETISM * dt;
+            currentVelY -= perpY * CONFIG.FLOW_FIELD_MAGNETISM * dt;
+        }
+
         return {vx: currentVelX, vy: currentVelY};
     }
 
