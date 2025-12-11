@@ -183,10 +183,4 @@ export class FlowFieldSystem {
         // Stroke everything at once (this draws the shafts)
         this.container.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
     }
-            }
-        }
-        
-        // Stroke everything at once
-        this.container.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
-    }
 }
