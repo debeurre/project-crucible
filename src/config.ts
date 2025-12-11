@@ -59,14 +59,15 @@ export const CONFIG = {
   RESOURCE_NODE_SPAWN_MARGIN: 50, // Extra padding from edges when spawning
 
   // Flow Field
-  FLOW_FIELD_CELL_SIZE: 10,
+  FLOW_FIELD_CELL_SIZE: 20,
   FLOW_FIELD_FORCE_SCALE: 0.1, // How much the flow field influences sprigs
   FLOW_FIELD_VISUAL_ALPHA: 0.5, // Increased visibility
   FLOW_FIELD_VISUAL_COLOR: 0xFF0000, // Red for debug
-  FLOW_FIELD_VISUAL_ARROW_LENGTH: 15, // Longer arrows
-  FLOW_FIELD_VISUAL_THICKNESS: 2, // Thicker lines
-  FLOW_FIELD_VISUAL_STRIDE: 4, // Draw every 4th cell for cleaner look
-  FLOW_FIELD_GRID_ALPHA: 0.1, // Alpha for the debug grid
+  FLOW_FIELD_VISUAL_ARROW_LENGTH: 4, 
+  FLOW_FIELD_VISUAL_THICKNESS: 2, 
+  FLOW_FIELD_VISUAL_STRIDE: 1, 
+  FLOW_FIELD_GRID_ALPHA: 0.5, // Alpha for the debug grid
+  FLOW_FIELD_GRID_COLOR: 0x808080, // Default gray for grid lines
 
   // Sprig Cargo
   SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo

@@ -152,95 +152,55 @@ export class FlowFieldSystem {
                 this.container.lineTo(width, row * this.cellSize);
             }
             
-            this.container.stroke({ width: 1, color: 0xFFFFFF, alpha: CONFIG.FLOW_FIELD_GRID_ALPHA });
-
-            // Draw thin V-arrows for grid mode
-            for (let row = 0; row < this.gridRows; row += stride) {
-                for (let col = 0; col < this.gridCols; col += stride) {
-                    const index = (row * this.gridCols + col) * 2;
-                    const flowX = this.field[index];
-                    const flowY = this.field[index + 1];
-
-                    // Only draw if there's significant flow
-                    if (Math.abs(flowX) < 0.1 && Math.abs(flowY) < 0.1) continue;
-
-                    const centerX = col * this.cellSize + (this.cellSize * stride) / 2;
-                    const centerY = row * this.cellSize + (this.cellSize * stride) / 2;
-
-                    const endX = centerX + flowX * arrowLength;
-                    const endY = centerY + flowY * arrowLength;
-                    
-                    // Main arrow shaft (thin)
-                    this.container.moveTo(centerX, centerY);
-                    this.container.lineTo(endX, endY);
-                    
-                    // Arrowhead (V-shape, thin)
-                    const angle = Math.atan2(flowY, flowX);
-                    const oldArrowHeadLength = arrowLength * 0.4; 
-                    
-                    this.container.moveTo(endX, endY);
-                    this.container.lineTo(
-                        endX - oldArrowHeadLength * Math.cos(angle - Math.PI / 5),
-                        endY - oldArrowHeadLength * Math.sin(angle - Math.PI / 5)
-                    );
-                    
-                    this.container.moveTo(endX, endY);
-                    this.container.lineTo(
-                        endX - oldArrowHeadLength * Math.cos(angle + Math.PI / 5),
-                        endY - oldArrowHeadLength * Math.sin(angle + Math.PI / 5)
-                    );
-                }
-            }
-            // Stroke all thin arrows at once
-            this.container.stroke({ width: 1, color: arrowColor });
-
-        } else { // Not in grid mode, draw thick arrows with filled heads
-
-            for (let row = 0; row < this.gridRows; row += stride) {
-                for (let col = 0; col < this.gridCols; col += stride) {
-                    const index = (row * this.gridCols + col) * 2;
-                    const flowX = this.field[index];
-                    const flowY = this.field[index + 1];
-
-                    // Only draw if there's significant flow
-                    if (Math.abs(flowX) < 0.1 && Math.abs(flowY) < 0.1) continue;
-
-                    const centerX = col * this.cellSize + (this.cellSize * stride) / 2;
-                    const centerY = row * this.cellSize + (this.cellSize * stride) / 2;
-
-                    const endX = centerX + flowX * arrowLength;
-                    const endY = centerY + flowY * arrowLength;
-                    
-                    // Main arrow shaft (thick)
-                    this.container.moveTo(centerX, centerY);
-                    this.container.lineTo(endX, endY);
-                    
-                    // Arrowhead - filled triangle
-                    const angle = Math.atan2(flowY, flowX);
-                    const arrowHeadWidth = CONFIG.FLOW_FIELD_VISUAL_THICKNESS * 2.5; 
-                    const arrowHeadLength = arrowHeadWidth * 1.0; 
-
-                    const baseMidX = endX - arrowHeadLength * Math.cos(angle);
-                    const baseMidY = endY - arrowHeadLength * Math.sin(angle);
-
-                    const halfWidthX = (arrowHeadWidth / 2) * Math.sin(angle);
-                    const halfWidthY = (arrowHeadWidth / 2) * -Math.cos(angle);
-
-                    const p1x = baseMidX + halfWidthX;
-                    const p1y = baseMidY + halfWidthY;
-
-                    const p2x = baseMidX - halfWidthX;
-                    const p2y = baseMidY - halfWidthY;
-                    
-                    this.container.beginFill(arrowColor);
-                    this.container.moveTo(endX, endY); 
-                    this.container.lineTo(p1x, p1y);   
-                    this.container.lineTo(p2x, p2y);   
-                    this.container.closePath();
-                    this.container.endFill();
-                }
-            }
-            // Stroke all thick arrow shafts at once
-            this.container.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
+            // Use configurable grid color
+            this.container.stroke({ width: 1, color: CONFIG.FLOW_FIELD_GRID_COLOR, alpha: CONFIG.FLOW_FIELD_GRID_ALPHA });
         }
+
+        // Always draw thick arrows with filled heads (user requirement)
+        for (let row = 0; row < this.gridRows; row += stride) {
+            for (let col = 0; col < this.gridCols; col += stride) {
+                const index = (row * this.gridCols + col) * 2;
+                const flowX = this.field[index];
+                const flowY = this.field[index + 1];
+
+                // Only draw if there's significant flow
+                if (Math.abs(flowX) < 0.1 && Math.abs(flowY) < 0.1) continue;
+
+                const centerX = col * this.cellSize + (this.cellSize * stride) / 2;
+                const centerY = row * this.cellSize + (this.cellSize * stride) / 2;
+
+                const endX = centerX + flowX * arrowLength;
+                const endY = centerY + flowY * arrowLength;
+                
+                // Main arrow shaft (thick)
+                this.container.moveTo(centerX, centerY);
+                this.container.lineTo(endX, endY);
+                
+                // Arrowhead - filled triangle
+                const angle = Math.atan2(flowY, flowX);
+                const arrowHeadWidth = CONFIG.FLOW_FIELD_VISUAL_THICKNESS * 2.5; 
+                const arrowHeadLength = arrowHeadWidth * 1.0; 
+
+                const baseMidX = endX - arrowHeadLength * Math.cos(angle);
+                const baseMidY = endY - arrowHeadLength * Math.sin(angle);
+
+                const halfWidthX = (arrowHeadWidth / 2) * Math.sin(angle);
+                const halfWidthY = (arrowHeadWidth / 2) * -Math.cos(angle);
+
+                const p1x = baseMidX + halfWidthX;
+                const p1y = baseMidY + halfWidthY;
+
+                const p2x = baseMidX - halfWidthX;
+                const p2y = baseMidY - halfWidthY;
+                
+                this.container.beginFill(arrowColor);
+                this.container.moveTo(endX, endY); 
+                this.container.lineTo(p1x, p1y);   
+                this.container.lineTo(p2x, p2y);   
+                this.container.closePath();
+                this.container.endFill();
+            }
+        }
+        // Stroke all thick arrow shafts at once
+        this.container.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
     }}
