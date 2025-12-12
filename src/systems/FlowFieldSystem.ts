@@ -284,12 +284,11 @@ export class FlowFieldSystem {
                 const p2x = baseMidX - halfWidthX;
                 const p2y = baseMidY - halfWidthY;
                 
-                this.arrowGraphics.beginFill(arrowColor);
                 this.arrowGraphics.moveTo(endX, endY); 
                 this.arrowGraphics.lineTo(p1x, p1y);   
                 this.arrowGraphics.lineTo(p2x, p2y);   
                 this.arrowGraphics.closePath();
-                this.arrowGraphics.endFill();
+                this.arrowGraphics.fill(arrowColor);
             }
         }
     }
