@@ -111,11 +111,6 @@ export class Game {
         
         // 6. UI (Overlay)
         this.app.stage.addChild(this.toolbar);
-        this.app.stage.addChild(this.debugOverlay.container); // Assuming DebugOverlay has a container or is handled differently? 
-        // DebugOverlay manages its own DOM elements or PIXI text? 
-        // Checking DebugOverlay.ts: It manages DOM elements usually if it's HTML, but if it's Pixi... 
-        // Actually DebugOverlay in this project is a TS file, likely creates DOM.
-        // Let's check DebugOverlay.ts if needed. Assuming it's fine.
         
         // 7. Apply Effects
         this.visualEffects.applyTo(this.worldContainer);
