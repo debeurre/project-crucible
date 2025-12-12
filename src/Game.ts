@@ -12,6 +12,9 @@ import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar, ToolMode } from './ui/Toolbar';
 import { TaskIntent } from './types/GraphTypes';
 
+type ToolMode = 'PENCIL' | 'PEN' | 'ERASER';
+type PenState = 'IDLE' | 'DRAGGING' | 'CHAINING';
+
 export class Game {
     private app: Application;
     private worldContainer: Container;
@@ -38,7 +41,9 @@ export class Game {
     
     // Tool State
     private toolMode: ToolMode = 'PENCIL';
-    private dragStartNodeId: number | null = null;
+    private penState: PenState = 'IDLE';
+    private penLastNodeId: number | null = null; // The anchor node for chaining/dragging
+    private penDragStartPos: Point = new Point(); // Where we started dragging
     
     // Animation State
     private tapAnimProgress = 1.0;
@@ -186,30 +191,58 @@ export class Game {
                 this.interactionMode = 'CRUCIBLE';
             } else if (this.toolMode === 'PEN') {
                 this.interactionMode = 'PEN';
+                
                 const clickedNode = this.graphSystem.getNodeAt(mx, my);
-                if (clickedNode) {
-                    this.dragStartNodeId = clickedNode.id;
-                } else {
-                    this.dragStartNodeId = null; 
+                
+                // STATE MACHINE INPUT
+                if (this.penState === 'IDLE' || this.penState === 'CHAINING') {
+                    if (clickedNode) {
+                        // Clicked existing node -> Start Drag or Chain from here
+                        this.penLastNodeId = clickedNode.id;
+                        this.penState = 'DRAGGING'; 
+                        this.penDragStartPos.set(clickedNode.x, clickedNode.y);
+                    } else {
+                        // Clicked empty -> Create Node -> Start Chain
+                        // OR: Just start dragging a ghost line from this empty point? 
+                        // Spec says: Tap(Empty) -> Create A -> Goto CHAINING.
+                        // But also: Drag Start(Existing) -> Goto DRAGGING.
+                        
+                        // Let's implement:
+                        // 1. Create Node A immediately.
+                        const newNode = this.graphSystem.addNode(mx, my);
+                        
+                        // 2. If we were chaining, link to previous
+                        if (this.penState === 'CHAINING' && this.penLastNodeId !== null) {
+                            this.graphSystem.createLink(this.penLastNodeId, newNode.id, TaskIntent.RED_ATTACK);
+                        }
+                        
+                        // 3. Set new node as anchor
+                        this.penLastNodeId = newNode.id;
+                        this.penDragStartPos.set(newNode.x, newNode.y);
+                        
+                        // 4. Enter DRAGGING state immediately to allow "Drag to link" 
+                        // even after creating a new node? 
+                        // Actually, if it's a TAP, we go to CHAINING. If it's a HOLD, we go to DRAGGING.
+                        // Since this is 'Just Pressed', let's assume DRAGGING for now, 
+                        // and if released quickly without moving, we treat as TAP (Chain).
+                        this.penState = 'DRAGGING';
+                    }
                 }
             } else if (this.toolMode === 'ERASER') {
                 this.interactionMode = 'ERASER';
-                // Immediate erasure on click
                 this.performErasure(mx, my);
             } else {
                 this.interactionMode = 'FLOW';
             }
         }
 
-        // 2. Holding
+        // 2. Holding / Dragging
         if (isDown) {
             if (this.interactionMode === 'CRUCIBLE') {
+                // ... (Existing Crucible Hold Logic) ...
                 const holdDuration = now - this.inputDownTime;
-                
                 if (holdDuration >= CONFIG.TAP_THRESHOLD_MS) {
-                    // HOLD ACTION: Continuous Spawn
                     this.spawnTimer += ticker.deltaMS / 1000;
-                    
                     const spawnInterval = 1 / CONFIG.SPRIGS_PER_SECOND_HELD;
                     while (this.spawnTimer >= spawnInterval) {
                         this.sprigSystem.spawnSprig(this.crucible.x, this.crucible.y);
@@ -218,58 +251,84 @@ export class Game {
                     }
                 }
             } else if (this.interactionMode === 'FLOW') {
-                // DRAG ACTION: Flow Field (Manual)
+                // ... (Existing Flow Logic) ...
                 const dragVecX = mx - (this.lastMousePos?.x ?? mx);
                 const dragVecY = my - (this.lastMousePos?.y ?? my);
-
                 if (dragVecX !== 0 || dragVecY !== 0) {
                      this.flowFieldSystem.paintManualFlow(mx, my, dragVecX, dragVecY);
                 }
             } else if (this.interactionMode === 'ERASER') {
-                // Drag Eraser
                 this.performErasure(mx, my);
+            } else if (this.interactionMode === 'PEN' && this.penState === 'DRAGGING') {
+                // Visualize Drag
+                // Snap check
+                let targetX = mx;
+                let targetY = my;
+                const hoverNode = this.graphSystem.getNodeAt(mx, my);
+                if (hoverNode) {
+                    targetX = hoverNode.x;
+                    targetY = hoverNode.y;
+                }
+                
+                if (this.penDragStartPos.x !== 0 || this.penDragStartPos.y !== 0) { // Safety check
+                     this.graphSystem.drawPreviewLine(this.penDragStartPos.x, this.penDragStartPos.y, targetX, targetY, true);
+                }
             }
         }
 
         // 3. Just Released
         if (!isDown && this.wasDown) {
             if (this.interactionMode === 'CRUCIBLE') {
+                // ... (Existing Crucible Release Logic) ...
                 const holdDuration = now - this.inputDownTime;
                 if (holdDuration < CONFIG.TAP_THRESHOLD_MS) {
-                    // TAP ACTION: Burst Spawn
                     for(let i=0; i<CONFIG.SPRIGS_PER_TAP; i++) {
                          this.sprigSystem.spawnSprig(this.crucible.x, this.crucible.y);
                     }
                     this.updateUI();
-                    
-                    // Restart Tap Animation
                     this.tapAnimProgress = 0;
                 }
-            } else if (this.interactionMode === 'PEN') {
-                const endNode = this.graphSystem.getNodeAt(mx, my);
+            } else if (this.interactionMode === 'PEN' && this.penState === 'DRAGGING') {
+                // Commit the Drag
+                const hoverNode = this.graphSystem.getNodeAt(mx, my);
                 
-                if (this.dragStartNodeId !== null) {
-                    // Started on a node
-                    if (endNode && endNode.id !== this.dragStartNodeId) {
-                        // Dragged from Node A to Node B -> Connect
-                        this.graphSystem.createLink(this.dragStartNodeId, endNode.id, TaskIntent.RED_ATTACK);
-                    } else if (!endNode) {
-                        // Dragged from Node A to Empty -> Create B + Connect
+                // Logic:
+                // 1. If released on a Node (different from start) -> Link & Chain
+                // 2. If released on Empty -> Create Node B -> Link & Chain
+                // 3. If released on Start Node (Tap) -> Switch to CHAINING (Wait for next click)
+                
+                if (hoverNode && hoverNode.id !== this.penLastNodeId) {
+                    // Linked to existing
+                    if (this.penLastNodeId !== null) {
+                        this.graphSystem.createLink(this.penLastNodeId, hoverNode.id, TaskIntent.RED_ATTACK);
+                    }
+                    this.penLastNodeId = hoverNode.id;
+                    this.penState = 'CHAINING';
+                } else if (!hoverNode) {
+                    // Dragged to empty -> Create new node
+                    // But check distance! If very short drag (tap), don't create duplicate node if we just created one on 'down'.
+                    const distSq = (mx - this.penDragStartPos.x)**2 + (my - this.penDragStartPos.y)**2;
+                    if (distSq > 100) { // Minimal drag threshold
                         const newNode = this.graphSystem.addNode(mx, my);
-                        this.graphSystem.createLink(this.dragStartNodeId, newNode.id, TaskIntent.RED_ATTACK);
+                        if (this.penLastNodeId !== null) {
+                            this.graphSystem.createLink(this.penLastNodeId, newNode.id, TaskIntent.RED_ATTACK);
+                        }
+                        this.penLastNodeId = newNode.id;
+                        this.penState = 'CHAINING';
+                    } else {
+                        // It was a tap on the start node (or the node we just created on down)
+                        // Just switch to Chaining
+                        this.penState = 'CHAINING';
                     }
                 } else {
-                    // Started on empty space
-                    if (!endNode) {
-                        // Clicked/Dragged empty to empty -> Just create Node at end pos
-                        // (Simple placement)
-                        this.graphSystem.addNode(mx, my);
-                    }
+                    // Released on same node
+                    this.penState = 'CHAINING';
                 }
-                this.dragStartNodeId = null;
+                
+                this.graphSystem.clearPreview();
             }
             
-            // Reset
+            // Reset Interaction Mode but NOT Pen State (Pen State persists for chaining)
             this.interactionMode = 'NONE';
             this.spawnTimer = 0;
         }
@@ -335,6 +394,22 @@ export class Game {
     private renderVisuals(ticker: Ticker) {
         // We pass ticker here now
         this.updateCrucibleAnimation(ticker);
+        
+        // Pen Preview
+        if (this.toolMode === 'PEN' && this.penState === 'DRAGGING' && this.penLastNodeId !== null) {
+            // This is actually handled in the Input Loop (Immediate Mode) for responsiveness?
+            // No, the input loop updates state, renderVisuals should draw.
+            // But handleInput is called before renderVisuals in update().
+            // Wait, I put drawPreviewLine inside handleInput's "Holding" block. 
+            // That works because handleInput runs every frame.
+            // However, it's better practice to separate logic and render.
+            // But since drawPreviewLine clears and redraws the graph graphics... calling it twice is bad.
+            // Let's rely on handleInput for now as it has the mouse coordinates handy.
+            // Actually, handleInput calls it every frame. That's fine.
+        } else if (this.toolMode === 'PEN' && this.penState === 'CHAINING' && this.penLastNodeId !== null) {
+            // Pulse the last node?
+            // TODO: Add visual feedback for active chaining node
+        }
     }
 
     private updateCrucibleAnimation(ticker: Ticker) {

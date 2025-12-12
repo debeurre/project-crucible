@@ -163,11 +163,29 @@ export class GraphSystem {
             this.edges = this.edges.filter(e => !idsToRemove.has(e.nodeAId) && !idsToRemove.has(e.nodeBId));
         }
 
-        // 4. Check for edges crossing the eraser (Geometry line vs circle check)
-        // For simplicity, we can skip complex line-circle intersection for now unless user demands it.
-        // Destroying nodes destroys their edges, which is the primary way to "cut" graph paths.
-        // If we want to cut edges mid-way, that's harder. Let's stick to node destruction for now.
+        this.draw();
+    }
+
+    public drawPreviewLine(fromX: number, fromY: number, toX: number, toY: number, isValid: boolean) {
+        // Redraw everything first (to clear old preview if any, or we could use a separate graphics object)
+        // For simplicity, let's just clear and redraw all + preview. 
+        // Optimization: Use a separate "previewGraphics" container if this is slow.
+        // Given low entity count, full redraw is fine for now.
+        this.draw(); 
         
+        this.graphics.moveTo(fromX, fromY);
+        this.graphics.lineTo(toX, toY);
+        
+        // Dashed effect? Pixi doesn't do native dashed lines easily without plugins.
+        // Just use low alpha or specific color.
+        const color = isValid ? 0x00FF00 : 0xFF0000;
+        this.graphics.stroke({ width: 2, color: color, alpha: 0.5 });
+        
+        // Ghost Node at end
+        this.graphics.circle(toX, toY, 4).fill({ color: color, alpha: 0.5 });
+    }
+
+    public clearPreview() {
         this.draw();
     }
 }
