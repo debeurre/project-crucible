@@ -7,7 +7,11 @@ import { VisualEffects } from './systems/VisualEffects';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { ResourceSystem } from './systems/ResourceSystem';
 import { FloatingTextSystem } from './systems/FloatingTextSystem';
+import { GraphSystem } from './systems/GraphSystem';
 import { DebugOverlay } from './ui/DebugOverlay';
+import { TaskIntent } from './types/GraphTypes';
+
+type ToolMode = 'PENCIL' | 'PEN';
 
 export class Game {
     private app: Application;
@@ -22,6 +26,8 @@ export class Game {
     private flowFieldSystem: FlowFieldSystem;
     private resourceSystem: ResourceSystem;
     private floatingTextSystem: FloatingTextSystem;
+    private graphSystem: GraphSystem;
+    
     private inputState: InputState;
     private debugOverlay: DebugOverlay;
 
@@ -30,6 +36,10 @@ export class Game {
     private spawnTimer = 0;
     private lastMousePos: Point | null = null;
     
+    // Tool State
+    private toolMode: ToolMode = 'PENCIL';
+    private dragStartNodeId: number | null = null;
+    
     // Animation State
     private tapAnimProgress = 1.0;
     private holdAnimPhase = 0;
@@ -37,7 +47,7 @@ export class Game {
     // Input Logic State
     private wasDown = false;
     private inputDownTime = 0;
-    private interactionMode: 'NONE' | 'CRUCIBLE' | 'FLOW' = 'NONE';
+    private interactionMode: 'NONE' | 'CRUCIBLE' | 'FLOW' | 'PEN' = 'NONE';
 
     constructor(app: Application) {
         this.app = app;
@@ -58,7 +68,8 @@ export class Game {
         
         this.setupWorld();
         
-        // Sprig System (needs world container)
+        // Systems dependent on world container
+        this.graphSystem = new GraphSystem(this.worldContainer, this.flowFieldSystem);
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.worldContainer, this.flowFieldSystem);
         
         // Setup Resize Handler
@@ -83,6 +94,7 @@ export class Game {
         this.worldContainer.addChild(this.mapSystem.container);
         this.worldContainer.addChild(this.flowFieldSystem.container);
         this.worldContainer.addChild(this.resourceSystem.container);
+        // Graph system adds its own graphics to worldContainer in constructor
         
         // 4. Crucible
         this.crucible.circle(0, 0, CONFIG.CRUCIBLE_RADIUS).fill(CONFIG.CRUCIBLE_COLOR);
@@ -94,21 +106,6 @@ export class Game {
         // 6. Apply Effects
         this.visualEffects.applyTo(this.worldContainer);
     }
-    
-    // ... rest of class until updateGameLogic
-    
-    // I need to be careful with replace range. I'll replace the updateGameLogic method entirely if needed, or better, replace just the property definitions and constructor, then the setupWorld, then updateGameLogic.
-    // Actually, I can replace the whole file content I retrieved, but I should try to replace smaller blocks if possible.
-    // The previous read_file output is truncated in my memory? No, I have full content in last turn.
-    // I will replace `updateGameLogic` separately.
-    
-    // First replacement: Imports and Properties and Constructor and SetupWorld.
-    // Wait, replacing half the file is risky if indentation is slightly off.
-    // I'll replace the *entire* file content from `import ...` down to `setupWorld() { ... }` block end? No.
-    // Let's do imports + class def first.
-    
-    // Actually, I will replace the imports and property list first.
-
 
     private onResize() {
         this.background.clear();
@@ -148,6 +145,10 @@ export class Game {
                 case 'R': this.visualEffects.toggleNoise(); break;
                 
                 case 'G': this.flowFieldSystem.toggleGrid(); break;
+                case 'T': 
+                    this.toolMode = this.toolMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
+                    console.log('Tool Mode:', this.toolMode);
+                    break;
 
                 case 'F': this.flowFieldSystem.clearAll(); break;
                 case 'S': this.sprigSystem.clearAll(); break;
@@ -158,17 +159,34 @@ export class Game {
 
         const isDown = this.inputState.isDown;
         const now = performance.now();
+        const mx = this.inputState.mousePosition.x;
+        const my = this.inputState.mousePosition.y;
 
         // 1. Just Pressed
         if (isDown && !this.wasDown) {
             this.inputDownTime = now;
             
-            const dx = this.inputState.mousePosition.x - this.crucible.x;
-            const dy = this.inputState.mousePosition.y - this.crucible.y;
+            // Interaction Mode Logic
+            const dx = mx - this.crucible.x;
+            const dy = my - this.crucible.y;
             const distSq = dx*dx + dy*dy;
 
             if (distSq < CONFIG.CRUCIBLE_RADIUS**2) {
                 this.interactionMode = 'CRUCIBLE';
+            } else if (this.toolMode === 'PEN') {
+                this.interactionMode = 'PEN';
+                const clickedNode = this.graphSystem.getNodeAt(mx, my);
+                if (clickedNode) {
+                    this.dragStartNodeId = clickedNode.id;
+                } else {
+                    // Clicked empty space -> create node immediately
+                    // Or wait for up? Standard is create on click if just placing.
+                    // If dragging, we might want to start a path.
+                    // Let's defer creation to UP if it's a simple click, 
+                    // or handle drag logic.
+                    // For now: Just track that we started in empty space.
+                    this.dragStartNodeId = null; 
+                }
             } else {
                 this.interactionMode = 'FLOW';
             }
@@ -191,13 +209,16 @@ export class Game {
                     }
                 }
             } else if (this.interactionMode === 'FLOW') {
-                // DRAG ACTION: Flow Field (Immediate)
-                const dragVecX = this.inputState.mousePosition.x - (this.lastMousePos?.x ?? this.inputState.mousePosition.x);
-                const dragVecY = this.inputState.mousePosition.y - (this.lastMousePos?.y ?? this.inputState.mousePosition.y);
+                // DRAG ACTION: Flow Field (Manual)
+                const dragVecX = mx - (this.lastMousePos?.x ?? mx);
+                const dragVecY = my - (this.lastMousePos?.y ?? my);
 
                 if (dragVecX !== 0 || dragVecY !== 0) {
-                     this.flowFieldSystem.paintFlow(this.inputState.mousePosition.x, this.inputState.mousePosition.y, dragVecX, dragVecY);
+                     this.flowFieldSystem.paintManualFlow(mx, my, dragVecX, dragVecY);
                 }
+            } else if (this.interactionMode === 'PEN') {
+                // Dragging in Pen mode... Visualize edge?
+                // TODO: Add visual feedback for pending edge
             }
         }
 
@@ -215,6 +236,28 @@ export class Game {
                     // Restart Tap Animation
                     this.tapAnimProgress = 0;
                 }
+            } else if (this.interactionMode === 'PEN') {
+                const endNode = this.graphSystem.getNodeAt(mx, my);
+                
+                if (this.dragStartNodeId !== null) {
+                    // Started on a node
+                    if (endNode && endNode.id !== this.dragStartNodeId) {
+                        // Dragged from Node A to Node B -> Connect
+                        this.graphSystem.createLink(this.dragStartNodeId, endNode.id, TaskIntent.RED_ATTACK);
+                    } else if (!endNode) {
+                        // Dragged from Node A to Empty -> Create B + Connect
+                        const newNode = this.graphSystem.addNode(mx, my);
+                        this.graphSystem.createLink(this.dragStartNodeId, newNode.id, TaskIntent.RED_ATTACK);
+                    }
+                } else {
+                    // Started on empty space
+                    if (!endNode) {
+                        // Clicked/Dragged empty to empty -> Just create Node at end pos
+                        // (Simple placement)
+                        this.graphSystem.addNode(mx, my);
+                    }
+                }
+                this.dragStartNodeId = null;
             }
             
             // Reset
@@ -305,6 +348,8 @@ export class Game {
     }
 
     private updateUI() {
+        // We could extend DebugOverlay to show toolMode
+        // For now, console log was added
         this.debugOverlay.update(
             this.score,
             this.sprigSystem.activeSprigCount, 
