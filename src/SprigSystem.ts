@@ -2,6 +2,7 @@ import { Application, Graphics, Container, Texture, Sprite, Ticker } from 'pixi.
 import { CONFIG } from './config';
 import { MapSystem } from './systems/MapSystem';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
+import { TaskIntent } from './types/GraphTypes';
 
 // No more Sprig interface in DOD
 
@@ -13,6 +14,7 @@ export class SprigSystem {
     private velocitiesY: Float32Array;
     private flashTimers: Uint8Array;
     private cargos: Uint8Array; // 0 = None, 1 = Wood
+    private intents: Int32Array; // TaskIntent
     
     // Spatial Hash Grid
     private gridHead: Int32Array;
@@ -49,6 +51,7 @@ export class SprigSystem {
         this.velocitiesY = new Float32Array(this.MAX_SPRIG_COUNT);
         this.flashTimers = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.cargos = new Uint8Array(this.MAX_SPRIG_COUNT); 
+        this.intents = new Int32Array(this.MAX_SPRIG_COUNT);
         
         // Initialize Spatial Hash Arrays (sized for max potential usage, resized in resize())
         this.gridNext = new Int32Array(this.MAX_SPRIG_COUNT);
@@ -154,6 +157,7 @@ export class SprigSystem {
         
         this.flashTimers[i] = 0;
         this.cargos[i] = 0; 
+        this.intents[i] = -1; // Default intent
 
         this.sprigContainers[i].x = this.positionsX[i];
         this.sprigContainers[i].y = this.positionsY[i];
@@ -205,8 +209,6 @@ export class SprigSystem {
             this.gridHead[cellIndex] = i;
         }
     }
-    
-    // ... (applyFlowField, applyBoids, updatePosition methods remain same, skipping to updateVisuals)
 
     private applyFlowField(idx: number, dt: number) {
         const sprigX = this.positionsX[idx];
@@ -214,11 +216,17 @@ export class SprigSystem {
         let sprigVelX = this.velocitiesX[idx];
         let sprigVelY = this.velocitiesY[idx];
 
-        const newVel = this.flowFieldSystem.applyFlow(sprigX, sprigY, sprigVelX, sprigVelY, dt);
+        const { vx, vy, intent } = this.flowFieldSystem.applyFlow(sprigX, sprigY, sprigVelX, sprigVelY, dt);
         
-        this.velocitiesX[idx] = newVel.vx; 
-        this.velocitiesY[idx] = newVel.vy;
+        this.velocitiesX[idx] = vx; 
+        this.velocitiesY[idx] = vy;
+        
+        if (intent !== null) {
+            this.intents[idx] = intent;
+        }
     }
+    
+    // ... applyBoids, updatePosition (unchanged)
 
     private applyBoids(idx: number, dt: number) {
         let sepX = 0, sepY = 0;
@@ -381,7 +389,13 @@ export class SprigSystem {
             bodySprite.tint = CONFIG.SPRIG_FLASH_COLOR;
             this.flashTimers[idx]--;
         } else {
-            bodySprite.tint = CONFIG.SPRIG_COLOR;
+            // Use Intent Color if present, else Default
+            const intent = this.intents[idx];
+            if (intent !== -1) {
+                bodySprite.tint = intent;
+            } else {
+                bodySprite.tint = CONFIG.SPRIG_COLOR;
+            }
         }
 
         if (this.cargos[idx] !== 0) { 
@@ -402,7 +416,9 @@ export class SprigSystem {
             bodySprite.scale.set(1.0, 1.0);
         }
     }
-
+    
+    // ... other methods (isSprigActive, isCarrying, setCargo, getSprigBounds, clearAll)
+    
     public isSprigActive(idx: number): boolean {
         return idx < this.activeSprigCount;
     }
@@ -428,8 +444,5 @@ export class SprigSystem {
         for(const container of this.sprigContainers) {
             container.visible = false;
         }
-        // No need to hide cargo explicitly as the container is hidden, 
-        // but resetting state might be good. 
-        // Cargo visibility is managed in updateVisuals anyway when active.
     }
 }

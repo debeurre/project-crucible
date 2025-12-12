@@ -1,5 +1,6 @@
 import { Application, Graphics, Container } from 'pixi.js';
 import { CONFIG } from '../config';
+import { TaskIntent } from '../types/GraphTypes';
 
 export class FlowFieldSystem {
     public container: Container;
@@ -7,8 +8,11 @@ export class FlowFieldSystem {
     private gridGraphics: Graphics;
     private app: Application;
     
-    // Flow field data: [vectorX, vectorY, vectorX, vectorY, ...]
-    private field: Float32Array; 
+    // Layers
+    private fieldManual: Float32Array; 
+    private fieldGraph: Float32Array; 
+    private fieldGraphIntent: Int32Array; 
+
     private gridCols: number;
     private gridRows: number;
     private cellSize: number;
@@ -31,13 +35,16 @@ export class FlowFieldSystem {
         this.gridCols = Math.ceil(app.screen.width / this.cellSize);
         this.gridRows = Math.ceil(app.screen.height / this.cellSize);
         
-        // Each cell stores a 2D vector (x, y components)
-        this.field = new Float32Array(this.gridCols * this.gridRows * 2); 
+        // Initialize Arrays
+        const size = this.gridCols * this.gridRows * 2;
+        this.fieldManual = new Float32Array(size); 
+        this.fieldGraph = new Float32Array(size); 
+        this.fieldGraphIntent = new Int32Array(this.gridCols * this.gridRows); 
         
-        // Initialize flow to zero
-        for(let i = 0; i < this.field.length; i++) {
-            this.field[i] = 0;
-        }
+        // Initialize to zero
+        this.fieldManual.fill(0);
+        this.fieldGraph.fill(0);
+        this.fieldGraphIntent.fill(-1); // -1 for no intent
 
         // Handle resize
         this.app.renderer.on('resize', this.resize.bind(this));
@@ -48,14 +55,17 @@ export class FlowFieldSystem {
         this.gridCols = Math.ceil(this.app.screen.width / this.cellSize);
         this.gridRows = Math.ceil(this.app.screen.height / this.cellSize);
         
-        // Re-initialize field if size changes
-        const newFieldSize = this.gridCols * this.gridRows * 2;
-        if (this.field.length !== newFieldSize) {
-            this.field = new Float32Array(newFieldSize);
-            // Optionally clear to zero here, or preserve/interpolate if needed
-            for(let i = 0; i < this.field.length; i++) {
-                this.field[i] = 0;
-            }
+        const size = this.gridCols * this.gridRows * 2;
+        const cellCount = this.gridCols * this.gridRows;
+
+        if (this.fieldManual.length !== size) {
+            this.fieldManual = new Float32Array(size);
+            this.fieldGraph = new Float32Array(size);
+            this.fieldGraphIntent = new Int32Array(cellCount);
+            
+            this.fieldManual.fill(0);
+            this.fieldGraph.fill(0);
+            this.fieldGraphIntent.fill(-1);
         }
         
         this.drawGrid();
@@ -81,59 +91,61 @@ export class FlowFieldSystem {
         this.gridGraphics.stroke({ width: 1, color: CONFIG.FLOW_FIELD_GRID_COLOR, alpha: CONFIG.FLOW_FIELD_GRID_ALPHA });
     }
 
-    public applyFlow(sprigX: number, sprigY: number, currentVelX: number, currentVelY: number, dt: number): {vx: number, vy: number} {
+    public applyFlow(sprigX: number, sprigY: number, currentVelX: number, currentVelY: number, dt: number): {vx: number, vy: number, intent: TaskIntent | null} {
         const col = Math.floor(sprigX / this.cellSize);
         const row = Math.floor(sprigY / this.cellSize);
 
         if (col < 0 || col >= this.gridCols || row < 0 || row >= this.gridRows) {
-            return {vx: currentVelX, vy: currentVelY}; // No flow outside bounds
+            return {vx: currentVelX, vy: currentVelY, intent: null}; 
         }
 
         const index = (row * this.gridCols + col) * 2;
-        const flowX = this.field[index];
-        const flowY = this.field[index + 1];
+        const intentIndex = row * this.gridCols + col;
+        
+        // 1. Check Graph Layer (High Priority)
+        let flowX = this.fieldGraph[index];
+        let flowY = this.fieldGraph[index + 1];
+        let intent = this.fieldGraphIntent[intentIndex] !== -1 ? (this.fieldGraphIntent[intentIndex] as TaskIntent) : null;
+
+        // 2. Check Manual Layer (Low Priority) - only if graph vector is zero
+        if (flowX === 0 && flowY === 0) {
+            flowX = this.fieldManual[index];
+            flowY = this.fieldManual[index + 1];
+            // intent remains null or could be a default 'MANUAL' intent if we wanted
+        }
 
         // Apply flow force scaled by dt
         currentVelX += flowX * CONFIG.FLOW_FIELD_FORCE_SCALE * dt;
         currentVelY += flowY * CONFIG.FLOW_FIELD_FORCE_SCALE * dt;
 
         // Apply Magnetism (Attract to flow axis)
-        // If there is significant flow, push particle towards the "center line" of the flow in this cell
         const magSq = flowX * flowX + flowY * flowY;
-        if (magSq > 0.01) { // Only apply if flow is strong enough
+        if (magSq > 0.01) { 
             const mag = Math.sqrt(magSq);
-            // Normalized flow direction
             const nx = flowX / mag;
             const ny = flowY / mag;
             
-            // Cell center
             const centerX = col * this.cellSize + this.cellSize / 2;
             const centerY = row * this.cellSize + this.cellSize / 2;
             
-            // Vector from center to sprig
             const dx = sprigX - centerX;
             const dy = sprigY - centerY;
             
-            // Project offset onto flow direction (dot product)
             const dot = dx * nx + dy * ny;
             
-            // Calculate perpendicular component (distance from axis)
-            // perp = offset - (offset . dir) * dir
             const perpX = dx - dot * nx;
             const perpY = dy - dot * ny;
             
-            // Apply restoring force opposing the perpendicular offset
-            // Force = -perp * Strength * dt
             currentVelX -= perpX * CONFIG.FLOW_FIELD_MAGNETISM * dt;
             currentVelY -= perpY * CONFIG.FLOW_FIELD_MAGNETISM * dt;
         }
 
-        return {vx: currentVelX, vy: currentVelY};
+        return {vx: currentVelX, vy: currentVelY, intent};
     }
 
-    public paintFlow(mouseX: number, mouseY: number, dragVecX: number, dragVecY: number) {
-        // Apply flow to cells under the mouse
-        const radius = 2; // Affect a 2x2 area around cursor
+    public paintManualFlow(mouseX: number, mouseY: number, dragVecX: number, dragVecY: number) {
+        // Apply flow to cells under the mouse (Manual Layer)
+        const radius = 2; 
         for (let r = -radius; r <= radius; r++) {
             for (let c = -radius; c <= radius; c++) {
                 const col = Math.floor(mouseX / this.cellSize) + c;
@@ -142,27 +154,37 @@ export class FlowFieldSystem {
                 if (col >= 0 && col < this.gridCols && row >= 0 && row < this.gridRows) {
                     const index = (row * this.gridCols + col) * 2;
                     
-                    // Add to existing flow (simple blend)
-                    this.field[index] += dragVecX;
-                    this.field[index + 1] += dragVecY;
+                    // Add to existing flow
+                    this.fieldManual[index] += dragVecX;
+                    this.fieldManual[index + 1] += dragVecY;
 
-                    // Clamp magnitude to prevent runaway forces
-                    const magSq = this.field[index]**2 + this.field[index+1]**2;
-                    const maxMag = 10.0; // Max flow vector magnitude
+                    // Clamp
+                    const magSq = this.fieldManual[index]**2 + this.fieldManual[index+1]**2;
+                    const maxMag = 10.0;
                     if (magSq > maxMag**2) {
                         const mag = Math.sqrt(magSq);
-                        this.field[index] = (this.field[index] / mag) * maxMag;
-                        this.field[index + 1] = (this.field[index + 1] / mag) * maxMag;
+                        this.fieldManual[index] = (this.fieldManual[index] / mag) * maxMag;
+                        this.fieldManual[index + 1] = (this.fieldManual[index + 1] / mag) * maxMag;
                     }
                 }
             }
         }
-        this.updateVisuals(); // Update visuals immediately
+        this.updateVisuals(); 
+    }
+    
+    public setGraphFlow(col: number, row: number, vx: number, vy: number, intent: TaskIntent) {
+        if (col >= 0 && col < this.gridCols && row >= 0 && row < this.gridRows) {
+            const index = (row * this.gridCols + col) * 2;
+            const intentIndex = row * this.gridCols + col;
+            
+            this.fieldGraph[index] = vx;
+            this.fieldGraph[index + 1] = vy;
+            this.fieldGraphIntent[intentIndex] = intent;
+        }
     }
 
-    // New method for clearing flow (Cut action)
-    public clearFlow(mouseX: number, mouseY: number) {
-        const radius = 2; // Affect a 2x2 area around cursor
+    public clearManualFlow(mouseX: number, mouseY: number) {
+        const radius = 2;
         for (let r = -radius; r <= radius; r++) {
             for (let c = -radius; c <= radius; c++) {
                 const col = Math.floor(mouseX / this.cellSize) + c;
@@ -170,8 +192,8 @@ export class FlowFieldSystem {
 
                 if (col >= 0 && col < this.gridCols && row >= 0 && row < this.gridRows) {
                     const index = (row * this.gridCols + col) * 2;
-                    this.field[index] = 0;
-                    this.field[index + 1] = 0;
+                    this.fieldManual[index] = 0;
+                    this.fieldManual[index + 1] = 0;
                 }
             }
         }
@@ -179,9 +201,9 @@ export class FlowFieldSystem {
     }
 
     public clearAll() {
-        for(let i = 0; i < this.field.length; i++) {
-            this.field[i] = 0;
-        }
+        this.fieldManual.fill(0);
+        this.fieldGraph.fill(0);
+        this.fieldGraphIntent.fill(-1);
         this.updateVisuals();
     }
 
@@ -195,18 +217,34 @@ export class FlowFieldSystem {
         this.arrowGraphics.alpha = CONFIG.FLOW_FIELD_VISUAL_ALPHA;
         
         const arrowLength = CONFIG.FLOW_FIELD_VISUAL_ARROW_LENGTH;
-        const arrowColor = CONFIG.FLOW_FIELD_VISUAL_COLOR;
         const stride = CONFIG.FLOW_FIELD_VISUAL_STRIDE;
         
-        // Always draw thick arrows with filled heads (user requirement)
+        // Iterate grid
         for (let row = 0; row < this.gridRows; row += stride) {
             for (let col = 0; col < this.gridCols; col += stride) {
                 const index = (row * this.gridCols + col) * 2;
-                const flowX = this.field[index];
-                const flowY = this.field[index + 1];
+                
+                // Visualization Priority: Show Graph if present, else Manual
+                let flowX = this.fieldGraph[index];
+                let flowY = this.fieldGraph[index + 1];
+                let isGraph = (flowX !== 0 || flowY !== 0);
+                
+                if (!isGraph) {
+                    flowX = this.fieldManual[index];
+                    flowY = this.fieldManual[index + 1];
+                }
 
                 // Only draw if there's significant flow
                 if (Math.abs(flowX) < 0.1 && Math.abs(flowY) < 0.1) continue;
+                
+                // Color: Use Intent Color if Graph, else Default Red
+                let arrowColor = CONFIG.FLOW_FIELD_VISUAL_COLOR;
+                if (isGraph) {
+                    const intent = this.fieldGraphIntent[row * this.gridCols + col];
+                    if (intent !== -1) {
+                         arrowColor = intent;
+                    }
+                }
 
                 const centerX = col * this.cellSize + (this.cellSize * stride) / 2;
                 const centerY = row * this.cellSize + (this.cellSize * stride) / 2;
@@ -217,6 +255,7 @@ export class FlowFieldSystem {
                 // Main arrow shaft (thick)
                 this.arrowGraphics.moveTo(centerX, centerY);
                 this.arrowGraphics.lineTo(endX, endY);
+                this.arrowGraphics.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
                 
                 // Arrowhead - filled triangle
                 const angle = Math.atan2(flowY, flowX);
@@ -243,6 +282,5 @@ export class FlowFieldSystem {
                 this.arrowGraphics.endFill();
             }
         }
-        // Stroke all thick arrow shafts at once
-        this.arrowGraphics.stroke({ width: CONFIG.FLOW_FIELD_VISUAL_THICKNESS, color: arrowColor });
-    }}
+    }
+}
