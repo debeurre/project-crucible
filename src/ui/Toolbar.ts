@@ -1,17 +1,23 @@
 import { Container, Graphics, Text } from 'pixi.js';
 
-export type ToolMode = 'PENCIL' | 'PEN';
+export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER';
 
 export class Toolbar extends Container {
     private bg: Graphics;
     private pencilBtn: Container;
     private penBtn: Container;
+    private eraserBtn: Container;
     private activeTool: ToolMode = 'PENCIL';
     private onToolSelected: (tool: ToolMode) => void;
 
-    private readonly WIDTH = 120;
-    private readonly HEIGHT = 50;
-    private readonly RADIUS = 25; // Pill shape
+    private readonly BUTTON_WIDTH = 50;
+    private readonly BUTTON_GAP = 10;
+    private readonly PADDING = 10;
+    
+    // Width = 3 buttons * 50 + 2 gaps * 10 + 2 padding * 10 = 150 + 20 + 20 = 190
+    private readonly WIDTH = 190;
+    private readonly HEIGHT = 60;
+    private readonly RADIUS = 30; // Pill shape
     private readonly BG_COLOR = 0x222222;
     private readonly ACTIVE_COLOR = 0x444444;
     private readonly ICON_COLOR = 0xFFFFFF;
@@ -24,11 +30,17 @@ export class Toolbar extends Container {
         this.bg = new Graphics();
         this.addChild(this.bg);
 
-        this.pencilBtn = this.createButton('PENCIL', -30);
-        this.penBtn = this.createButton('PEN', 30);
+        // Calculate positions
+        const startX = -this.WIDTH / 2 + this.PADDING + this.BUTTON_WIDTH / 2;
+        const gap = this.BUTTON_WIDTH + this.BUTTON_GAP;
+
+        this.pencilBtn = this.createButton('PENCIL', startX);
+        this.penBtn = this.createButton('PEN', startX + gap);
+        this.eraserBtn = this.createButton('ERASER', startX + gap * 2);
 
         this.addChild(this.pencilBtn);
         this.addChild(this.penBtn);
+        this.addChild(this.eraserBtn);
 
         this.draw();
         
@@ -57,8 +69,10 @@ export class Toolbar extends Container {
         const icon = new Graphics();
         if (mode === 'PENCIL') {
             this.drawPencilIcon(icon);
-        } else {
+        } else if (mode === 'PEN') {
             this.drawPenIcon(icon);
+        } else {
+            this.drawEraserIcon(icon);
         }
         btn.addChild(icon);
 
@@ -71,11 +85,6 @@ export class Toolbar extends Container {
         g.moveTo(-8, 8);
         g.bezierCurveTo(-5, -5, 5, 5, 8, -8);
         g.stroke({ width: 2, color: this.ICON_COLOR });
-        
-        // Label (Optional, maybe too cluttered, stick to icons)
-        // const t = new Text({ text: 'P', style: { fill: 0xffffff, fontSize: 14 }});
-        // t.anchor.set(0.5);
-        // g.addChild(t);
     }
 
     private drawPenIcon(g: Graphics) {
@@ -86,6 +95,16 @@ export class Toolbar extends Container {
         g.moveTo(-6, 6);
         g.lineTo(6, -6);
         g.stroke({ width: 2, color: this.ICON_COLOR });
+    }
+
+    private drawEraserIcon(g: Graphics) {
+        g.clear();
+        // Eraser block
+        g.rect(-8, -6, 16, 12).stroke({ width: 2, color: this.ICON_COLOR });
+        // Slanted line
+        g.moveTo(-4, -6);
+        g.lineTo(-4, 6);
+        g.stroke({ width: 1, color: this.ICON_COLOR });
     }
 
     public setTool(tool: ToolMode) {
@@ -101,12 +120,20 @@ export class Toolbar extends Container {
                .stroke({ width: 1, color: 0x555555 });
 
         // Highlight Active
-        const highlightX = this.activeTool === 'PENCIL' ? -30 : 30;
-        this.bg.circle(highlightX, 0, 20).fill({ color: 0xFFFFFF, alpha: 0.1 });
+        let highlightX = 0;
+        const startX = -this.WIDTH / 2 + this.PADDING + this.BUTTON_WIDTH / 2;
+        const gap = this.BUTTON_WIDTH + this.BUTTON_GAP;
+
+        if (this.activeTool === 'PENCIL') highlightX = startX;
+        else if (this.activeTool === 'PEN') highlightX = startX + gap;
+        else if (this.activeTool === 'ERASER') highlightX = startX + gap * 2;
+
+        this.bg.circle(highlightX, 0, 22).fill({ color: 0xFFFFFF, alpha: 0.1 });
 
         // Update Opacity
         this.pencilBtn.alpha = this.activeTool === 'PENCIL' ? 1.0 : this.INACTIVE_ALPHA;
         this.penBtn.alpha = this.activeTool === 'PEN' ? 1.0 : this.INACTIVE_ALPHA;
+        this.eraserBtn.alpha = this.activeTool === 'ERASER' ? 1.0 : this.INACTIVE_ALPHA;
     }
 
     public resize(screenWidth: number, screenHeight: number) {

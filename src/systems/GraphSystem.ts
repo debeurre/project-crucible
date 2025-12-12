@@ -143,4 +143,31 @@ export class GraphSystem {
         }
         return null;
     }
+
+    public removeElementsAt(x: number, y: number, radius: number) {
+        const rSq = radius * radius;
+        
+        // 1. Find Nodes to remove
+        const nodesToRemove = this.nodes.filter(n => {
+            const dx = n.x - x;
+            const dy = n.y - y;
+            return (dx*dx + dy*dy) < rSq;
+        });
+
+        // 2. Remove Nodes
+        if (nodesToRemove.length > 0) {
+            const idsToRemove = new Set(nodesToRemove.map(n => n.id));
+            this.nodes = this.nodes.filter(n => !idsToRemove.has(n.id));
+            
+            // 3. Remove Edges connected to these nodes
+            this.edges = this.edges.filter(e => !idsToRemove.has(e.nodeAId) && !idsToRemove.has(e.nodeBId));
+        }
+
+        // 4. Check for edges crossing the eraser (Geometry line vs circle check)
+        // For simplicity, we can skip complex line-circle intersection for now unless user demands it.
+        // Destroying nodes destroys their edges, which is the primary way to "cut" graph paths.
+        // If we want to cut edges mid-way, that's harder. Let's stick to node destruction for now.
+        
+        this.draw();
+    }
 }

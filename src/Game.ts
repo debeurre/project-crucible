@@ -47,7 +47,7 @@ export class Game {
     // Input Logic State
     private wasDown = false;
     private inputDownTime = 0;
-    private interactionMode: 'NONE' | 'CRUCIBLE' | 'FLOW' | 'PEN' = 'NONE';
+    private interactionMode: 'NONE' | 'CRUCIBLE' | 'FLOW' | 'PEN' | 'ERASER' = 'NONE';
 
     constructor(app: Application) {
         this.app = app;
@@ -190,14 +190,12 @@ export class Game {
                 if (clickedNode) {
                     this.dragStartNodeId = clickedNode.id;
                 } else {
-                    // Clicked empty space -> create node immediately
-                    // Or wait for up? Standard is create on click if just placing.
-                    // If dragging, we might want to start a path.
-                    // Let's defer creation to UP if it's a simple click, 
-                    // or handle drag logic.
-                    // For now: Just track that we started in empty space.
                     this.dragStartNodeId = null; 
                 }
+            } else if (this.toolMode === 'ERASER') {
+                this.interactionMode = 'ERASER';
+                // Immediate erasure on click
+                this.performErasure(mx, my);
             } else {
                 this.interactionMode = 'FLOW';
             }
@@ -227,9 +225,9 @@ export class Game {
                 if (dragVecX !== 0 || dragVecY !== 0) {
                      this.flowFieldSystem.paintManualFlow(mx, my, dragVecX, dragVecY);
                 }
-            } else if (this.interactionMode === 'PEN') {
-                // Dragging in Pen mode... Visualize edge?
-                // TODO: Add visual feedback for pending edge
+            } else if (this.interactionMode === 'ERASER') {
+                // Drag Eraser
+                this.performErasure(mx, my);
             }
         }
 
@@ -278,6 +276,24 @@ export class Game {
 
         this.wasDown = isDown;
         this.lastMousePos = this.inputState.mousePosition.clone();
+    }
+
+    private performErasure(x: number, y: number) {
+        const radius = 40; // Eraser radius
+        
+        // 1. Clear Flow
+        // We use clearFlow which currently has hardcoded small radius (2 cells).
+        // Let's rely on FlowFieldSystem to handle its own radius or update it?
+        // Actually, let's just loop a bit here or update FlowFieldSystem later to take radius.
+        // For now, call clearFlow multiple times? No, that's inefficient.
+        // Let's assume clearFlow does 2 cells (40px) which matches our eraser visual roughly.
+        this.flowFieldSystem.clearFlow(x, y); 
+
+        // 2. Remove Graph Elements
+        this.graphSystem.removeElementsAt(x, y, radius);
+
+        // 3. Remove Sprigs
+        this.sprigSystem.removeSprigsAt(x, y, radius);
     }
 
     private updateGameLogic(ticker: Ticker) {

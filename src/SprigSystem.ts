@@ -439,6 +439,41 @@ export class SprigSystem {
         };
     }
 
+    public removeSprigsAt(x: number, y: number, radius: number) {
+        const rSq = radius * radius;
+        let i = 0;
+        while (i < this.activeSprigCount) {
+            const dx = this.positionsX[i] - x;
+            const dy = this.positionsY[i] - y;
+            if (dx*dx + dy*dy < rSq) {
+                // Remove sprig (Swap with last active)
+                const last = this.activeSprigCount - 1;
+                
+                if (i !== last) {
+                    this.positionsX[i] = this.positionsX[last];
+                    this.positionsY[i] = this.positionsY[last];
+                    this.velocitiesX[i] = this.velocitiesX[last];
+                    this.velocitiesY[i] = this.velocitiesY[last];
+                    this.flashTimers[i] = this.flashTimers[last];
+                    this.cargos[i] = this.cargos[last];
+                    this.intents[i] = this.intents[last];
+                    // Visuals are pooled, just need to update their usage in next frame update
+                    // But we should swap visual state if needed? 
+                    // Actually, visuals are linked by index `i` in updateVisuals.
+                    // So we effectively moved the data of 'last' to 'i'.
+                }
+                
+                // Hide the removed container (which was at 'last', now effectively unused)
+                this.sprigContainers[last].visible = false;
+                
+                this.activeSprigCount--;
+                // Don't increment i, check the swapped sprig
+            } else {
+                i++;
+            }
+        }
+    }
+
     public clearAll() {
         this.activeSprigCount = 0;
         for(const container of this.sprigContainers) {

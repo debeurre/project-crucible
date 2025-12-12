@@ -183,8 +183,10 @@ export class FlowFieldSystem {
         }
     }
 
-    public clearManualFlow(mouseX: number, mouseY: number) {
-        const radius = 2;
+    // New method for clearing flow (Cut action)
+    public clearFlow(mouseX: number, mouseY: number) {
+        // Eraser logic: wipe everything in radius
+        const radius = 2; // Check if config has eraser radius, otherwise use 2 cells (~40px)
         for (let r = -radius; r <= radius; r++) {
             for (let c = -radius; c <= radius; c++) {
                 const col = Math.floor(mouseX / this.cellSize) + c;
@@ -192,8 +194,16 @@ export class FlowFieldSystem {
 
                 if (col >= 0 && col < this.gridCols && row >= 0 && row < this.gridRows) {
                     const index = (row * this.gridCols + col) * 2;
+                    const intentIndex = row * this.gridCols + col;
+                    
+                    // Wipe Manual
                     this.fieldManual[index] = 0;
                     this.fieldManual[index + 1] = 0;
+                    
+                    // Wipe Graph
+                    this.fieldGraph[index] = 0;
+                    this.fieldGraph[index + 1] = 0;
+                    this.fieldGraphIntent[intentIndex] = -1;
                 }
             }
         }
