@@ -1,43 +1,67 @@
+# SPEC: Contextual Input & UI (Phase 3)
 
-# DESIGN DIRECTIVE: The Alchemist's Interface
+## 1\. The Goal
 
-## 1. The "Invisible" Input (Contextual Gestures)
-We rely on **Intent Recognition** rather than buttons for the primary modes.
+Transition from "Debug Mode" to "Player Mode."
+Create an interface that feels like a **Drawing App** (Procreate/Paint) rather than an RTS.
+Enable complex commands (Move vs. Select) using only **Gestures** (Contextual Switch).
 
-### The "Loop Check" Logic
-When the player creates a drag input (a path of points) and lifts their finger (`pointerup`):
-1.  **Calculate Distance:** Measure the distance between the **Start Point** and the **End Point** of the path.
-2.  **Case A: The Closed Loop (Lasso)**
-    * **Condition:** `Distance < THRESHOLD` (e.g., 50px).
-    * **Interpretation:** The user intended to circle something.
-    * **Action:** Close the shape mathematically. Run a "Point-in-Polygon" check. **Select** all Sprigs inside the shape.
-3.  **Case B: The Open Line (Flow)**
-    * **Condition:** `Distance > THRESHOLD`.
-    * **Interpretation:** The user intended to draw a direction.
-    * **Action:** Treat the path as a "Brush Stroke." Bake the directional vectors into the **Flow Field**.
+## 2\. The Input Manager (`src/systems/InputManager.ts`)
 
-### Visual Feedback (The "Snap")
-* **While Dragging:** If the cursor gets close to the Start Point (within threshold), **highlight the path** (e.g., turn it Gold) or show a "Link" icon.
-* **Why:** This tells the user *before* they release: "I am about to treat this as a Lasso."
+We need to upgrade the input logic to detect **Intent** based on the gesture shape.
 
-## 2. The UI: "Crucible Paint"
-Instead of a traditional RTS sidebar (Build, Attack, Stop), we use an **Art App Toolbar**.
+### A. The "Gesture Analyzer"
 
-### The "Palette" (Right Side)
-In an art app, you pick colors. In Crucible, you pick **Alchemical Intents**.
-* **White (Salt/Base):** **Move.** Standard movement flow.
-* **Red (Sulfur/Aggro):** **Attack.** Sprigs in this flow become aggressive/volatile.
-* **Green (Mercury/Flow):** **Harvest.** Sprigs in this flow look for resources.
-* **Blue (Aether/Guard):** **Patrol.** Sprigs orbit or guard the area.
+On `pointerup`, analyze the path of points (`state.path`):
 
-### The "Tools" (Left Side)
-These act as overrides or modifiers for the gesture engine.
-1.  **Brush (Default):** Draws Flow / Lasso (Contextual).
-2.  **Eraser (Cut):** Draws "Null" vectors. Clears flow fields.
-3.  **Stamp (Build):** Tapping places a building (Resource Node, Wall) instead of moving units.
-4.  **Hand (Pan):** Moves the canvas (camera) without affecting the simulation.
+1.  **Calculate Loop Gap:** Distance between `path[0]` (Start) and `path[length-1]` (End).
+2.  **Logic:**
+      * **IF `gap < 60px` AND `pathLength > 100px`:**
+          * **Intent:** **LASSO (Select).**
+          * **Action:** Close the polygon. Run `SprigSystem.selectUnitsInPoly(path)`.
+      * **ELSE:**
+          * **Intent:** **FLOW (Paint).**
+          * **Action:** Commit the drawn vectors to the `FlowField`.
 
-## 3. Aesthetic Goal
-* **Vibe:** A dirty, magical sketchbook.
-* **UI Elements:** Should look like tools lying on a desk (a physical charcoal stick for "Wall," a quill for "Flow").
-* **Feedback:** When "painting" a flow, it shouldn't look like a digital vector line. It should look like **ink bleeding into paper** (using the Rough.js texture strategy).
+### B. Real-Time Feedback (The "Snap")
+
+  * **While Dragging:**
+      * Check distance to Start Point every frame.
+      * **IF `dist < 60px`:** Change the trail color (e.g., White -\> Gold).
+      * **Why?** Tells the player "If you let go now, this counts as a Lasso."
+
+## 3\. The UI Overlay (`src/ui/Toolbar.ts`)
+
+Do not use DOM elements if possible; use PixiJS UI or simple HTML overlays for the "Tool" vibe.
+
+### Layout: "The Artist's Desk"
+
+  * **Left Dock (Tools):**
+    1.  **Brush (Default):** Draws Flows/Lassos.
+    2.  **Eraser:** "Cuts" flows (draws 0-vectors).
+    3.  **Stamp:** Taps place a Flag/Building.
+  * **Right Dock (Palette / Intents):**
+      * Instead of colors, we pick **Commands**.
+      * **White:** Standard Flow.
+      * **Red:** Aggro Flow (Sprigs attack).
+      * **Green:** Harvest Flow (Sprigs seek resources).
+      * **Yellow:** Patrol/Orbit.
+
+## 4\. Visuals: The "Ink" Trail
+
+  * **Current:** The red debug lines (`graphics.lineTo`).
+  * **Target:** A "wet ink" stroke.
+  * **Implementation:**
+      * Use a `Rope` or `MeshStrip` for the active trail?
+      * **MVP:** Just increase line width to 5px and lower alpha to 0.8. We will apply the "Rough.js" texture to this later.
+
+## 5\. Technical Directives
+
+  * **Point-in-Polygon:** Implement a standard ray-casting algorithm helper function.
+  * **Optimization:** Do not run the "Loop Check" every single pixel of drag. Run it every 5-10 pixels (throttle).
+  * **State Machine:**
+    ```typescript
+    enum ToolMode { BRUSH, ERASER, STAMP }
+    enum IntentColor { MOVE, ATTACK, HARVEST }
+    ```
+    Ensure these states filter what happens on `pointerdown`.
