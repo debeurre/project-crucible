@@ -64,7 +64,7 @@ export const CONFIG = {
   FLOW_FIELD_VISUAL_ALPHA: 0.5, // Increased visibility
   FLOW_FIELD_VISUAL_COLOR: 0xFF0000, // Red for debug
   FLOW_FIELD_VISUAL_ARROW_LENGTH: 4, 
-  FLOW_FIELD_VISUAL_THICKNESS: 2, 
+  FLOW_FIELD_VISUAL_THICKNESS: 4, 
   FLOW_FIELD_VISUAL_STRIDE: 1, 
   FLOW_FIELD_GRID_ALPHA: 0.5, // Alpha for the debug grid
   FLOW_FIELD_GRID_COLOR: 0x808080, // Default gray for grid lines
