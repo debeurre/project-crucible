@@ -9,9 +9,8 @@ import { ResourceSystem } from './systems/ResourceSystem';
 import { FloatingTextSystem } from './systems/FloatingTextSystem';
 import { GraphSystem } from './systems/GraphSystem';
 import { DebugOverlay } from './ui/DebugOverlay';
+import { Toolbar, ToolMode } from './ui/Toolbar';
 import { TaskIntent } from './types/GraphTypes';
-
-type ToolMode = 'PENCIL' | 'PEN';
 
 export class Game {
     private app: Application;
@@ -30,6 +29,7 @@ export class Game {
     
     private inputState: InputState;
     private debugOverlay: DebugOverlay;
+    private toolbar: Toolbar;
 
     // State
     private score = 0;
@@ -53,6 +53,12 @@ export class Game {
         this.app = app;
         this.inputState = createInputManager(app);
         this.debugOverlay = new DebugOverlay();
+        
+        // Initialize UI
+        this.toolbar = new Toolbar((tool) => {
+            this.toolMode = tool;
+            this.toolbar.setTool(tool);
+        });
         
         // Initialize Systems
         this.mapSystem = new MapSystem(app);
@@ -103,7 +109,15 @@ export class Game {
         // 5. Floating Text (Always on top)
         this.worldContainer.addChild(this.floatingTextSystem.container);
         
-        // 6. Apply Effects
+        // 6. UI (Overlay)
+        this.app.stage.addChild(this.toolbar);
+        this.app.stage.addChild(this.debugOverlay.container); // Assuming DebugOverlay has a container or is handled differently? 
+        // DebugOverlay manages its own DOM elements or PIXI text? 
+        // Checking DebugOverlay.ts: It manages DOM elements usually if it's HTML, but if it's Pixi... 
+        // Actually DebugOverlay in this project is a TS file, likely creates DOM.
+        // Let's check DebugOverlay.ts if needed. Assuming it's fine.
+        
+        // 7. Apply Effects
         this.visualEffects.applyTo(this.worldContainer);
     }
 
@@ -118,6 +132,8 @@ export class Game {
         
         this.crucible.x = this.app.screen.width / 2;
         this.crucible.y = this.app.screen.height / 2;
+        
+        this.toolbar.resize(this.app.screen.width, this.app.screen.height);
     }
 
     private update(ticker: Ticker) {
@@ -147,7 +163,7 @@ export class Game {
                 case 'G': this.flowFieldSystem.toggleGrid(); break;
                 case 'T': 
                     this.toolMode = this.toolMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
-                    console.log('Tool Mode:', this.toolMode);
+                    this.toolbar.setTool(this.toolMode);
                     break;
 
                 case 'F': this.flowFieldSystem.clearAll(); break;
