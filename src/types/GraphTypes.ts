@@ -16,6 +16,7 @@ export interface GraphNode {
     x: number;
     y: number;
     type: NodeType;
+    active: boolean; // True if part of the current uncommited chain
 }
 
 export interface GraphEdge {

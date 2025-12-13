@@ -26,11 +26,46 @@ export class GraphSystem {
             id: this.nextNodeId++,
             x,
             y,
-            type
+            type,
+            active: true // New nodes start active (part of current chain)
         };
         this.nodes.push(node);
         this.draw();
         return node;
+    }
+
+    public setActiveNode(id: number) {
+        const node = this.nodes.find(n => n.id === id);
+        if (node) {
+            node.active = true;
+            this.draw();
+        }
+    }
+
+    public commitActiveNodes() {
+        for (const node of this.nodes) {
+            if (node.active) node.active = false;
+        }
+        this.draw();
+    }
+
+    public abortActiveNodes() {
+        // Destroy all nodes marked as active
+        const idsToRemove = new Set<number>();
+        this.nodes = this.nodes.filter(n => {
+            if (n.active) {
+                idsToRemove.add(n.id);
+                return false;
+            }
+            return true;
+        });
+        
+        // Remove connected edges
+        if (idsToRemove.size > 0) {
+            this.edges = this.edges.filter(e => !idsToRemove.has(e.nodeAId) && !idsToRemove.has(e.nodeBId));
+        }
+        
+        this.draw();
     }
 
     public createLink(nodeAId: number, nodeBId: number, intent: TaskIntent) {
@@ -109,6 +144,12 @@ export class GraphSystem {
         for (const node of this.nodes) {
             let color = 0xFFFFFF;
             let radius = 5;
+            
+            if (node.active) {
+                // Glow for active nodes
+                this.graphics.circle(node.x, node.y, radius + 4).fill({ color: 0xFFFF00, alpha: 0.3 });
+            }
+
             if (node.type === NodeType.BUILDING) {
                 color = 0x00FFFF;
                 radius = 10;

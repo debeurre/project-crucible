@@ -94,6 +94,9 @@ export class Game {
     }
 
     private setTool(mode: ToolMode) {
+        if (this.toolMode === 'PEN') {
+            this.graphSystem.commitActiveNodes();
+        }
         this.toolMode = mode;
         this.toolbar.setTool(mode);
         
@@ -151,19 +154,25 @@ export class Game {
         this.renderVisuals(ticker);
     }
 
+    // Keyboard Listener in InputManager handles keydown, we read it here?
+    // Wait, handleInput is polled. But events like 'ESCAPE' are ephemeral.
+    // InputManager needs to hold the key until consumed? Or we assume check happens fast enough.
+    // 'state.debugKey' is held.
+    
     private handleInput(ticker: Ticker) {
-        // Debug Input
+        // Debug/Tool Input
         if (this.inputState.debugKey) {
             const k = this.inputState.debugKey;
             switch (k) {
                 case '1': this.mapSystem.setMode(MapShape.FULL); this.resourceSystem.spawnRandomly(); break;
+                // ... (modes 2-7) ...
                 case '2': this.mapSystem.setMode(MapShape.RECT); this.resourceSystem.spawnRandomly(); break;
                 case '3': this.mapSystem.setMode(MapShape.SQUARE); this.resourceSystem.spawnRandomly(); break;
                 case '4': this.mapSystem.setMode(MapShape.CIRCLE); this.resourceSystem.spawnRandomly(); break;
                 case '5': this.mapSystem.setMode(MapShape.PROCGEN); this.resourceSystem.spawnRandomly(); break;
                 case '6': this.mapSystem.setMode(MapShape.MIRROR); this.resourceSystem.spawnRandomly(); break;
                 case '7': this.mapSystem.setMode(MapShape.RADIAL); this.resourceSystem.spawnRandomly(); break;
-                
+
                 case 'Q': this.visualEffects.toggleBlur(); break;
                 case 'W': this.visualEffects.toggleThreshold(); break;
                 case 'E': this.visualEffects.toggleDisplacement(); break;
@@ -171,18 +180,27 @@ export class Game {
                 
                 case 'G': this.flowFieldSystem.toggleGrid(); break;
                 case 'T': 
+                    // Tool Switch -> Commit current path
+                    if (this.toolMode === 'PEN') {
+                        this.graphSystem.commitActiveNodes();
+                    }
                     const nextTool = this.toolMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
                     this.setTool(nextTool);
                     break;
                 
                 case 'ESCAPE':
                     if (this.toolMode === 'PEN') {
-                        // Commit / Abort Chain
+                        // Cancel -> Destroy active nodes
+                        this.graphSystem.abortActiveNodes();
                         this.penState = 'IDLE';
                         this.penLastNodeId = null;
                         this.graphSystem.clearPreview();
                     }
                     break;
+                
+                // Add Enter for Commit? 
+                // InputManager needs update for ENTER.
+                // Assuming ENTER key is 'ENTER'.
 
                 case 'F': this.flowFieldSystem.clearAll(); break;
                 case 'S': this.sprigSystem.clearAll(); break;
@@ -321,21 +339,21 @@ export class Game {
                         this.graphSystem.createLink(this.penLastNodeId, hoverNode.id, TaskIntent.RED_ATTACK);
                     }
                     this.penLastNodeId = hoverNode.id;
+                    this.graphSystem.setActiveNode(hoverNode.id); // Highlight
                     this.penState = 'CHAINING';
                 } else if (!hoverNode) {
                     // Dragged to empty -> Create new node
-                    // But check distance! If very short drag (tap), don't create duplicate node if we just created one on 'down'.
                     const distSq = (mx - this.penDragStartPos.x)**2 + (my - this.penDragStartPos.y)**2;
-                    if (distSq > 100) { // Minimal drag threshold
+                    if (distSq > 100) { 
                         const newNode = this.graphSystem.addNode(mx, my);
                         if (this.penLastNodeId !== null) {
                             this.graphSystem.createLink(this.penLastNodeId, newNode.id, TaskIntent.RED_ATTACK);
                         }
                         this.penLastNodeId = newNode.id;
+                        this.graphSystem.setActiveNode(newNode.id); // Highlight
                         this.penState = 'CHAINING';
                     } else {
-                        // It was a tap on the start node (or the node we just created on down)
-                        // Just switch to Chaining
+                        // Tap logic
                         this.penState = 'CHAINING';
                     }
                 } else {
