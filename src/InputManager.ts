@@ -54,7 +54,7 @@ export function createInputManager(app: Application): InputState {
     // Keyboard Listener
     window.addEventListener('keydown', (e) => {
         const k = e.key.toUpperCase();
-        if ((k >= '1' && k <= '9') || ['Q','W','E','R','F','S','G','T','ESCAPE','ENTER'].includes(k)) {
+        if ((k >= '1' && k <= '9') || ['Q','W','E','R','F','S','G','T','ESCAPE','ENTER','SPACE'].includes(k)) {
             state.debugKey = k;
         }
     });

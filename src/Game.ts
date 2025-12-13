@@ -202,6 +202,7 @@ export class Game {
                     break;
                 
                 case 'ENTER':
+                case 'SPACE':
                     if (this.toolMode === 'PEN') {
                         // Commit Chain
                         this.graphSystem.commitActiveNodes();
