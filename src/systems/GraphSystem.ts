@@ -255,6 +255,12 @@ export class GraphSystem {
         this.draw();
     }
 
+    public clearAll() {
+        this.nodes = [];
+        this.edges = [];
+        this.draw();
+    }
+
     public drawPreviewLine(fromX: number, fromY: number, toX: number, toY: number, isValid: boolean) {
         // Redraw everything first (to clear old preview if any, or we could use a separate graphics object)
         // For simplicity, let's just clear and redraw all + preview. 

@@ -214,7 +214,13 @@ export class Game {
                     }
                     break;
 
-                case 'F': this.flowFieldSystem.clearAll(); break;
+                case 'F': 
+                    // Global Wipe
+                    this.flowFieldSystem.clearAll();
+                    this.sprigSystem.clearAll();
+                    this.graphSystem.clearAll(); // Need to implement this
+                    break;
+                
                 case 'S': this.sprigSystem.clearAll(); break;
             }
             this.updateUI();
