@@ -61,8 +61,7 @@ export class Game {
         
         // Initialize UI
         this.toolbar = new Toolbar((tool) => {
-            this.toolMode = tool;
-            this.toolbar.setTool(tool);
+            this.setTool(tool);
         });
         
         // Initialize Systems
@@ -92,6 +91,16 @@ export class Game {
         
         // Initial UI Update
         this.updateUI();
+    }
+
+    private setTool(mode: ToolMode) {
+        this.toolMode = mode;
+        this.toolbar.setTool(mode);
+        
+        // Reset Pen State
+        this.penState = 'IDLE';
+        this.penLastNodeId = null;
+        this.graphSystem.clearPreview();
     }
 
     private setupWorld() {
@@ -162,8 +171,17 @@ export class Game {
                 
                 case 'G': this.flowFieldSystem.toggleGrid(); break;
                 case 'T': 
-                    this.toolMode = this.toolMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
-                    this.toolbar.setTool(this.toolMode);
+                    const nextTool = this.toolMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
+                    this.setTool(nextTool);
+                    break;
+                
+                case 'ESCAPE':
+                    if (this.toolMode === 'PEN') {
+                        // Commit / Abort Chain
+                        this.penState = 'IDLE';
+                        this.penLastNodeId = null;
+                        this.graphSystem.clearPreview();
+                    }
                     break;
 
                 case 'F': this.flowFieldSystem.clearAll(); break;
