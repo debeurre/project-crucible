@@ -7,6 +7,10 @@ export class Toolbar extends Container {
     private pencilBtn: Container;
     private penBtn: Container;
     private eraserBtn: Container;
+    
+    // Icon Graphics References
+    private penIcon: Graphics;
+
     private activeTool: ToolMode = 'PENCIL';
     private isChaining: boolean = false; // New state
     private onToolSelected: (tool: ToolMode) => void;
@@ -71,17 +75,22 @@ export class Toolbar extends Container {
         if (mode === 'PENCIL') {
             this.drawPencilIcon(icon);
         } else if (mode === 'PEN') {
-            if (this.isChaining) {
-                this.drawCheckIcon(icon);
-            } else {
-                this.drawPenIcon(icon);
-            }
+            this.penIcon = icon; // Store reference
+            this.updatePenIcon(); // Draw initial state
         } else {
             this.drawEraserIcon(icon);
         }
         btn.addChild(icon);
 
         return btn;
+    }
+
+    private updatePenIcon() {
+        if (this.isChaining) {
+            this.drawCheckIcon(this.penIcon);
+        } else {
+            this.drawPenIcon(this.penIcon);
+        }
     }
 
     private drawPencilIcon(g: Graphics) {
@@ -153,6 +162,11 @@ export class Toolbar extends Container {
         this.pencilBtn.alpha = this.activeTool === 'PENCIL' ? 1.0 : this.INACTIVE_ALPHA;
         this.penBtn.alpha = this.activeTool === 'PEN' ? 1.0 : this.INACTIVE_ALPHA;
         this.eraserBtn.alpha = this.activeTool === 'ERASER' ? 1.0 : this.INACTIVE_ALPHA;
+        
+        // Ensure Pen Icon is up to date
+        if (this.penIcon) {
+            this.updatePenIcon();
+        }
     }
 
     public resize(screenWidth: number, screenHeight: number) {
