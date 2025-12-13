@@ -51,6 +51,11 @@ export class Game {
         this.inputState = createInputManager(app);
         this.debugOverlay = new DebugOverlay();
         
+        // Initialize Visual Containers
+        this.background = new Graphics();
+        this.worldContainer = new Container();
+        this.crucible = new Graphics();
+
         // Initialize Systems
         this.mapSystem = new MapSystem(app);
         this.visualEffects = new VisualEffects();
@@ -59,37 +64,6 @@ export class Game {
         this.floatingTextSystem = new FloatingTextSystem();
         this.graphSystem = new GraphSystem(this.worldContainer, this.flowFieldSystem);
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.worldContainer, this.flowFieldSystem);
-
-        // Initialize UI
-        this.toolbar = new Toolbar(
-            (tool) => {
-                this.toolManager.setTool(tool);
-            },
-            (intent) => {
-                this.toolManager.setActiveIntent(intent);
-            }
-        );
-        
-        // Initialize Tool Manager
-        this.toolManager = new ToolManager(
-            this.graphSystem,
-            this.flowFieldSystem,
-            this.sprigSystem,
-            this.toolbar
-        );
-
-        this.setupWorld();
-        
-        // Setup Resize Handler
-        this.app.renderer.on('resize', this.onResize.bind(this));
-        this.onResize(); // Initial sizing
-
-        // Start Game Loop
-        this.app.ticker.add(this.update.bind(this));
-        
-        // Initial UI Update
-        this.updateUI();
-    }
 
     private setupWorld() {
         // 1. Background (Separate layer)
