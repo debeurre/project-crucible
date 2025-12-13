@@ -261,23 +261,45 @@ export class GraphSystem {
         this.draw();
     }
 
+    private drawDashedLine(g: Graphics, x1: number, y1: number, x2: number, y2: number, dashLen: number, gapLen: number, color: number, width: number, alpha: number) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        
+        if (len === 0) return;
+        
+        const dashCount = Math.floor(len / (dashLen + gapLen));
+        const unitVx = dx / len;
+        const unitVy = dy / len;
+
+        for (let i = 0; i < dashCount; i++) {
+            const startX = x1 + i * (dashLen + gapLen) * unitVx;
+            const startY = y1 + i * (dashLen + gapLen) * unitVy;
+            const endX = startX + dashLen * unitVx;
+            const endY = startY + dashLen * unitVy;
+            
+            g.moveTo(startX, startY);
+            g.lineTo(endX, endY);
+        }
+        g.stroke({ width: width, color: color, alpha: alpha });
+    }
+
     public drawPreviewLine(fromX: number, fromY: number, toX: number, toY: number, isValid: boolean) {
-        // Redraw everything first (to clear old preview if any, or we could use a separate graphics object)
-        // For simplicity, let's just clear and redraw all + preview. 
-        // Optimization: Use a separate "previewGraphics" container if this is slow.
-        // Given low entity count, full redraw is fine for now.
-        this.draw(); 
-        
-        this.graphics.moveTo(fromX, fromY);
-        this.graphics.lineTo(toX, toY);
-        
-        // Dashed effect? Pixi doesn't do native dashed lines easily without plugins.
-        // Just use low alpha or specific color.
-        const color = isValid ? 0x00FF00 : 0xFF0000;
-        this.graphics.stroke({ width: 2, color: color, alpha: 0.5 });
+        this.graphics.clear(); // Clear everything
+        this.draw(); // Redraw static graph elements
+
+        const pathColor = TaskIntent.RED_ATTACK; // The color of the path segments (for now)
+        const lineColor = isValid ? pathColor : 0xFF0000; // Path color if valid, pure red if invalid
+
+        // Draw dashed line
+        const dashLength = 8;
+        const gapLength = 6;
+        const lineWidth = 2; // Preview line thickness
+
+        this.drawDashedLine(this.graphics, fromX, fromY, toX, toY, dashLength, gapLen, lineColor, lineWidth, 0.7);
         
         // Ghost Node at end
-        this.graphics.circle(toX, toY, 4).fill({ color: color, alpha: 0.5 });
+        this.graphics.circle(toX, toY, 4).fill({ color: lineColor, alpha: 0.5 });
     }
 
     public clearPreview() {
