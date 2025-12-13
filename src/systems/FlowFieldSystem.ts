@@ -183,6 +183,24 @@ export class FlowFieldSystem {
         }
     }
 
+    public paintIntent(mouseX: number, mouseY: number, intent: TaskIntent) {
+        // Brush Logic: Paint intent onto Graph Layer without flow vectors
+        // Radius can be configurable, hardcoded for now
+        const radius = 2; 
+        for (let r = -radius; r <= radius; r++) {
+            for (let c = -radius; c <= radius; c++) {
+                const col = Math.floor(mouseX / this.cellSize) + c;
+                const row = Math.floor(mouseY / this.cellSize) + r;
+
+                if (col >= 0 && col < this.gridCols && row >= 0 && row < this.gridRows) {
+                    const intentIndex = row * this.gridCols + col;
+                    this.fieldGraphIntent[intentIndex] = intent;
+                }
+            }
+        }
+        this.updateVisuals();
+    }
+
     public clearGraphFlowAt(col: number, row: number) {
         if (col >= 0 && col < this.gridCols && row >= 0 && row < this.gridRows) {
             const index = (row * this.gridCols + col) * 2;
@@ -255,20 +273,26 @@ export class FlowFieldSystem {
                     flowY = this.fieldManual[index + 1];
                 }
 
-                // Only draw if there's significant flow
+                const centerX = col * this.cellSize + (this.cellSize * stride) / 2;
+                const centerY = row * this.cellSize + (this.cellSize * stride) / 2;
+
+                // Check for Intent Only (Brush)
+                const intent = this.fieldGraphIntent[row * this.gridCols + col];
+                if (intent !== -1) {
+                    // Draw filled square for intent area
+                    // Use low alpha to indicate area
+                    this.arrowGraphics.rect(col * this.cellSize, row * this.cellSize, this.cellSize, this.cellSize)
+                        .fill({ color: intent, alpha: 0.25 });
+                }
+
+                // Only draw arrow if there's significant flow
                 if (Math.abs(flowX) < 0.1 && Math.abs(flowY) < 0.1) continue;
                 
                 // Color: Use Intent Color if Graph, else Default Red
                 let arrowColor = CONFIG.FLOW_FIELD_VISUAL_COLOR;
-                if (isGraph) {
-                    const intent = this.fieldGraphIntent[row * this.gridCols + col];
-                    if (intent !== -1) {
-                         arrowColor = intent;
-                    }
+                if (isGraph && intent !== -1) {
+                     arrowColor = intent;
                 }
-
-                const centerX = col * this.cellSize + (this.cellSize * stride) / 2;
-                const centerY = row * this.cellSize + (this.cellSize * stride) / 2;
 
                 const endX = centerX + flowX * arrowLength;
                 const endY = centerY + flowY * arrowLength;
@@ -295,11 +319,12 @@ export class FlowFieldSystem {
                 const p2x = baseMidX - halfWidthX;
                 const p2y = baseMidY - halfWidthY;
                 
+                this.arrowGraphics.beginFill(arrowColor);
                 this.arrowGraphics.moveTo(endX, endY); 
                 this.arrowGraphics.lineTo(p1x, p1y);   
                 this.arrowGraphics.lineTo(p2x, p2y);   
                 this.arrowGraphics.closePath();
-                this.arrowGraphics.fill(arrowColor);
+                this.arrowGraphics.endFill();
             }
         }
     }

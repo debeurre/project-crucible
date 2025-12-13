@@ -3,6 +3,7 @@ export enum TaskIntent {
     RED_ATTACK = 0xFF0000,    // Red
     BLUE_SCOUT = 0x0000FF,    // Blue
     YELLOW_ASSIST = 0xFFFF00, // Yellow
+    WHITE_OVERRIDE = 0xFFFFFF // White
 }
 
 export enum NodeType {

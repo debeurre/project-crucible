@@ -3,20 +3,23 @@ import { ITool } from './ITool';
 import { GraphSystem } from '../systems/GraphSystem';
 import { Toolbar } from '../ui/Toolbar';
 import { TaskIntent } from '../types/GraphTypes';
+import { ToolManager } from './ToolManager';
 
 type PenState = 'IDLE' | 'DRAGGING' | 'CHAINING';
 
 export class PenTool implements ITool {
     private graphSystem: GraphSystem;
     private toolbar: Toolbar;
+    private toolManager: ToolManager;
     
     private state: PenState = 'IDLE';
     private lastNodeId: number | null = null;
     private dragStartPos: Point = new Point();
 
-    constructor(graphSystem: GraphSystem, toolbar: Toolbar) {
+    constructor(graphSystem: GraphSystem, toolbar: Toolbar, toolManager: ToolManager) {
         this.graphSystem = graphSystem;
         this.toolbar = toolbar;
+        this.toolManager = toolManager;
     }
 
     onActivate(): void {
@@ -33,12 +36,13 @@ export class PenTool implements ITool {
 
     onDown(x: number, y: number): void {
         const clickedNode = this.graphSystem.getNodeAt(x, y);
+        const currentIntent = this.toolManager.getActiveIntent();
 
         if (this.state === 'IDLE' || this.state === 'CHAINING') {
             if (clickedNode) {
                 // Clicked existing node -> Link & Start Drag
                 if (this.state === 'CHAINING' && this.lastNodeId !== null && this.lastNodeId !== clickedNode.id) {
-                    this.graphSystem.createLink(this.lastNodeId, clickedNode.id, TaskIntent.RED_ATTACK);
+                    this.graphSystem.createLink(this.lastNodeId, clickedNode.id, currentIntent);
                 }
                 
                 this.lastNodeId = clickedNode.id;
@@ -88,13 +92,15 @@ export class PenTool implements ITool {
     }
 
     onUp(x: number, y: number): void {
+        const currentIntent = this.toolManager.getActiveIntent();
+
         if (this.state === 'DRAGGING') {
             const hoverNode = this.graphSystem.getNodeAt(x, y);
             
             if (hoverNode && hoverNode.id !== this.lastNodeId) {
                 // Linked to existing
                 if (this.lastNodeId !== null) {
-                    this.graphSystem.createLink(this.lastNodeId, hoverNode.id, TaskIntent.RED_ATTACK);
+                    this.graphSystem.createLink(this.lastNodeId, hoverNode.id, currentIntent);
                 }
                 this.lastNodeId = hoverNode.id;
                 this.graphSystem.setActiveNode(hoverNode.id);
@@ -106,7 +112,7 @@ export class PenTool implements ITool {
                 if (distSq > 100) { 
                     const newNode = this.graphSystem.addNode(x, y);
                     if (this.lastNodeId !== null) {
-                        this.graphSystem.createLink(this.lastNodeId, newNode.id, TaskIntent.RED_ATTACK);
+                        this.graphSystem.createLink(this.lastNodeId, newNode.id, currentIntent);
                     }
                     this.lastNodeId = newNode.id;
                     this.graphSystem.setActiveNode(newNode.id);

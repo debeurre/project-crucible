@@ -1,4 +1,4 @@
-import { Application, Graphics, Container, Point, Ticker } from 'pixi.js';
+import { Application, Graphics, Container, Ticker } from 'pixi.js';
 import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
 import { CONFIG } from './config';
@@ -51,11 +51,6 @@ export class Game {
         this.inputState = createInputManager(app);
         this.debugOverlay = new DebugOverlay();
         
-        // Initialize Visual Containers
-        this.background = new Graphics();
-        this.worldContainer = new Container();
-        this.crucible = new Graphics();
-        
         // Initialize Systems
         this.mapSystem = new MapSystem(app);
         this.visualEffects = new VisualEffects();
@@ -66,9 +61,14 @@ export class Game {
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.worldContainer, this.flowFieldSystem);
 
         // Initialize UI
-        this.toolbar = new Toolbar((tool) => {
-            this.toolManager.setTool(tool);
-        });
+        this.toolbar = new Toolbar(
+            (tool) => {
+                this.toolManager.setTool(tool);
+            },
+            (intent) => {
+                this.toolManager.setActiveIntent(intent);
+            }
+        );
         
         // Initialize Tool Manager
         this.toolManager = new ToolManager(
@@ -145,14 +145,16 @@ export class Game {
         if (this.inputState.debugKey) {
             const k = this.inputState.debugKey;
             switch (k) {
-                case '1': this.mapSystem.setMode(MapShape.FULL); this.resourceSystem.spawnRandomly(); break;
-                case '2': this.mapSystem.setMode(MapShape.RECT); this.resourceSystem.spawnRandomly(); break;
-                case '3': this.mapSystem.setMode(MapShape.SQUARE); this.resourceSystem.spawnRandomly(); break;
-                case '4': this.mapSystem.setMode(MapShape.CIRCLE); this.resourceSystem.spawnRandomly(); break;
-                case '5': this.mapSystem.setMode(MapShape.PROCGEN); this.resourceSystem.spawnRandomly(); break;
-                case '6': this.mapSystem.setMode(MapShape.MIRROR); this.resourceSystem.spawnRandomly(); break;
-                case '7': this.mapSystem.setMode(MapShape.RADIAL); this.resourceSystem.spawnRandomly(); break;
-
+                // Intent Hotkeys
+                case '1': this.toolManager.setActiveIntent(TaskIntent.GREEN_HARVEST); break;
+                case '2': this.toolManager.setActiveIntent(TaskIntent.RED_ATTACK); break;
+                case '3': this.toolManager.setActiveIntent(TaskIntent.BLUE_SCOUT); break;
+                case '4': this.toolManager.setActiveIntent(TaskIntent.YELLOW_ASSIST); break;
+                case '5': this.toolManager.setActiveIntent(TaskIntent.WHITE_OVERRIDE); break;
+                
+                // Old map hotkeys removed/remapped?
+                // Spec says "Remove map relaed hotkeys".
+                
                 case 'Q': this.visualEffects.toggleBlur(); break;
                 case 'W': this.visualEffects.toggleThreshold(); break;
                 case 'E': this.visualEffects.toggleDisplacement(); break;
