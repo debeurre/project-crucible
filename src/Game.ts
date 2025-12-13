@@ -273,36 +273,39 @@ export class Game {
                 // STATE MACHINE INPUT
                 if (this.penState === 'IDLE' || this.penState === 'CHAINING') {
                     if (clickedNode) {
-                        // Clicked existing node -> Start Drag or Chain from here
-                        this.penLastNodeId = clickedNode.id;
-                        this.penState = 'DRAGGING'; 
-                        this.penDragStartPos.set(clickedNode.x, clickedNode.y);
-                    } else {
-                        // Clicked empty -> Create Node -> Start Chain
-                        // OR: Just start dragging a ghost line from this empty point? 
-                        // Spec says: Tap(Empty) -> Create A -> Goto CHAINING.
-                        // But also: Drag Start(Existing) -> Goto DRAGGING.
-                        
-                        // Let's implement:
-                        // 1. Create Node A immediately.
-                        const newNode = this.graphSystem.addNode(mx, my);
-                        
-                        // 2. If we were chaining, link to previous
-                        if (this.penState === 'CHAINING' && this.penLastNodeId !== null) {
-                            this.graphSystem.createLink(this.penLastNodeId, newNode.id, TaskIntent.RED_ATTACK);
+                        // Clicked existing node -> Link & Start Drag
+                        if (this.penState === 'CHAINING' && this.penLastNodeId !== null && this.penLastNodeId !== clickedNode.id) {
+                            this.graphSystem.createLink(this.penLastNodeId, clickedNode.id, TaskIntent.RED_ATTACK);
                         }
                         
-                        // 3. Set new node as anchor
-                        this.penLastNodeId = newNode.id;
-                        this.penDragStartPos.set(newNode.x, newNode.y);
-                        
-                        // 4. Enter DRAGGING state immediately to allow "Drag to link" 
-                        // even after creating a new node? 
-                        // Actually, if it's a TAP, we go to CHAINING. If it's a HOLD, we go to DRAGGING.
-                        // Since this is 'Just Pressed', let's assume DRAGGING for now, 
-                        // and if released quickly without moving, we treat as TAP (Chain).
-                        this.penState = 'DRAGGING';
-                        this.toolbar.setPenState(true); // Assuming we started a chain
+                        this.penLastNodeId = clickedNode.id;
+                        this.graphSystem.setActiveNode(clickedNode.id);
+                        this.penState = 'DRAGGING'; 
+                        this.penDragStartPos.set(clickedNode.x, clickedNode.y);
+                        this.toolbar.setPenState(true);
+                    } else {
+                        // Clicked Empty
+                        if (this.penState === 'IDLE') {
+                            // IDLE -> Click Empty -> Create Start Node A
+                            const newNode = this.graphSystem.addNode(mx, my);
+                            this.penLastNodeId = newNode.id;
+                            this.graphSystem.setActiveNode(newNode.id);
+                            this.penState = 'DRAGGING';
+                            this.penDragStartPos.set(newNode.x, newNode.y);
+                            this.toolbar.setPenState(true);
+                        } else if (this.penState === 'CHAINING' && this.penLastNodeId !== null) {
+                            // CHAINING -> Click Empty -> Start "Rubber Band" from Last Node
+                            // Do NOT create node yet. Just drag from A.
+                            const lastNode = this.graphSystem.getNodes().find(n => n.id === this.penLastNodeId);
+                            if (lastNode) {
+                                this.penState = 'DRAGGING';
+                                this.penDragStartPos.set(lastNode.x, lastNode.y);
+                                // Don't change lastNodeId yet
+                            } else {
+                                // Error fallback: Node gone? Reset.
+                                this.penState = 'IDLE';
+                            }
+                        }
                     }
                 }
             } else if (this.toolMode === 'ERASER') {
