@@ -296,7 +296,7 @@ export class GraphSystem {
         const gapLength = 6;
         const lineWidth = 2; // Preview line thickness
 
-        this.drawDashedLine(this.graphics, fromX, fromY, toX, toY, dashLength, gapLen, lineColor, lineWidth, 0.7);
+        this.drawDashedLine(this.graphics, fromX, fromY, toX, toY, dashLength, gapLength, lineColor, lineWidth, 0.7);
         
         // Ghost Node at end
         this.graphics.circle(toX, toY, 4).fill({ color: lineColor, alpha: 0.5 });
