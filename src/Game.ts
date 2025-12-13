@@ -52,6 +52,7 @@ export class Game {
     // Input Logic State
     private wasDown = false;
     private inputDownTime = 0;
+    private maxTouches = 0;
     private interactionMode: 'NONE' | 'CRUCIBLE' | 'FLOW' | 'PEN' | 'ERASER' = 'NONE';
 
     constructor(app: Application) {
@@ -225,9 +226,17 @@ export class Game {
         const mx = this.inputState.mousePosition.x;
         const my = this.inputState.mousePosition.y;
 
+        // Track max touches
+        if (isDown) {
+            this.maxTouches = Math.max(this.maxTouches, this.inputState.touchCount);
+        } else {
+            // Reset on release (after processing logic)
+        }
+
         // 1. Just Pressed
         if (isDown && !this.wasDown) {
             this.inputDownTime = now;
+            this.maxTouches = this.inputState.touchCount; // Init tracking
             
             // Interaction Mode Logic
             const dx = mx - this.crucible.x;
@@ -286,6 +295,11 @@ export class Game {
 
         // 2. Holding / Dragging
         if (isDown) {
+            // Check for Multi-touch Abort Signal immediately if needed?
+            // User said "Abort/Undo = Two-Finger Tap".
+            // If we detect 2 fingers, we can abort immediately or wait for release.
+            // Waiting for release is safer for "Tap" gestures.
+            
             if (this.interactionMode === 'CRUCIBLE') {
                 // ... (Existing Crucible Hold Logic) ...
                 const holdDuration = now - this.inputDownTime;
@@ -299,9 +313,10 @@ export class Game {
                     }
                 }
             } else if (this.interactionMode === 'FLOW') {
-                // ... (Existing Flow Logic) ...
+                // DRAG ACTION: Flow Field (Manual)
                 const dragVecX = mx - (this.lastMousePos?.x ?? mx);
                 const dragVecY = my - (this.lastMousePos?.y ?? my);
+
                 if (dragVecX !== 0 || dragVecY !== 0) {
                      this.flowFieldSystem.paintManualFlow(mx, my, dragVecX, dragVecY);
                 }
@@ -326,6 +341,25 @@ export class Game {
 
         // 3. Just Released
         if (!isDown && this.wasDown) {
+            // Multi-touch Abort Check
+            if (this.maxTouches >= 2) {
+                // Two-finger tap detected -> Abort
+                if (this.interactionMode === 'PEN') {
+                    this.graphSystem.abortActiveNodes();
+                    this.penState = 'IDLE';
+                    this.penLastNodeId = null;
+                    this.graphSystem.clearPreview();
+                    this.toolbar.setPenState(false);
+                }
+                // Reset everything
+                this.interactionMode = 'NONE';
+                this.spawnTimer = 0;
+                this.wasDown = isDown;
+                this.lastMousePos = this.inputState.mousePosition.clone();
+                this.maxTouches = 0;
+                return; // Early exit
+            }
+
             if (this.interactionMode === 'CRUCIBLE') {
                 // ... (Existing Crucible Release Logic) ...
                 const holdDuration = now - this.inputDownTime;
@@ -380,9 +414,10 @@ export class Game {
                 this.graphSystem.clearPreview();
             }
             
-            // Reset Interaction Mode but NOT Pen State (Pen State persists for chaining)
+            // Reset
             this.interactionMode = 'NONE';
             this.spawnTimer = 0;
+            this.maxTouches = 0; // Reset max touches
         }
 
         this.wasDown = isDown;
