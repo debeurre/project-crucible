@@ -10,10 +10,7 @@ import { FloatingTextSystem } from './systems/FloatingTextSystem';
 import { GraphSystem } from './systems/GraphSystem';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar, ToolMode } from './ui/Toolbar';
-import { TaskIntent } from './types/GraphTypes';
-
-type ToolMode = 'PENCIL' | 'PEN' | 'ERASER';
-type PenState = 'IDLE' | 'DRAGGING' | 'CHAINING';
+import { ToolManager } from './tools/ToolManager';
 
 export class Game {
     private app: Application;
@@ -30,6 +27,7 @@ export class Game {
     private floatingTextSystem: FloatingTextSystem;
     private graphSystem: GraphSystem;
     
+    private toolManager: ToolManager;
     private inputState: InputState;
     private debugOverlay: DebugOverlay;
     private toolbar: Toolbar;
@@ -39,12 +37,6 @@ export class Game {
     private spawnTimer = 0;
     private lastMousePos: Point | null = null;
     
-    // Tool State
-    private toolMode: ToolMode = 'PENCIL';
-    private penState: PenState = 'IDLE';
-    private penLastNodeId: number | null = null; // The anchor node for chaining/dragging
-    private penDragStartPos: Point = new Point(); // Where we started dragging
-    
     // Animation State
     private tapAnimProgress = 1.0;
     private holdAnimPhase = 0;
@@ -53,17 +45,17 @@ export class Game {
     private wasDown = false;
     private inputDownTime = 0;
     private maxTouches = 0;
-    private interactionMode: 'NONE' | 'CRUCIBLE' | 'FLOW' | 'PEN' | 'ERASER' = 'NONE';
+    private interactionMode: 'NONE' | 'CRUCIBLE' | 'TOOL' = 'NONE';
 
     constructor(app: Application) {
         this.app = app;
         this.inputState = createInputManager(app);
         this.debugOverlay = new DebugOverlay();
         
-        // Initialize UI
-        this.toolbar = new Toolbar((tool) => {
-            this.setTool(tool);
-        });
+        // Initialize Visual Containers
+        this.background = new Graphics();
+        this.worldContainer = new Container();
+        this.crucible = new Graphics();
         
         // Initialize Systems
         this.mapSystem = new MapSystem(app);
@@ -71,17 +63,23 @@ export class Game {
         this.flowFieldSystem = new FlowFieldSystem(app);
         this.resourceSystem = new ResourceSystem(app, this.mapSystem);
         this.floatingTextSystem = new FloatingTextSystem();
-
-        // Initialize Visual Containers
-        this.background = new Graphics();
-        this.worldContainer = new Container();
-        this.crucible = new Graphics();
-        
-        this.setupWorld();
-        
-        // Systems dependent on world container
         this.graphSystem = new GraphSystem(this.worldContainer, this.flowFieldSystem);
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.worldContainer, this.flowFieldSystem);
+
+        // Initialize UI
+        this.toolbar = new Toolbar((tool) => {
+            this.toolManager.setTool(tool);
+        });
+        
+        // Initialize Tool Manager
+        this.toolManager = new ToolManager(
+            this.graphSystem,
+            this.flowFieldSystem,
+            this.sprigSystem,
+            this.toolbar
+        );
+
+        this.setupWorld();
         
         // Setup Resize Handler
         this.app.renderer.on('resize', this.onResize.bind(this));
@@ -92,20 +90,6 @@ export class Game {
         
         // Initial UI Update
         this.updateUI();
-    }
-
-    private setTool(mode: ToolMode) {
-        if (this.toolMode === 'PEN') {
-            this.graphSystem.commitActiveNodes();
-            this.toolbar.setPenState(false);
-        }
-        this.toolMode = mode;
-        this.toolbar.setTool(mode);
-        
-        // Reset Pen State
-        this.penState = 'IDLE';
-        this.penLastNodeId = null;
-        this.graphSystem.clearPreview();
     }
 
     private setupWorld() {
@@ -154,20 +138,15 @@ export class Game {
         this.handleInput(ticker);
         this.updateGameLogic(ticker);
         this.renderVisuals(ticker);
+        this.toolManager.update(ticker);
     }
 
-    // Keyboard Listener in InputManager handles keydown, we read it here?
-    // Wait, handleInput is polled. But events like 'ESCAPE' are ephemeral.
-    // InputManager needs to hold the key until consumed? Or we assume check happens fast enough.
-    // 'state.debugKey' is held.
-    
     private handleInput(ticker: Ticker) {
         // Debug/Tool Input
         if (this.inputState.debugKey) {
             const k = this.inputState.debugKey;
             switch (k) {
                 case '1': this.mapSystem.setMode(MapShape.FULL); this.resourceSystem.spawnRandomly(); break;
-                // ... (modes 2-7) ...
                 case '2': this.mapSystem.setMode(MapShape.RECT); this.resourceSystem.spawnRandomly(); break;
                 case '3': this.mapSystem.setMode(MapShape.SQUARE); this.resourceSystem.spawnRandomly(); break;
                 case '4': this.mapSystem.setMode(MapShape.CIRCLE); this.resourceSystem.spawnRandomly(); break;
@@ -182,35 +161,21 @@ export class Game {
                 
                 case 'G': this.flowFieldSystem.toggleGrid(); break;
                 case 'T': 
-                    // Tool Switch -> Commit current path
-                    if (this.toolMode === 'PEN') {
-                        this.graphSystem.commitActiveNodes();
-                        this.toolbar.setPenState(false); // Reset Checkmark
-                    }
-                    const nextTool = this.toolMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
-                    this.setTool(nextTool);
+                    const currentMode = this.toolManager.getActiveToolMode();
+                    const nextTool = currentMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
+                    this.toolManager.setTool(nextTool);
                     break;
                 
                 case 'ESCAPE':
-                    if (this.toolMode === 'PEN') {
-                        // Cancel -> Destroy active nodes
-                        this.graphSystem.abortActiveNodes();
-                        this.penState = 'IDLE';
-                        this.penLastNodeId = null;
-                        this.graphSystem.clearPreview();
-                        this.toolbar.setPenState(false); // Reset Checkmark
+                    if (this.toolManager.getActiveToolMode() === 'PEN') {
+                        this.toolManager.getPenTool().abort();
                     }
                     break;
                 
                 case 'ENTER':
                 case 'SPACE':
-                    if (this.toolMode === 'PEN') {
-                        // Commit Chain
-                        this.graphSystem.commitActiveNodes();
-                        this.penState = 'IDLE';
-                        this.penLastNodeId = null;
-                        this.graphSystem.clearPreview();
-                        this.toolbar.setPenState(false); // Reset Checkmark
+                    if (this.toolManager.getActiveToolMode() === 'PEN') {
+                        this.toolManager.getPenTool().commit();
                     }
                     break;
 
@@ -218,7 +183,7 @@ export class Game {
                     // Global Wipe
                     this.flowFieldSystem.clearAll();
                     this.sprigSystem.clearAll();
-                    this.graphSystem.clearAll(); // Need to implement this
+                    this.graphSystem.clearAll();
                     break;
                 
                 case 'S': this.sprigSystem.clearAll(); break;
@@ -235,21 +200,12 @@ export class Game {
         // Track max touches
         if (isDown) {
             this.maxTouches = Math.max(this.maxTouches, this.inputState.touchCount);
-        } else {
-            // Reset on release (after processing logic)
         }
 
-        // 0. Right Click (Just Pressed Logic simulation for Commit)
-        // Since we don't have a "wasRightDown", we might re-trigger if held. 
-        // But Commit is idempotent usually (clears active).
-        // Better: Check `isRightDown`.
+        // 0. Right Click (Commit)
         if (this.inputState.isRightDown) {
-             if (this.toolMode === 'PEN') {
-                this.graphSystem.commitActiveNodes();
-                this.penState = 'IDLE';
-                this.penLastNodeId = null;
-                this.graphSystem.clearPreview();
-                this.toolbar.setPenState(false); 
+             if (this.toolManager.getActiveToolMode() === 'PEN') {
+                this.toolManager.getPenTool().commit();
             }
         }
 
@@ -265,66 +221,15 @@ export class Game {
 
             if (distSq < CONFIG.CRUCIBLE_RADIUS**2) {
                 this.interactionMode = 'CRUCIBLE';
-            } else if (this.toolMode === 'PEN') {
-                this.interactionMode = 'PEN';
-                
-                const clickedNode = this.graphSystem.getNodeAt(mx, my);
-                
-                // STATE MACHINE INPUT
-                if (this.penState === 'IDLE' || this.penState === 'CHAINING') {
-                    if (clickedNode) {
-                        // Clicked existing node -> Link & Start Drag
-                        if (this.penState === 'CHAINING' && this.penLastNodeId !== null && this.penLastNodeId !== clickedNode.id) {
-                            this.graphSystem.createLink(this.penLastNodeId, clickedNode.id, TaskIntent.RED_ATTACK);
-                        }
-                        
-                        this.penLastNodeId = clickedNode.id;
-                        this.graphSystem.setActiveNode(clickedNode.id);
-                        this.penState = 'DRAGGING'; 
-                        this.penDragStartPos.set(clickedNode.x, clickedNode.y);
-                        this.toolbar.setPenState(true);
-                    } else {
-                        // Clicked Empty
-                        if (this.penState === 'IDLE') {
-                            // IDLE -> Click Empty -> Create Start Node A
-                            const newNode = this.graphSystem.addNode(mx, my);
-                            this.penLastNodeId = newNode.id;
-                            this.graphSystem.setActiveNode(newNode.id);
-                            this.penState = 'DRAGGING';
-                            this.penDragStartPos.set(newNode.x, newNode.y);
-                            this.toolbar.setPenState(true);
-                        } else if (this.penState === 'CHAINING' && this.penLastNodeId !== null) {
-                            // CHAINING -> Click Empty -> Start "Rubber Band" from Last Node
-                            // Do NOT create node yet. Just drag from A.
-                            const lastNode = this.graphSystem.getNodes().find(n => n.id === this.penLastNodeId);
-                            if (lastNode) {
-                                this.penState = 'DRAGGING';
-                                this.penDragStartPos.set(lastNode.x, lastNode.y);
-                                // Don't change lastNodeId yet
-                            } else {
-                                // Error fallback: Node gone? Reset.
-                                this.penState = 'IDLE';
-                            }
-                        }
-                    }
-                }
-            } else if (this.toolMode === 'ERASER') {
-                this.interactionMode = 'ERASER';
-                this.performErasure(mx, my);
             } else {
-                this.interactionMode = 'FLOW';
+                this.interactionMode = 'TOOL';
+                this.toolManager.onDown(mx, my);
             }
         }
 
         // 2. Holding / Dragging
         if (isDown) {
-            // Check for Multi-touch Abort Signal immediately if needed?
-            // User said "Abort/Undo = Two-Finger Tap".
-            // If we detect 2 fingers, we can abort immediately or wait for release.
-            // Waiting for release is safer for "Tap" gestures.
-            
             if (this.interactionMode === 'CRUCIBLE') {
-                // ... (Existing Crucible Hold Logic) ...
                 const holdDuration = now - this.inputDownTime;
                 if (holdDuration >= CONFIG.TAP_THRESHOLD_MS) {
                     this.spawnTimer += ticker.deltaMS / 1000;
@@ -335,30 +240,8 @@ export class Game {
                         this.updateUI();
                     }
                 }
-            } else if (this.interactionMode === 'FLOW') {
-                // DRAG ACTION: Flow Field (Manual)
-                const dragVecX = mx - (this.lastMousePos?.x ?? mx);
-                const dragVecY = my - (this.lastMousePos?.y ?? my);
-
-                if (dragVecX !== 0 || dragVecY !== 0) {
-                     this.flowFieldSystem.paintManualFlow(mx, my, dragVecX, dragVecY);
-                }
-            } else if (this.interactionMode === 'ERASER') {
-                this.performErasure(mx, my);
-            } else if (this.interactionMode === 'PEN' && this.penState === 'DRAGGING') {
-                // Visualize Drag
-                // Snap check
-                let targetX = mx;
-                let targetY = my;
-                const hoverNode = this.graphSystem.getNodeAt(mx, my);
-                if (hoverNode) {
-                    targetX = hoverNode.x;
-                    targetY = hoverNode.y;
-                }
-                
-                if (this.penDragStartPos.x !== 0 || this.penDragStartPos.y !== 0) { // Safety check
-                     this.graphSystem.drawPreviewLine(this.penDragStartPos.x, this.penDragStartPos.y, targetX, targetY, true);
-                }
+            } else if (this.interactionMode === 'TOOL') {
+                this.toolManager.onHold(mx, my, ticker);
             }
         }
 
@@ -366,25 +249,18 @@ export class Game {
         if (!isDown && this.wasDown) {
             // Multi-touch Abort Check
             if (this.maxTouches >= 2) {
-                // Two-finger tap detected -> Abort
-                if (this.interactionMode === 'PEN') {
-                    this.graphSystem.abortActiveNodes();
-                    this.penState = 'IDLE';
-                    this.penLastNodeId = null;
-                    this.graphSystem.clearPreview();
-                    this.toolbar.setPenState(false);
+                if (this.toolManager.getActiveToolMode() === 'PEN') {
+                    this.toolManager.getPenTool().abort();
                 }
-                // Reset everything
+                // Reset
                 this.interactionMode = 'NONE';
                 this.spawnTimer = 0;
                 this.wasDown = isDown;
-                this.lastMousePos = this.inputState.mousePosition.clone();
                 this.maxTouches = 0;
-                return; // Early exit
+                return;
             }
 
             if (this.interactionMode === 'CRUCIBLE') {
-                // ... (Existing Crucible Release Logic) ...
                 const holdDuration = now - this.inputDownTime;
                 if (holdDuration < CONFIG.TAP_THRESHOLD_MS) {
                     for(let i=0; i<CONFIG.SPRIGS_PER_TAP; i++) {
@@ -393,76 +269,18 @@ export class Game {
                     this.updateUI();
                     this.tapAnimProgress = 0;
                 }
-            } else if (this.interactionMode === 'PEN' && this.penState === 'DRAGGING') {
-                // Commit the Drag
-                const hoverNode = this.graphSystem.getNodeAt(mx, my);
-                
-                // Logic:
-                // 1. If released on a Node (different from start) -> Link & Chain
-                // 2. If released on Empty -> Create Node B -> Link & Chain
-                // 3. If released on Start Node (Tap) -> Switch to CHAINING (Wait for next click)
-                
-                if (hoverNode && hoverNode.id !== this.penLastNodeId) {
-                    // Linked to existing
-                    if (this.penLastNodeId !== null) {
-                        this.graphSystem.createLink(this.penLastNodeId, hoverNode.id, TaskIntent.RED_ATTACK);
-                    }
-                    this.penLastNodeId = hoverNode.id;
-                    this.graphSystem.setActiveNode(hoverNode.id); // Highlight
-                    this.penState = 'CHAINING';
-                    this.toolbar.setPenState(true); // Show Checkmark
-                } else if (!hoverNode) {
-                    // Dragged to empty -> Create new node
-                    const distSq = (mx - this.penDragStartPos.x)**2 + (my - this.penDragStartPos.y)**2;
-                    if (distSq > 100) { 
-                        const newNode = this.graphSystem.addNode(mx, my);
-                        if (this.penLastNodeId !== null) {
-                            this.graphSystem.createLink(this.penLastNodeId, newNode.id, TaskIntent.RED_ATTACK);
-                        }
-                        this.penLastNodeId = newNode.id;
-                        this.graphSystem.setActiveNode(newNode.id); // Highlight
-                        this.penState = 'CHAINING';
-                        this.toolbar.setPenState(true); // Show Checkmark
-                    } else {
-                        // Tap logic
-                        this.penState = 'CHAINING';
-                        this.toolbar.setPenState(true); // Show Checkmark
-                    }
-                } else {
-                    // Released on same node
-                    this.penState = 'CHAINING';
-                    this.toolbar.setPenState(true); // Show Checkmark
-                }
-                
-                this.graphSystem.clearPreview();
+            } else if (this.interactionMode === 'TOOL') {
+                this.toolManager.onUp(mx, my);
             }
             
             // Reset
             this.interactionMode = 'NONE';
             this.spawnTimer = 0;
-            this.maxTouches = 0; // Reset max touches
+            this.maxTouches = 0;
         }
 
         this.wasDown = isDown;
         this.lastMousePos = this.inputState.mousePosition.clone();
-    }
-
-    private performErasure(x: number, y: number) {
-        const radius = 40; // Eraser radius
-        
-        // 1. Clear Flow
-        // We use clearFlow which currently has hardcoded small radius (2 cells).
-        // Let's rely on FlowFieldSystem to handle its own radius or update it?
-        // Actually, let's just loop a bit here or update FlowFieldSystem later to take radius.
-        // For now, call clearFlow multiple times? No, that's inefficient.
-        // Let's assume clearFlow does 2 cells (40px) which matches our eraser visual roughly.
-        this.flowFieldSystem.clearFlow(x, y); 
-
-        // 2. Remove Graph Elements
-        this.graphSystem.removeElementsAt(x, y, radius);
-
-        // 3. Remove Sprigs
-        this.sprigSystem.removeSprigsAt(x, y, radius);
     }
 
     private updateGameLogic(ticker: Ticker) {
@@ -502,24 +320,7 @@ export class Game {
     }
 
     private renderVisuals(ticker: Ticker) {
-        // We pass ticker here now
         this.updateCrucibleAnimation(ticker);
-        
-        // Pen Preview
-        if (this.toolMode === 'PEN' && this.penState === 'DRAGGING' && this.penLastNodeId !== null) {
-            // This is actually handled in the Input Loop (Immediate Mode) for responsiveness?
-            // No, the input loop updates state, renderVisuals should draw.
-            // But handleInput is called before renderVisuals in update().
-            // Wait, I put drawPreviewLine inside handleInput's "Holding" block. 
-            // That works because handleInput runs every frame.
-            // However, it's better practice to separate logic and render.
-            // But since drawPreviewLine clears and redraws the graph graphics... calling it twice is bad.
-            // Let's rely on handleInput for now as it has the mouse coordinates handy.
-            // Actually, handleInput calls it every frame. That's fine.
-        } else if (this.toolMode === 'PEN' && this.penState === 'CHAINING' && this.penLastNodeId !== null) {
-            // Pulse the last node?
-            // TODO: Add visual feedback for active chaining node
-        }
     }
 
     private updateCrucibleAnimation(ticker: Ticker) {
@@ -527,41 +328,27 @@ export class Game {
 
         // 1. Tap Animation (Priority)
         if (this.tapAnimProgress < 1.0) {
-            // Progress = Time / Duration
             this.tapAnimProgress += ticker.deltaMS / CONFIG.CRUCIBLE_ANIMATION.TAP_DURATION_MS;
             if (this.tapAnimProgress > 1.0) this.tapAnimProgress = 1.0;
-
-            // Sine hump: 0 -> 1 -> 0
             const t = Math.sin(this.tapAnimProgress * Math.PI); 
-            // Squeeze
             scaleX = 1.0 - (t * CONFIG.CRUCIBLE_ANIMATION.TAP_SQUEEZE_FACTOR); 
         } 
         // 2. Hold Animation (Rhythmic)
         else if (this.interactionMode === 'CRUCIBLE' && (performance.now() - this.inputDownTime) >= CONFIG.TAP_THRESHOLD_MS) {
-            // Phase increment = (dt / cycle_duration) * 2PI
             const phaseInc = (ticker.deltaMS / CONFIG.CRUCIBLE_ANIMATION.HOLD_CYCLE_DURATION_MS) * 2 * Math.PI;
             this.holdAnimPhase += phaseInc;
-            
-            // Sine wave 0..1
             const t = (Math.sin(this.holdAnimPhase) + 1) / 2;
-            // Squeeze
             scaleX = 1.0 - (t * CONFIG.CRUCIBLE_ANIMATION.HOLD_SQUEEZE_FACTOR);
         }
-        // 3. Idle / Recovery
         else {
              this.holdAnimPhase = 0;
         }
         
-        // Apply Volume-Preserving Stretch
-        // If scaleX decreases (squeeze), scaleY increases (stretch)
         const scaleY = 1.0 / Math.max(0.1, scaleX); 
-        
         this.crucible.scale.set(scaleX, scaleY);
     }
 
     private updateUI() {
-        // We could extend DebugOverlay to show toolMode
-        // For now, console log was added
         this.debugOverlay.update(
             this.score,
             this.sprigSystem.activeSprigCount, 
