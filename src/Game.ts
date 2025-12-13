@@ -9,7 +9,7 @@ import { ResourceSystem } from './systems/ResourceSystem';
 import { FloatingTextSystem } from './systems/FloatingTextSystem';
 import { GraphSystem } from './systems/GraphSystem';
 import { DebugOverlay } from './ui/DebugOverlay';
-import { Toolbar, ToolMode } from './ui/Toolbar';
+import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
 
 export class Game {
@@ -35,7 +35,6 @@ export class Game {
     // State
     private score = 0;
     private spawnTimer = 0;
-    private lastMousePos: Point | null = null;
     
     // Animation State
     private tapAnimProgress = 1.0;
@@ -280,7 +279,6 @@ export class Game {
         }
 
         this.wasDown = isDown;
-        this.lastMousePos = this.inputState.mousePosition.clone();
     }
 
     private updateGameLogic(ticker: Ticker) {
