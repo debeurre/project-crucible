@@ -183,6 +183,17 @@ export class FlowFieldSystem {
         }
     }
 
+    public clearGraphFlowAt(col: number, row: number) {
+        if (col >= 0 && col < this.gridCols && row >= 0 && row < this.gridRows) {
+            const index = (row * this.gridCols + col) * 2;
+            const intentIndex = row * this.gridCols + col;
+            
+            this.fieldGraph[index] = 0;
+            this.fieldGraph[index + 1] = 0;
+            this.fieldGraphIntent[intentIndex] = -1;
+        }
+    }
+
     // New method for clearing flow (Cut action)
     public clearFlow(mouseX: number, mouseY: number) {
         // Eraser logic: wipe everything in radius

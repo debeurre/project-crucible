@@ -60,12 +60,60 @@ export class GraphSystem {
             return true;
         });
         
-        // Remove connected edges
+        // Remove connected edges and Clear their Flow
         if (idsToRemove.size > 0) {
-            this.edges = this.edges.filter(e => !idsToRemove.has(e.nodeAId) && !idsToRemove.has(e.nodeBId));
+            // Find edges to be removed
+            const edgesToRemove = this.edges.filter(e => idsToRemove.has(e.nodeAId) || idsToRemove.has(e.nodeBId));
+            
+            for (const edge of edgesToRemove) {
+                // We need to retrieve the nodes to calculate the path to clear
+                // But the nodes might have just been removed from this.nodes!
+                // Wait, we filtered this.nodes. We lost the node data.
+                // We need to snapshot nodes before filtering or find them in the removed set.
+                
+                // Let's refactor the node removal to keep references first.
+            }
+            
+            // Refactored logic:
+            // 1. Identify removal targets
+            // 2. Clear flow for edges connecting them
+            // 3. Delete data
         }
         
+        // Let's retry the method implementation
+        this.performAbort();
         this.draw();
+    }
+
+    private performAbort() {
+        const nodesToRemove = this.nodes.filter(n => n.active);
+        if (nodesToRemove.length === 0) return;
+
+        const idsToRemove = new Set(nodesToRemove.map(n => n.id));
+        const edgesToRemove = this.edges.filter(e => idsToRemove.has(e.nodeAId) || idsToRemove.has(e.nodeBId));
+
+        // Clear Flow for these edges
+        // We need to look up node data. If a node is being removed, we have it in nodesToRemove.
+        // If a node is persistent (e.g. the anchor of the chain), we find it in this.nodes.
+        const allNodesMap = new Map<number, GraphNode>();
+        this.nodes.forEach(n => allNodesMap.set(n.id, n)); // Includes active ones still
+
+        for (const edge of edgesToRemove) {
+            const nodeA = allNodesMap.get(edge.nodeAId);
+            const nodeB = allNodesMap.get(edge.nodeBId);
+            
+            if (nodeA && nodeB) {
+                const path = Pathfinder.getPath(nodeA.x, nodeA.y, nodeB.x, nodeB.y, CONFIG.FLOW_FIELD_CELL_SIZE);
+                for (const point of path) {
+                    this.flowFieldSystem.clearGraphFlowAt(point.gx, point.gy);
+                }
+            }
+        }
+        this.flowFieldSystem.updateVisuals();
+
+        // Now Delete Data
+        this.nodes = this.nodes.filter(n => !idsToRemove.has(n.id));
+        this.edges = this.edges.filter(e => !edgesToRemove.includes(e));
     }
 
     public createLink(nodeAId: number, nodeBId: number, intent: TaskIntent) {
