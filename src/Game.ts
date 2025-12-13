@@ -96,6 +96,7 @@ export class Game {
     private setTool(mode: ToolMode) {
         if (this.toolMode === 'PEN') {
             this.graphSystem.commitActiveNodes();
+            this.toolbar.setPenState(false);
         }
         this.toolMode = mode;
         this.toolbar.setTool(mode);
@@ -183,6 +184,7 @@ export class Game {
                     // Tool Switch -> Commit current path
                     if (this.toolMode === 'PEN') {
                         this.graphSystem.commitActiveNodes();
+                        this.toolbar.setPenState(false); // Reset Checkmark
                     }
                     const nextTool = this.toolMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
                     this.setTool(nextTool);
@@ -195,6 +197,7 @@ export class Game {
                         this.penState = 'IDLE';
                         this.penLastNodeId = null;
                         this.graphSystem.clearPreview();
+                        this.toolbar.setPenState(false); // Reset Checkmark
                     }
                     break;
                 
@@ -262,6 +265,7 @@ export class Game {
                         // Since this is 'Just Pressed', let's assume DRAGGING for now, 
                         // and if released quickly without moving, we treat as TAP (Chain).
                         this.penState = 'DRAGGING';
+                        this.toolbar.setPenState(true); // Assuming we started a chain
                     }
                 }
             } else if (this.toolMode === 'ERASER') {
@@ -341,6 +345,7 @@ export class Game {
                     this.penLastNodeId = hoverNode.id;
                     this.graphSystem.setActiveNode(hoverNode.id); // Highlight
                     this.penState = 'CHAINING';
+                    this.toolbar.setPenState(true); // Show Checkmark
                 } else if (!hoverNode) {
                     // Dragged to empty -> Create new node
                     const distSq = (mx - this.penDragStartPos.x)**2 + (my - this.penDragStartPos.y)**2;
@@ -352,13 +357,16 @@ export class Game {
                         this.penLastNodeId = newNode.id;
                         this.graphSystem.setActiveNode(newNode.id); // Highlight
                         this.penState = 'CHAINING';
+                        this.toolbar.setPenState(true); // Show Checkmark
                     } else {
                         // Tap logic
                         this.penState = 'CHAINING';
+                        this.toolbar.setPenState(true); // Show Checkmark
                     }
                 } else {
                     // Released on same node
                     this.penState = 'CHAINING';
+                    this.toolbar.setPenState(true); // Show Checkmark
                 }
                 
                 this.graphSystem.clearPreview();

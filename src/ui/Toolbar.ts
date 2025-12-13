@@ -8,6 +8,7 @@ export class Toolbar extends Container {
     private penBtn: Container;
     private eraserBtn: Container;
     private activeTool: ToolMode = 'PENCIL';
+    private isChaining: boolean = false; // New state
     private onToolSelected: (tool: ToolMode) => void;
 
     private readonly BUTTON_WIDTH = 50;
@@ -70,7 +71,11 @@ export class Toolbar extends Container {
         if (mode === 'PENCIL') {
             this.drawPencilIcon(icon);
         } else if (mode === 'PEN') {
-            this.drawPenIcon(icon);
+            if (this.isChaining) {
+                this.drawCheckIcon(icon);
+            } else {
+                this.drawPenIcon(icon);
+            }
         } else {
             this.drawEraserIcon(icon);
         }
@@ -97,6 +102,15 @@ export class Toolbar extends Container {
         g.stroke({ width: 2, color: this.ICON_COLOR });
     }
 
+    private drawCheckIcon(g: Graphics) {
+        g.clear();
+        // Checkmark
+        g.moveTo(-8, 0);
+        g.lineTo(-2, 6);
+        g.lineTo(8, -6);
+        g.stroke({ width: 3, color: 0x00FF00 }); // Green Check
+    }
+
     private drawEraserIcon(g: Graphics) {
         g.clear();
         // Eraser block
@@ -109,6 +123,11 @@ export class Toolbar extends Container {
 
     public setTool(tool: ToolMode) {
         this.activeTool = tool;
+        this.draw();
+    }
+
+    public setPenState(isChaining: boolean) {
+        this.isChaining = isChaining;
         this.draw();
     }
 

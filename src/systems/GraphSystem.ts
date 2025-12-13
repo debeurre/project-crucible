@@ -146,8 +146,8 @@ export class GraphSystem {
             let radius = 5;
             
             if (node.active) {
-                // Glow for active nodes
-                this.graphics.circle(node.x, node.y, radius + 4).fill({ color: 0xFFFF00, alpha: 0.3 });
+                // Glow for active nodes - match Intent Color
+                this.graphics.circle(node.x, node.y, radius + 4).fill({ color: TaskIntent.RED_ATTACK, alpha: 0.5 });
             }
 
             if (node.type === NodeType.BUILDING) {
