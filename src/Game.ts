@@ -233,6 +233,20 @@ export class Game {
             // Reset on release (after processing logic)
         }
 
+        // 0. Right Click (Just Pressed Logic simulation for Commit)
+        // Since we don't have a "wasRightDown", we might re-trigger if held. 
+        // But Commit is idempotent usually (clears active).
+        // Better: Check `isRightDown`.
+        if (this.inputState.isRightDown) {
+             if (this.toolMode === 'PEN') {
+                this.graphSystem.commitActiveNodes();
+                this.penState = 'IDLE';
+                this.penLastNodeId = null;
+                this.graphSystem.clearPreview();
+                this.toolbar.setPenState(false); 
+            }
+        }
+
         // 1. Just Pressed
         if (isDown && !this.wasDown) {
             this.inputDownTime = now;
