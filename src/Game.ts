@@ -201,9 +201,16 @@ export class Game {
                     }
                     break;
                 
-                // Add Enter for Commit? 
-                // InputManager needs update for ENTER.
-                // Assuming ENTER key is 'ENTER'.
+                case 'ENTER':
+                    if (this.toolMode === 'PEN') {
+                        // Commit Chain
+                        this.graphSystem.commitActiveNodes();
+                        this.penState = 'IDLE';
+                        this.penLastNodeId = null;
+                        this.graphSystem.clearPreview();
+                        this.toolbar.setPenState(false); // Reset Checkmark
+                    }
+                    break;
 
                 case 'F': this.flowFieldSystem.clearAll(); break;
                 case 'S': this.sprigSystem.clearAll(); break;
