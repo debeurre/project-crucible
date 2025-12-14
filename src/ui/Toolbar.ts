@@ -217,7 +217,7 @@ export class Toolbar extends Container {
             TaskIntent.RED_ATTACK,
             TaskIntent.BLUE_SCOUT,
             TaskIntent.YELLOW_ASSIST,
-            TaskIntent.WHITE_FOCUS
+            TaskIntent.WHITE_OVERRIDE
         ];
 
         intents.forEach(intent => {
@@ -378,7 +378,7 @@ export class Toolbar extends Container {
                 TaskIntent.RED_ATTACK,
                 TaskIntent.BLUE_SCOUT,
                 TaskIntent.YELLOW_ASSIST,
-                TaskIntent.WHITE_FOCUS
+                TaskIntent.WHITE_OVERRIDE
             ];
             const isActive = intents[i] === this.activeIntent;
             
