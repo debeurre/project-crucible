@@ -44,7 +44,7 @@ export class FlowFieldSystem {
         // Initialize to zero
         this.fieldManual.fill(0);
         this.fieldGraph.fill(0);
-        this.fieldGraphIntent.fill(-1); // -1 for no intent
+        this.fieldGraphIntent.fill(-1); // -1 for no intent (numeric)
 
         // Handle resize
         this.app.renderer.on('resize', this.resize.bind(this));
@@ -105,7 +105,8 @@ export class FlowFieldSystem {
         // 1. Check Graph Layer (High Priority)
         let flowX = this.fieldGraph[index];
         let flowY = this.fieldGraph[index + 1];
-        let intent = this.fieldGraphIntent[intentIndex] !== -1 ? (this.fieldGraphIntent[intentIndex] as TaskIntent) : null;
+        let intentId = this.fieldGraphIntent[intentIndex];
+        let intent: TaskIntent | null = intentId !== -1 ? (intentId as TaskIntent) : null;
 
         // 2. Check Manual Layer (Low Priority) - only if graph vector is zero
         if (flowX === 0 && flowY === 0) {
@@ -277,12 +278,12 @@ export class FlowFieldSystem {
                 const centerY = row * this.cellSize + (this.cellSize * stride) / 2;
 
                 // Check for Intent Only (Brush)
-                const intent = this.fieldGraphIntent[row * this.gridCols + col];
-                if (intent !== -1) {
+                const intentId = this.fieldGraphIntent[row * this.gridCols + col];
+                if (intentId !== -1) {
                     // Draw filled square for intent area
                     // Use low alpha to indicate area
                     this.arrowGraphics.rect(col * this.cellSize, row * this.cellSize, this.cellSize, this.cellSize)
-                        .fill({ color: intent, alpha: 0.25 });
+                        .fill({ color: CONFIG.INTENT_COLORS[intentId], alpha: 0.25 });
                 }
 
                 // Only draw arrow if there's significant flow
@@ -290,8 +291,8 @@ export class FlowFieldSystem {
                 
                 // Color: Use Intent Color if Graph, else Default Red
                 let arrowColor = CONFIG.FLOW_FIELD_VISUAL_COLOR;
-                if (isGraph && intent !== -1) {
-                     arrowColor = intent;
+                if (isGraph && intentId !== -1) {
+                     arrowColor = CONFIG.INTENT_COLORS[intentId];
                 }
 
                 const endX = centerX + flowX * arrowLength;
@@ -319,12 +320,11 @@ export class FlowFieldSystem {
                 const p2x = baseMidX - halfWidthX;
                 const p2y = baseMidY - halfWidthY;
                 
-                this.arrowGraphics.beginFill(arrowColor);
                 this.arrowGraphics.moveTo(endX, endY); 
                 this.arrowGraphics.lineTo(p1x, p1y);   
                 this.arrowGraphics.lineTo(p2x, p2y);   
                 this.arrowGraphics.closePath();
-                this.arrowGraphics.endFill();
+                this.arrowGraphics.fill(arrowColor);
             }
         }
     }

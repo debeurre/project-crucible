@@ -1,13 +1,13 @@
 # PROJECT CRUCIBLE: CONTEXT & RULES
 
 ## 1. THE DEVELOPER (CRITICAL)
-- **Input Constraints:** I can ONLY use a mouse/touchscreen (Tap/Drag). 
-- **NO KEYBOARD CONTROLS:** Do not suggest WASD, arrow keys, or complex hotkeys.
-- **Deafness:** I am deaf. Do not rely on audio cues. All feedback must be VISUAL (screen shake, flash, floating text, particle bursts).
-- **Workflow:** I use 4-6 hour energy bursts. Code must be modular and easy to "pick up and put down."
+- **Input Constraints:** Developer MOSTLY uses a mouse/touchscreen (Tap/Drag). 
+- **MINIMAL KEYBOARD CONTROLS:** Do not suggest WASD, arrow keys, or complex hotkeys.
+- **Deafness:** Developer is deaf. Do not rely on audio cues. All feedback must be VISUAL (screen shake, flash, floating text, particle bursts).
+- **Workflow:** Developer uses 4-6 hour energy blocks. Code must be modular and easy to "pick up and put down."
 
 ## 2. THE GAME: "Crucible Swarm"
-- **Genre:** Particle-based Colony Sim (Pikmin meets Falling Sand).
+- **Genre:** Particle-based Colony Sim (Pikmin meets Dwarf Fortress).
 - **Core Loop:** Drag to direct a fluid swarm of "Sprigs" to harvest physical resources, complete objectives, defend territory.
 - **Vibe:** Medieval high fantasy with alchemy theme. High Spectacle.
 - **Tech Stack:** TypeScript, Vite, PixiJS (v8.5+).

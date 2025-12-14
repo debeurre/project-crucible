@@ -1,4 +1,4 @@
-import { Container, Graphics, Text } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
 
 export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER' | 'BRUSH';
@@ -22,10 +22,6 @@ export class Toolbar extends Container {
     private isChaining: boolean = false; 
     private onToolSelected: (tool: ToolMode) => void;
     private onIntentSelected: (intent: TaskIntent) => void; // New callback
-
-    private readonly BUTTON_WIDTH = 50;
-    private readonly BUTTON_GAP = 10;
-    private readonly PADDING = 10;
     
     // Width calculation: 4 buttons
     // 4 * 50 + 3 * 10 + 2 * 10 = 200 + 30 + 20 = 250

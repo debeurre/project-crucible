@@ -18,6 +18,7 @@ export class GraphSystem {
         this.container = new Container();
         this.flowFieldSystem = flowFieldSystem;
         this.graphics = new Graphics();
+        console.log('GraphSystem: this.container =', this.container); // DEBUG
         this.container.addChild(this.graphics);
     }
 
@@ -184,7 +185,7 @@ export class GraphSystem {
             if (nodeA && nodeB) {
                 this.graphics.moveTo(nodeA.x, nodeA.y);
                 this.graphics.lineTo(nodeB.x, nodeB.y);
-                this.graphics.stroke({ width: 2, color: edge.intent, alpha: 0.5 });
+                this.graphics.stroke({ width: 2, color: CONFIG.INTENT_COLORS[edge.intent], alpha: 0.5 });
             }
         }
 
@@ -195,7 +196,10 @@ export class GraphSystem {
             
             if (node.active) {
                 // Glow for active nodes - match Intent Color
-                this.graphics.circle(node.x, node.y, radius + 4).fill({ color: TaskIntent.RED_ATTACK, alpha: 0.5 });
+                // We assume active node is always the current intent of the pen.
+                // For now, let's use the default RED_ATTACK for highlighting.
+                // Later, can pass active intent from ToolManager.
+                this.graphics.circle(node.x, node.y, radius + 4).fill({ color: CONFIG.INTENT_COLORS[TaskIntent.RED_ATTACK], alpha: 0.5 });
             }
 
             if (node.type === NodeType.BUILDING) {
@@ -288,9 +292,8 @@ export class GraphSystem {
         this.graphics.clear(); // Clear everything
         this.draw(); // Redraw static graph elements
 
-        const pathColor = TaskIntent.RED_ATTACK; // The color of the path segments (for now)
-        const lineColor = isValid ? pathColor : 0xFF0000; // Path color if valid, pure red if invalid
-
+                    const pathColor = CONFIG.INTENT_COLORS[TaskIntent.RED_ATTACK]; // The color of the path segments (for now)
+                const lineColor = isValid ? pathColor : 0xFF0000; // Path color if valid, pure red if invalid
         // Draw dashed line
         const dashLength = 8;
         const gapLength = 6;

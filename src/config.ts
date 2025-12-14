@@ -87,5 +87,21 @@ export const CONFIG = {
       POP_EASE: "back.out(3)",
       FLOAT_EASE: "power1.in",
       POP_TARGET_SCALE: 1.5
-  }
+  },
+
+  // Intent System Colors (matching TaskIntent enum IDs)
+  INTENT_COLORS: {
+    0: 0x66D575, // GREEN_HARVEST
+    1: 0xF24822, // RED_ATTACK
+    2: 0x3DADFF, // BLUE_SCOUT
+    3: 0xFFC943, // YELLOW_ASSIST
+    4: 0xFFFFFF  // WHITE_FOCUS
+  },
+  INTENT_DEBUG_NAMES: {
+    0: 'HARVEST',
+    1: 'ATTACK',
+    2: 'SCOUT',
+    3: 'ASSIST',
+    4: 'FOCUS'
+  },
 };

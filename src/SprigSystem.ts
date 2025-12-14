@@ -390,9 +390,9 @@ export class SprigSystem {
             this.flashTimers[idx]--;
         } else {
             // Use Intent Color if present, else Default
-            const intent = this.intents[idx];
-            if (intent !== -1) {
-                bodySprite.tint = intent;
+            const intentId = this.intents[idx];
+            if (intentId !== -1) {
+                bodySprite.tint = CONFIG.INTENT_COLORS[intentId];
             } else {
                 bodySprite.tint = CONFIG.SPRIG_COLOR;
             }

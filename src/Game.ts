@@ -2,7 +2,7 @@ import { Application, Graphics, Container, Ticker } from 'pixi.js';
 import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
 import { CONFIG } from './config';
-import { MapSystem, MapShape } from './systems/MapSystem';
+import { MapSystem } from './systems/MapSystem';
 import { VisualEffects } from './systems/VisualEffects';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { ResourceSystem } from './systems/ResourceSystem';
