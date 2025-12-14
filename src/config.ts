@@ -94,21 +94,21 @@ export const CONFIG = {
     0: 0x228B22, // GREEN_HARVEST
     1: 0xDC143C, // RED_ATTACK
     2: 0x0000CD, // BLUE_SCOUT
-    3: 0xFFD700, // YELLOW_ASSIST
-    4: 0xF5F5F5  // WHITE_FOCUS
+    3: 0xFFFF00, // YELLOW_ASSIST
+    4: 0xFFFFFF  // WHITE_FOCUS
   },
   INTENT_DEBUG_NAMES: {
     0: 'HARVEST',
     1: 'ATTACK',
     2: 'SCOUT',
     3: 'ASSIST',
-    4: 'OVERRIDE'
+    4: 'FOCUS'
   },
   INTENT_ALPHA: {
-    0: 0.5, // GREEN_HARVEST
-    1: 0.5, // RED_ATTACK
-    2: 0.5, // BLUE_SCOUT
-    3: 0.5, // YELLOW_ASSIST
-    4: 0.5  // WHITE_OVERRIDE
+    0: 0.25, // GREEN_HARVEST
+    1: 0.25, // RED_ATTACK
+    2: 0.25, // BLUE_SCOUT,
+    3: 0.25, // YELLOW_ASSIST
+    4: 0.4   // WHITE_FOCUS
   }
 };
