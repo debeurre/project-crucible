@@ -11,6 +11,7 @@ import { GraphSystem } from './systems/GraphSystem';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
+import { TaskIntent } from './types/GraphTypes'; // Add this import
 
 export class Game {
     private app: Application;
@@ -165,7 +166,7 @@ export class Game {
                 case '2': this.toolManager.setActiveIntent(TaskIntent.RED_ATTACK); break;
                 case '3': this.toolManager.setActiveIntent(TaskIntent.BLUE_SCOUT); break;
                 case '4': this.toolManager.setActiveIntent(TaskIntent.YELLOW_ASSIST); break;
-                case '5': this.toolManager.setActiveIntent(TaskIntent.WHITE_OVERRIDE); break;
+                case '5': this.toolManager.setActiveIntent(TaskIntent.WHITE_FOCUS); break;
                 
                 // Old map hotkeys removed/remapped?
                 // Spec says "Remove map relaed hotkeys".
