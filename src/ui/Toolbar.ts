@@ -33,10 +33,6 @@ export class Toolbar extends Container {
     private onToolSelected: (tool: ToolMode) => void;
     private onIntentSelected: (intent: TaskIntent) => void;
     private onMapSelected: (mode: MapShape) => void; // Changed from Cycle
-
-    private readonly BUTTON_WIDTH = 50;
-    private readonly BUTTON_GAP = 10;
-    private readonly PADDING = 10;
     
     constructor(
         onToolSelected: (tool: ToolMode) => void, 
