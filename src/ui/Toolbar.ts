@@ -1,6 +1,7 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
 import { CONFIG } from '../config';
+import { MapShape } from '../systems/MapSystem';
 
 export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER' | 'BRUSH';
 
@@ -9,43 +10,46 @@ export class Toolbar extends Container {
     private pencilBtn: Container;
     private penBtn: Container;
     private eraserBtn: Container;
-    private brushBtn: Container; // New
+    private brushBtn: Container; 
     
     // Intent Swatches
     private swatchContainer: Container;
     private swatches: Container[] = [];
+
+    // Map Selector
+    private mapBtn: Container;
+    private mapLabel: Text;
 
     // Icon Graphics References
     private penIcon?: Graphics;
 
     private activeTool: ToolMode = 'PENCIL';
     private activeIntent: TaskIntent = TaskIntent.GREEN_HARVEST;
+    private activeMapMode: MapShape = MapShape.RECT; // Default
     private isChaining: boolean = false; 
+    
     private onToolSelected: (tool: ToolMode) => void;
-    private onIntentSelected: (intent: TaskIntent) => void; // New callback
+    private onIntentSelected: (intent: TaskIntent) => void;
+    private onMapCycle: () => void; // Simple cycle for now
+
+    private readonly BUTTON_WIDTH = 50;
+    private readonly BUTTON_GAP = 10;
+    private readonly PADDING = 10;
     
-    // Width calculation: 4 buttons
-    // 4 * 50 + 3 * 10 + 2 * 10 = 200 + 30 + 20 = 250
-    // Plus Swatches... 
-    // Let's put swatches in a second row or to the side?
-    // Figma style: Side or above?
-    // Let's put them above the toolbar for now, or expand width.
-    // Let's expand width. 
-    // 5 swatches * 30px + gaps?
-    // Let's keep it simple: 2 rows? Or just one long bar.
-    // Long bar: [Pencil] [Pen] [Brush] [Eraser] | [Green] [Red] [Blue] [Yellow] [White]
-    
-    constructor(onToolSelected: (tool: ToolMode) => void, onIntentSelected: (intent: TaskIntent) => void) {
+    constructor(
+        onToolSelected: (tool: ToolMode) => void, 
+        onIntentSelected: (intent: TaskIntent) => void,
+        onMapCycle: () => void
+    ) {
         super();
         this.onToolSelected = onToolSelected;
         this.onIntentSelected = onIntentSelected;
+        this.onMapCycle = onMapCycle;
 
         this.bg = new Graphics();
         this.addChild(this.bg);
 
         // Tools
-        // Created in a helper, positioned in draw()
-        
         this.pencilBtn = this.createButton('PENCIL');
         this.penBtn = this.createButton('PEN');
         this.brushBtn = this.createButton('BRUSH');
@@ -61,11 +65,55 @@ export class Toolbar extends Container {
         this.addChild(this.swatchContainer);
         this.createSwatches();
 
+        // Map Button
+        this.mapBtn = this.createMapButton();
+        this.addChild(this.mapBtn);
+
         this.draw();
         
         // Initial state
         this.setTool('PENCIL');
     }
+
+    private createMapButton(): Container {
+        const btn = new Container();
+        
+        // Background
+        const bg = new Graphics();
+        bg.roundRect(0, -15, 80, 30, 15).fill({ color: 0x333333 }).stroke({ width: 1, color: 0xAAAAAA });
+        btn.addChild(bg);
+
+        // Label
+        const style = new TextStyle({
+            fontFamily: 'monospace',
+            fontSize: 12,
+            fill: 0xFFFFFF,
+            fontWeight: 'bold',
+            align: 'center'
+        });
+        this.mapLabel = new Text({ text: 'RECT', style });
+        this.mapLabel.anchor.set(0.5);
+        this.mapLabel.x = 40; // Center of 80 width
+        btn.addChild(this.mapLabel);
+
+        // Event
+        btn.eventMode = 'static';
+        btn.cursor = 'pointer';
+        btn.on('pointerdown', (e) => {
+            e.stopPropagation();
+            this.onMapCycle();
+        });
+
+        return btn;
+    }
+
+    public setMapMode(mode: MapShape) {
+        this.activeMapMode = mode;
+        this.mapLabel.text = mode;
+        this.draw(); // To refresh if needed, mainly label update is enough
+    }
+    
+    // ... rest of createButton, createSwatches, icon drawers ...
 
     private createButton(mode: ToolMode): Container {
         const btn = new Container();
@@ -201,18 +249,19 @@ export class Toolbar extends Container {
         const gap = 10;
         const swatchW = 30;
         const swatchGap = 10;
+        const mapBtnW = 80;
         
         // Tools: 4 buttons
         // Swatches: 5 buttons
-        // Let's center tools, and put swatches to the right? Or above?
-        // Let's put swatches on the right with a separator.
+        // Map: 1 button
         
         const toolsWidth = 4 * btnW + 3 * gap;
         const swatchesWidth = 5 * swatchW + 4 * swatchGap;
+        const mapWidth = mapBtnW;
         const separator = 20;
         const padding = 20;
         
-        const totalWidth = toolsWidth + separator + swatchesWidth + padding * 2;
+        const totalWidth = toolsWidth + separator + swatchesWidth + separator + mapWidth + padding * 2;
         const height = 60;
         
         // Background
@@ -235,6 +284,11 @@ export class Toolbar extends Container {
             swatch.x = swatchStartX + i * (swatchW + swatchGap);
             swatch.y = 0;
         });
+
+        // Position Map Button
+        const mapStartX = swatchStartX + 4 * (swatchW + swatchGap) + swatchW / 2 + separator;
+        this.mapBtn.x = mapStartX;
+        this.mapBtn.y = 0; // Center vertically
 
         // Highlight Active Tool
         let highlightX = 0;

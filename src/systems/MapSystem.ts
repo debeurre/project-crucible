@@ -41,6 +41,10 @@ export class MapSystem {
     this.resize();
   }
 
+  public getMode(): MapShape {
+    return this.mode;
+  }
+
   public setMode(mode: MapShape) {
     this.mode = mode;
     this.resize();
