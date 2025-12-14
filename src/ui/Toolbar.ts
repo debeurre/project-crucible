@@ -17,9 +17,9 @@ export class Toolbar extends Container {
     private swatches: Container[] = [];
 
     // Map Selector
-    private mapBtn: Container;
-    private mapLabel: Text;
-    private mapMenuContainer: Container; // New
+    private mapBtn!: Container;
+    private mapLabel!: Text;
+    private mapMenuContainer!: Container; // Also this one since it's inited later
     private isMapMenuOpen: boolean = false; // New
 
     // Icon Graphics References
