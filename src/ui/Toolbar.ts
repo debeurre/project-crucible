@@ -15,7 +15,7 @@ export class Toolbar extends Container {
     private swatches: Container[] = [];
 
     // Icon Graphics References
-    private penIcon: Graphics;
+    private penIcon?: Graphics;
 
     private activeTool: ToolMode = 'PENCIL';
     private activeIntent: TaskIntent = TaskIntent.GREEN_HARVEST;
@@ -106,7 +106,7 @@ export class Toolbar extends Container {
             TaskIntent.RED_ATTACK,
             TaskIntent.BLUE_SCOUT,
             TaskIntent.YELLOW_ASSIST,
-            TaskIntent.WHITE_OVERRIDE
+            TaskIntent.WHITE_FOCUS
         ];
 
         intents.forEach(intent => {
@@ -174,6 +174,8 @@ export class Toolbar extends Container {
     }
 
     private updatePenIcon() {
+        if (!this.penIcon) return;
+        
         if (this.isChaining) {
             this.drawCheckIcon(this.penIcon);
         } else {
@@ -255,7 +257,7 @@ export class Toolbar extends Container {
                 TaskIntent.RED_ATTACK,
                 TaskIntent.BLUE_SCOUT,
                 TaskIntent.YELLOW_ASSIST,
-                TaskIntent.WHITE_OVERRIDE
+                TaskIntent.WHITE_FOCUS
             ];
             const isActive = intents[i] === this.activeIntent;
             
