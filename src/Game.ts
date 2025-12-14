@@ -181,6 +181,7 @@ export class Game {
                 case 'R': this.visualEffects.toggleNoise(); break;
                 
                 case 'G': this.flowFieldSystem.toggleGrid(); break;
+                case 'D': this.debugOverlay.toggle(); break;
                 case 'T': 
                     const currentMode = this.toolManager.getActiveToolMode();
                     const nextTool = currentMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
@@ -381,14 +382,7 @@ export class Game {
     private updateUI() {
         this.debugOverlay.update(
             this.score,
-            this.sprigSystem.activeSprigCount, 
-            this.mapSystem.mode,
-            {
-                blur: this.visualEffects.blurEnabled,
-                threshold: this.visualEffects.thresholdEnabled,
-                displacement: this.visualEffects.displacementEnabled,
-                noise: this.visualEffects.noiseEnabled
-            }
+            this.sprigSystem.activeSprigCount
         );
     }
 }
