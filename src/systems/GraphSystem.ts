@@ -14,8 +14,8 @@ export class GraphSystem {
     private graphics: Graphics;
     private flowFieldSystem: FlowFieldSystem;
 
-    constructor(container: Container, flowFieldSystem: FlowFieldSystem) {
-        this.container = container;
+    constructor(flowFieldSystem: FlowFieldSystem) {
+        this.container = new Container();
         this.flowFieldSystem = flowFieldSystem;
         this.graphics = new Graphics();
         this.container.addChild(this.graphics);

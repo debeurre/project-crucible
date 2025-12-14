@@ -62,7 +62,7 @@ export class Game {
         this.flowFieldSystem = new FlowFieldSystem(app);
         this.resourceSystem = new ResourceSystem(app, this.mapSystem);
         this.floatingTextSystem = new FloatingTextSystem();
-        this.graphSystem = new GraphSystem(this.worldContainer, this.flowFieldSystem);
+        this.graphSystem = new GraphSystem(this.flowFieldSystem);
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem);
 
         // Initialize UI
@@ -117,26 +117,7 @@ export class Game {
         this.worldContainer.addChild(this.flowFieldSystem.container);
         
         // Graph (Nodes/Edges)
-        // Note: GraphSystem added itself to worldContainer in constructor.
-        // We re-add it here to ensure it's on top of the layers above.
-        this.worldContainer.addChild(this.graphSystem.container); // Actually GraphSystem.container IS worldContainer. 
-        // Wait, GraphSystem.container IS the worldContainer passed in constructor?
-        // Let's check GraphSystem.ts.
-        // `constructor(container: Container...) { this.container = container; ... this.container.addChild(this.graphics); }`
-        // So `this.graphSystem.container` IS `worldContainer`.
-        // And `this.graphSystem` has a private `graphics` that it added to `worldContainer`.
-        // To move that `graphics` to top, we need access to it.
-        // Or we should have made GraphSystem have its OWN container.
-        
-        // Since I can't easily change GraphSystem right now (it wasn't in the plan but I can quick fix if I want),
-        // I will assume GraphSystem's graphics is at index 0.
-        // If I want it on top, I can't easily move it without accessing the private `graphics`.
-        // BUT, if I change `GraphSystem` to expose `graphics` or have its own container...
-        
-        // Let's just add Sprigs and Map.
-        // If Map is added now, it's on top of Graph.
-        // I MUST fix GraphSystem to play nice with layering.
-        // But for this task "Sprigs don't render", I just need to add Sprigs AFTER Map.
+        this.worldContainer.addChild(this.graphSystem.container);
         
         // 4. Crucible (On top of map/sprigs)
         this.crucible.circle(0, 0, CONFIG.CRUCIBLE_RADIUS).fill(CONFIG.CRUCIBLE_COLOR);
