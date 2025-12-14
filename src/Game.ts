@@ -32,6 +32,7 @@ export class Game {
     private inputState: InputState;
     private debugOverlay: DebugOverlay;
     private toolbar: Toolbar;
+    private cursorGraphics: Graphics;
 
     // State
     private score = 0;
@@ -56,6 +57,8 @@ export class Game {
         this.background = new Graphics();
         this.worldContainer = new Container();
         this.crucible = new Graphics();
+        this.cursorGraphics = new Graphics();
+        this.cursorGraphics.eventMode = 'none'; // Pass through clicks
 
         // Initialize Systems
         this.mapSystem = new MapSystem(app);
@@ -129,6 +132,7 @@ export class Game {
         
         // 6. UI (Overlay)
         this.app.stage.addChild(this.toolbar);
+        this.app.stage.addChild(this.cursorGraphics);
         
         // 7. Apply Effects
         this.visualEffects.applyTo(this.worldContainer);
@@ -339,6 +343,14 @@ export class Game {
 
     private renderVisuals(ticker: Ticker) {
         this.updateCrucibleAnimation(ticker);
+        
+        // Render Cursor
+        this.cursorGraphics.clear();
+        // Only draw if within bounds? Pixi handles off-screen.
+        // Get mouse pos
+        const mx = this.inputState.mousePosition.x;
+        const my = this.inputState.mousePosition.y;
+        this.toolManager.renderCursor(this.cursorGraphics, mx, my);
     }
 
     private updateCrucibleAnimation(ticker: Ticker) {
