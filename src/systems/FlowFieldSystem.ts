@@ -187,9 +187,14 @@ export class FlowFieldSystem {
     public paintIntent(mouseX: number, mouseY: number, intent: TaskIntent) {
         // Brush Logic: Paint intent onto Graph Layer without flow vectors
         // Radius can be configurable, hardcoded for now
-        const radius = 2; 
-        for (let r = -radius; r <= radius; r++) {
-            for (let c = -radius; c <= radius; c++) {
+        const radius = 2.5; 
+        const radiusSq = radius * radius;
+        const loopRadius = Math.ceil(radius);
+
+        for (let r = -loopRadius; r <= loopRadius; r++) {
+            for (let c = -loopRadius; c <= loopRadius; c++) {
+                if (r * r + c * c > radiusSq) continue; // Circular brush
+
                 const col = Math.floor(mouseX / this.cellSize) + c;
                 const row = Math.floor(mouseY / this.cellSize) + r;
 
