@@ -199,7 +199,7 @@ export class GraphSystem {
                 // We assume active node is always the current intent of the pen.
                 // For now, let's use the default RED_ATTACK for highlighting.
                 // Later, can pass active intent from ToolManager.
-                this.graphics.circle(node.x, node.y, radius + 4).fill({ color: CONFIG.INTENT_COLORS[TaskIntent.RED_ATTACK], alpha: 0.5 });
+                this.graphics.circle(node.x, node.y, radius + 4).fill({ color: CONFIG.INTENT_COLORS[TaskIntent.RED_ATTACK], alpha: CONFIG.INTENT_ALPHA[TaskIntent.RED_ATTACK] });
             }
 
             if (node.type === NodeType.BUILDING) {

@@ -283,7 +283,7 @@ export class FlowFieldSystem {
                     // Draw filled square for intent area
                     // Use low alpha to indicate area
                     this.arrowGraphics.rect(col * this.cellSize, row * this.cellSize, this.cellSize, this.cellSize)
-                        .fill({ color: CONFIG.INTENT_COLORS[intentId], alpha: 0.25 });
+                        .fill({ color: CONFIG.INTENT_COLORS[intentId], alpha: CONFIG.INTENT_ALPHA[intentId] });
                 }
 
                 // Only draw arrow if there's significant flow

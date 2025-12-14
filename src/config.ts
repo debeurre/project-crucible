@@ -102,6 +102,13 @@ export const CONFIG = {
     1: 'ATTACK',
     2: 'SCOUT',
     3: 'ASSIST',
-    4: 'FOCUS'
+    4: 'OVERRIDE'
   },
+  INTENT_ALPHA: {
+    0: 0.25, // GREEN_HARVEST
+    1: 0.25, // RED_ATTACK
+    2: 0.25, // BLUE_SCOUT
+    3: 0.25, // YELLOW_ASSIST
+    4: 0.4   // WHITE_OVERRIDE
+  }
 };
