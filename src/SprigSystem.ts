@@ -33,16 +33,16 @@ export class SprigSystem {
     private app: Application;
     private mapSystem: MapSystem;
     private flowFieldSystem: FlowFieldSystem; 
-    private parentContainer: Container; 
+    public container: Container; 
 
     private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; 
     public activeSprigCount: number = 0; 
 
-    constructor(app: Application, mapSystem: MapSystem, parentContainer: Container, flowFieldSystem: FlowFieldSystem) {
+    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
-        this.parentContainer = parentContainer;
         this.flowFieldSystem = flowFieldSystem; 
+        this.container = new Container();
 
         // Initialize typed arrays
         this.positionsX = new Float32Array(this.MAX_SPRIG_COUNT);
@@ -133,7 +133,7 @@ export class SprigSystem {
             this.sprigBodySprites.push(bodySprite);
             this.cargoSprites.push(cargoSprite);
             
-            this.parentContainer.addChild(container); 
+            this.container.addChild(container); 
         }
     }
 
