@@ -184,6 +184,8 @@ export class Game {
                     break;
                 
                 case 'ESCAPE':
+                case 'BACKSPACE':
+                case 'DELETE':
                     if (this.toolManager.getActiveToolMode() === 'PEN') {
                         this.toolManager.getPenTool().abort();
                     }
