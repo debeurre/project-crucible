@@ -1,5 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
+import { CONFIG } from '../config';
 
 export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER' | 'BRUSH';
 
@@ -108,7 +109,7 @@ export class Toolbar extends Container {
         intents.forEach(intent => {
             const btn = new Container();
             const g = new Graphics();
-            g.circle(0, 0, 10).fill({ color: intent });
+            g.circle(0, 0, 10).fill({ color: CONFIG.INTENT_COLORS[intent] });
             g.stroke({ width: 2, color: 0xFFFFFF, alpha: 0.5 }); // Border
             btn.addChild(g);
             
@@ -258,7 +259,7 @@ export class Toolbar extends Container {
             const isActive = intents[i] === this.activeIntent;
             
             g.clear();
-            g.circle(0, 0, 10).fill({ color: intents[i] });
+            g.circle(0, 0, 10).fill({ color: CONFIG.INTENT_COLORS[intents[i]] });
             if (isActive) {
                 g.stroke({ width: 3, color: 0xFFFFFF }); // Active thick border
             } else {
