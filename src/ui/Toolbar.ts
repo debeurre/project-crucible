@@ -19,6 +19,8 @@ export class Toolbar extends Container {
     // Map Selector
     private mapBtn: Container;
     private mapLabel: Text;
+    private mapMenuContainer: Container; // New
+    private isMapMenuOpen: boolean = false; // New
 
     // Icon Graphics References
     private penIcon?: Graphics;
@@ -30,7 +32,7 @@ export class Toolbar extends Container {
     
     private onToolSelected: (tool: ToolMode) => void;
     private onIntentSelected: (intent: TaskIntent) => void;
-    private onMapCycle: () => void; // Simple cycle for now
+    private onMapSelected: (mode: MapShape) => void; // Changed from Cycle
 
     private readonly BUTTON_WIDTH = 50;
     private readonly BUTTON_GAP = 10;
@@ -39,12 +41,12 @@ export class Toolbar extends Container {
     constructor(
         onToolSelected: (tool: ToolMode) => void, 
         onIntentSelected: (intent: TaskIntent) => void,
-        onMapCycle: () => void
+        onMapSelected: (mode: MapShape) => void // Changed
     ) {
         super();
         this.onToolSelected = onToolSelected;
         this.onIntentSelected = onIntentSelected;
-        this.onMapCycle = onMapCycle;
+        this.onMapSelected = onMapSelected;
 
         this.bg = new Graphics();
         this.addChild(this.bg);
@@ -68,6 +70,12 @@ export class Toolbar extends Container {
         // Map Button
         this.mapBtn = this.createMapButton();
         this.addChild(this.mapBtn);
+        
+        // Map Menu (Hidden by default)
+        this.mapMenuContainer = new Container();
+        this.mapMenuContainer.visible = false;
+        this.addChild(this.mapMenuContainer);
+        this.createMapMenu();
 
         this.draw();
         
@@ -101,16 +109,74 @@ export class Toolbar extends Container {
         btn.cursor = 'pointer';
         btn.on('pointerdown', (e) => {
             e.stopPropagation();
-            this.onMapCycle();
+            this.toggleMapMenu();
         });
 
         return btn;
     }
 
+    private toggleMapMenu() {
+        this.isMapMenuOpen = !this.isMapMenuOpen;
+        this.mapMenuContainer.visible = this.isMapMenuOpen;
+        if (this.isMapMenuOpen) {
+            // Re-draw or position menu?
+            // Position is set in draw(), but we might need to bring to top
+            this.setChildIndex(this.mapMenuContainer, this.children.length - 1);
+        }
+    }
+
+    private createMapMenu() {
+        const modes = Object.values(MapShape);
+        const itemHeight = 30;
+        const width = 100;
+        
+        // Background for menu
+        const bg = new Graphics();
+        bg.roundRect(0, -modes.length * itemHeight - 10, width, modes.length * itemHeight + 10, 10)
+          .fill({ color: 0x222222, alpha: 0.95 })
+          .stroke({ width: 1, color: 0x555555 });
+        this.mapMenuContainer.addChild(bg);
+
+        modes.forEach((mode, i) => {
+            const btn = new Container();
+            btn.y = -(i + 1) * itemHeight; // Stack upwards
+            btn.x = width / 2; // Centered relative to container
+
+            const label = new Text({ text: mode, style: {
+                fontFamily: 'monospace',
+                fontSize: 12,
+                fill: 0xFFFFFF,
+                align: 'center'
+            }});
+            label.anchor.set(0.5);
+            btn.addChild(label);
+            
+            // Hit area
+            const hit = new Graphics();
+            hit.rect(-width/2 + 5, -15, width - 10, 30).fill({ color: 0xFFFFFF, alpha: 0.001 });
+            btn.addChild(hit);
+
+            btn.eventMode = 'static';
+            btn.cursor = 'pointer';
+            
+            // Hover effect
+            btn.on('pointerover', () => label.style.fill = 0x00FF00);
+            btn.on('pointerout', () => label.style.fill = 0xFFFFFF);
+            
+            btn.on('pointerdown', (e) => {
+                e.stopPropagation();
+                this.onMapSelected(mode);
+                this.toggleMapMenu(); // Close on select
+            });
+
+            this.mapMenuContainer.addChild(btn);
+        });
+    }
+
     public setMapMode(mode: MapShape) {
         this.activeMapMode = mode;
         this.mapLabel.text = mode;
-        this.draw(); // To refresh if needed, mainly label update is enough
+        // Don't redraw whole toolbar, just label
     }
     
     // ... rest of createButton, createSwatches, icon drawers ...
@@ -289,6 +355,10 @@ export class Toolbar extends Container {
         const mapStartX = swatchStartX + 4 * (swatchW + swatchGap) + swatchW / 2 + separator;
         this.mapBtn.x = mapStartX;
         this.mapBtn.y = 0; // Center vertically
+        
+        // Position Menu above Button
+        this.mapMenuContainer.x = mapStartX;
+        this.mapMenuContainer.y = -20; // Start above button
 
         // Highlight Active Tool
         let highlightX = 0;

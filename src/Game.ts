@@ -78,16 +78,10 @@ export class Game {
             (intent) => {
                 this.toolManager.setActiveIntent(intent);
             },
-            () => {
-                // Cycle Map Mode
-                const modes = Object.values(MapShape);
-                const currentIdx = modes.indexOf(this.mapSystem.getMode());
-                const nextIdx = (currentIdx + 1) % modes.length;
-                const nextMode = modes[nextIdx];
-                
-                this.mapSystem.setMode(nextMode);
-                this.resourceSystem.spawnRandomly(); // Re-spawn resource on new map
-                this.toolbar.setMapMode(nextMode);
+            (mode) => {
+                this.mapSystem.setMode(mode);
+                this.resourceSystem.spawnRandomly(); 
+                this.toolbar.setMapMode(mode);
             }
         );
         
