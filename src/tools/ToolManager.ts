@@ -45,7 +45,13 @@ export class ToolManager {
     }
 
     public setTool(mode: ToolMode) {
-        if (this.activeToolMode === mode) return;
+        if (this.activeToolMode === mode) {
+            // Re-selecting Pen -> Commit
+            if (mode === 'PEN') {
+                this.getPenTool().commit();
+            }
+            return;
+        }
 
         this.activeTool.onDeactivate();
         this.activeToolMode = mode;
