@@ -1,4 +1,4 @@
-import { MapShape } from '../systems/MapSystem';
+import { MapShape } from '../types/MapTypes';
 
 export class DebugOverlay {
     private container: HTMLDivElement;

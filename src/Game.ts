@@ -1,8 +1,9 @@
-import { Application, Graphics, Container, Ticker } from 'pixi.js';
+import { Application, Graphics, Container, Point, Ticker } from 'pixi.js';
 import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
 import { CONFIG } from './config';
 import { MapSystem } from './systems/MapSystem';
+import { MapShape } from './types/MapTypes';
 import { VisualEffects } from './systems/VisualEffects';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { ResourceSystem } from './systems/ResourceSystem';
@@ -11,7 +12,7 @@ import { GraphSystem } from './systems/GraphSystem';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
-import { TaskIntent } from './types/GraphTypes'; // Add this import
+import { TaskIntent } from './types/GraphTypes';
 
 export class Game {
     private app: Application;

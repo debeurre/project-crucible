@@ -1,15 +1,6 @@
 import { Application, Container, Graphics, Rectangle, Circle } from 'pixi.js';
 import { CONFIG } from '../config';
-
-export enum MapShape {
-  FULL = 'FULL',
-  RECT = 'RECT',
-  SQUARE = 'SQUARE',
-  CIRCLE = 'CIRCLE',
-  PROCGEN = 'PROCGEN',
-  MIRROR = 'MIRROR',
-  RADIAL = 'RADIAL',
-}
+import { MapShape } from '../types/MapTypes';
 
 export class MapSystem {
   public container: Container;

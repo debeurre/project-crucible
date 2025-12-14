@@ -1,7 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
 import { CONFIG } from '../config';
-import { MapShape } from '../systems/MapSystem';
+import { MapShape } from '../types/MapTypes';
 
 export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER' | 'BRUSH';
 
