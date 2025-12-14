@@ -1,4 +1,4 @@
-import { Ticker } from 'pixi.js';
+import { Ticker, Graphics } from 'pixi.js';
 import { ITool } from './ITool';
 import { FlowFieldSystem } from '../systems/FlowFieldSystem';
 import { GraphSystem } from '../systems/GraphSystem';
@@ -30,6 +30,10 @@ export class EraserTool implements ITool {
     onUp(x: number, y: number): void {}
 
     update(ticker: Ticker): void {}
+    
+    renderCursor(g: Graphics, x: number, y: number): void {
+        g.circle(x, y, this.RADIUS).stroke({ width: 2, color: 0x000000 });
+    }
 
     private performErasure(x: number, y: number) {
         this.flowFieldSystem.clearFlow(x, y); 

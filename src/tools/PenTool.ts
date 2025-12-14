@@ -1,4 +1,4 @@
-import { Point, Ticker } from 'pixi.js';
+import { Point, Ticker, Graphics } from 'pixi.js';
 import { ITool } from './ITool';
 import { GraphSystem } from '../systems/GraphSystem';
 import { Toolbar } from '../ui/Toolbar';
@@ -136,6 +136,8 @@ export class PenTool implements ITool {
     update(ticker: Ticker): void {
         // Optional visual updates
     }
+    
+    renderCursor(g: Graphics, x: number, y: number): void {}
 
     // Explicit Actions
     public commit() {

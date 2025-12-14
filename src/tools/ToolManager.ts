@@ -85,4 +85,8 @@ export class ToolManager {
     public update(ticker: Ticker) {
         this.activeTool.update(ticker);
     }
+
+    public renderCursor(g: Graphics, x: number, y: number) {
+        this.activeTool.renderCursor(g, x, y);
+    }
 }

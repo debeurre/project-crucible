@@ -1,4 +1,4 @@
-import { Ticker, Point } from 'pixi.js';
+import { Ticker, Point, Graphics } from 'pixi.js';
 import { ITool } from './ITool';
 import { FlowFieldSystem } from '../systems/FlowFieldSystem';
 
@@ -37,4 +37,6 @@ export class PencilTool implements ITool {
     }
 
     update(ticker: Ticker): void {}
+    
+    renderCursor(g: Graphics, x: number, y: number): void {}
 }

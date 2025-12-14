@@ -1,4 +1,4 @@
-import { Ticker } from 'pixi.js';
+import { Ticker, Graphics } from 'pixi.js';
 
 export interface ITool {
     onDown(x: number, y: number): void;
@@ -7,4 +7,5 @@ export interface ITool {
     onActivate(): void;
     onDeactivate(): void;
     update(ticker: Ticker): void;
+    renderCursor(g: Graphics, x: number, y: number): void;
 }
