@@ -116,6 +116,7 @@ export const CONFIG = {
   PENCIL_VISUALS: {
       COLOR: 0x808080, // Gray
       ALPHA: 0.8,
-      HIGHLIGHT_COLOR: 0x808080
+      HIGHLIGHT_COLOR: 0x000000, // Black
+      HIGHLIGHT_ALPHA: 0.5       // Semi-transparent
   }
 };

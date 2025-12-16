@@ -139,7 +139,7 @@ export class SprigSystem {
 
             // Selection Ring
             const selectionRing = new Graphics();
-            selectionRing.circle(0, 0, CONFIG.SPRIG_RADIUS + 4).stroke({ width: 2, color: CONFIG.PENCIL_VISUALS.HIGHLIGHT_COLOR });
+            selectionRing.circle(0, 0, CONFIG.SPRIG_RADIUS + 4).stroke({ width: 2, color: CONFIG.PENCIL_VISUALS.HIGHLIGHT_COLOR, alpha: CONFIG.PENCIL_VISUALS.HIGHLIGHT_ALPHA });
             selectionRing.visible = false;
 
             container.addChild(selectionRing); // Add first (bottom) or last (top)? Top is better visibility.
