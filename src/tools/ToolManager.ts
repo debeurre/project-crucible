@@ -1,7 +1,6 @@
 import { ITool } from './ITool';
 import { ToolMode, Toolbar } from '../ui/Toolbar';
 import { PenTool } from './PenTool';
-import { PencilTool } from './PencilTool';
 import { EraserTool } from './EraserTool';
 import { BrushTool } from './BrushTool';
 import { OmniPencilTool } from './OmniPencilTool';
@@ -13,8 +12,8 @@ import { Ticker } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
 
 export class ToolManager {
-    private tools: Record<ToolMode | 'OMNI', ITool>; // Added OMNI
-    private activeToolMode: ToolMode | 'OMNI' = 'PENCIL';
+    private tools: Record<ToolMode, ITool>;
+    private activeToolMode: ToolMode = 'PENCIL';
     private activeTool: ITool;
     private toolbar: Toolbar;
     private activeIntent: TaskIntent = TaskIntent.GREEN_HARVEST; // Default
@@ -23,17 +22,16 @@ export class ToolManager {
         graphSystem: GraphSystem, 
         flowFieldSystem: FlowFieldSystem, 
         sprigSystem: SprigSystem,
-        movementPathSystem: MovementPathSystem, // New
+        movementPathSystem: MovementPathSystem,
         toolbar: Toolbar
     ) {
         this.toolbar = toolbar;
         
         this.tools = {
-            'PENCIL': new PencilTool(flowFieldSystem),
+            'PENCIL': new OmniPencilTool(sprigSystem, movementPathSystem),
             'PEN': new PenTool(graphSystem, toolbar, this),
             'ERASER': new EraserTool(flowFieldSystem, graphSystem, sprigSystem),
-            'BRUSH': new BrushTool(flowFieldSystem, this),
-            'OMNI': new OmniPencilTool(sprigSystem, movementPathSystem)
+            'BRUSH': new BrushTool(flowFieldSystem, this)
         };
         
         this.activeTool = this.tools['PENCIL'];
@@ -48,7 +46,7 @@ export class ToolManager {
         return this.activeIntent;
     }
 
-    public setTool(mode: ToolMode | 'OMNI') {
+    public setTool(mode: ToolMode) {
         if (this.activeToolMode === mode) {
              if (mode === 'PEN') {
                 this.getPenTool().commit();
@@ -61,12 +59,10 @@ export class ToolManager {
         this.activeTool = this.tools[mode];
         this.activeTool.onActivate();
         
-        if (mode !== 'OMNI') {
-            this.toolbar.setTool(mode);
-        }
+        this.toolbar.setTool(mode);
     }
 
-    public getActiveToolMode(): ToolMode | 'OMNI' {
+    public getActiveToolMode(): ToolMode {
         return this.activeToolMode;
     }
 

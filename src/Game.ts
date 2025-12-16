@@ -9,6 +9,7 @@ import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { ResourceSystem } from './systems/ResourceSystem';
 import { FloatingTextSystem } from './systems/FloatingTextSystem';
 import { GraphSystem } from './systems/GraphSystem';
+import { MovementPathSystem } from './systems/MovementPathSystem'; // New
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
@@ -28,6 +29,7 @@ export class Game {
     private resourceSystem: ResourceSystem;
     private floatingTextSystem: FloatingTextSystem;
     private graphSystem: GraphSystem;
+    private movementPathSystem: MovementPathSystem; // New
     
     private toolManager: ToolManager;
     private inputState: InputState;
@@ -68,7 +70,9 @@ export class Game {
         this.resourceSystem = new ResourceSystem(app, this.mapSystem);
         this.floatingTextSystem = new FloatingTextSystem();
         this.graphSystem = new GraphSystem(this.flowFieldSystem);
-        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem);
+        this.movementPathSystem = new MovementPathSystem();
+        // SprigSystem needs MovementPathSystem
+        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem);
 
         // Initialize UI
         this.toolbar = new Toolbar(
@@ -129,6 +133,9 @@ export class Game {
         // Graph (Nodes/Edges)
         this.worldContainer.addChild(this.graphSystem.container);
         
+        // Movement Paths (Over graph, under UI)
+        this.worldContainer.addChild(this.movementPathSystem.container);
+
         // 4. Crucible (On top of map/sprigs)
         this.crucible.circle(0, 0, CONFIG.CRUCIBLE_RADIUS).fill(CONFIG.CRUCIBLE_COLOR);
         this.worldContainer.addChild(this.crucible);

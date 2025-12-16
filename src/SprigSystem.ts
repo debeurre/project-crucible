@@ -3,6 +3,7 @@ import { CONFIG } from './config';
 import { MapSystem } from './systems/MapSystem';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { TaskIntent } from './types/GraphTypes';
+import { MovementPathSystem } from './systems/MovementPathSystem'; // New import
 
 // No more Sprig interface in DOD
 
@@ -17,6 +18,7 @@ export class SprigSystem {
     private intents: Int32Array; // TaskIntent
     private selected: Uint8Array; // 0 = False, 1 = True
     private pathIds: Int32Array; // -1 = None
+    private pathNodeIndices: Int32Array; // Index of the next target node in the path
     
     // Spatial Hash Grid
     private gridHead: Int32Array;
@@ -36,15 +38,17 @@ export class SprigSystem {
     private app: Application;
     private mapSystem: MapSystem;
     private flowFieldSystem: FlowFieldSystem; 
+    private movementPathSystem: MovementPathSystem; // New prop
     public container: Container; 
 
     private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; 
     public activeSprigCount: number = 0; 
 
-    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem) {
+    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
         this.flowFieldSystem = flowFieldSystem; 
+        this.movementPathSystem = movementPathSystem;
         this.container = new Container();
 
         // Initialize typed arrays
@@ -57,6 +61,7 @@ export class SprigSystem {
         this.intents = new Int32Array(this.MAX_SPRIG_COUNT);
         this.selected = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.pathIds = new Int32Array(this.MAX_SPRIG_COUNT);
+        this.pathNodeIndices = new Int32Array(this.MAX_SPRIG_COUNT); // Track progress
         
         // Initialize Spatial Hash Arrays (sized for max potential usage, resized in resize())
         this.gridNext = new Int32Array(this.MAX_SPRIG_COUNT);
@@ -173,6 +178,7 @@ export class SprigSystem {
         this.intents[i] = -1; // Default intent
         this.selected[i] = 0;
         this.pathIds[i] = -1;
+        this.pathNodeIndices[i] = 0; // Start at beginning of path
 
         this.sprigContainers[i].x = this.positionsX[i];
         this.sprigContainers[i].y = this.positionsY[i];
@@ -191,11 +197,72 @@ export class SprigSystem {
         this.updateSpatialHash();
 
         for (let i = 0; i < this.activeSprigCount; i++) { 
-            this.applyBoids(i, dt);
-            this.applyFlowField(i, dt); 
+            // Check if on a Movement Path (High Priority)
+            const pathId = this.pathIds[i];
+            let onPath = false;
+            
+            if (pathId !== -1) {
+                onPath = this.applyPathMovement(i, dt, pathId);
+            }
+
+            if (!onPath) {
+                // Default Behavior (Boids + Flow)
+                this.applyBoids(i, dt);
+                this.applyFlowField(i, dt); 
+            }
+            
             this.updatePosition(i, dt);
             this.updateVisuals(i);
         }
+    }
+
+    private applyPathMovement(idx: number, dt: number, pathId: number): boolean {
+        const path = this.movementPathSystem.getPath(pathId);
+        if (!path) {
+            // Path destroyed or invalid
+            this.pathIds[idx] = -1;
+            return false;
+        }
+
+        const targetIndex = this.pathNodeIndices[idx];
+        if (targetIndex >= path.points.length) {
+            // End of path reached
+            this.pathIds[idx] = -1;
+            return false;
+        }
+
+        const target = path.points[targetIndex];
+        const sx = this.positionsX[idx];
+        const sy = this.positionsY[idx];
+        
+        const dx = target.x - sx;
+        const dy = target.y - sy;
+        const distSq = dx * dx + dy * dy;
+        const dist = Math.sqrt(distSq);
+
+        const speed = CONFIG.MAX_SPEED * 1.5; // Slightly faster on paths? Or normal speed.
+        // Let's use normal max speed for now, maybe customizable.
+        
+        // Move towards target
+        if (dist > 0) {
+            // Steering behavior: Seek
+            // We want to override velocity completely or steer?
+            // "Units traverse the path nodes strictly" -> Override is clearer.
+            // Direct velocity set.
+            const vx = (dx / dist) * speed;
+            const vy = (dy / dist) * speed;
+            
+            this.velocitiesX[idx] = vx;
+            this.velocitiesY[idx] = vy;
+        }
+
+        // Check arrival
+        const arrivalThreshold = 10; // 10px radius
+        if (dist < arrivalThreshold) {
+            this.pathNodeIndices[idx]++; // Next point
+        }
+
+        return true;
     }
 
     private updateSpatialHash() {
@@ -475,6 +542,25 @@ export class SprigSystem {
             y: this.positionsY[idx],
             radius: CONFIG.SPRIG_RADIUS
         };
+    }
+
+    public getSprigAt(x: number, y: number, radius: number = CONFIG.SPRIG_RADIUS): number {
+        // Simple iteration for now. Can use spatial grid for optimization later.
+        const rSq = radius * radius;
+        let bestDistSq = rSq;
+        let bestIdx = -1;
+
+        for (let i = 0; i < this.activeSprigCount; i++) {
+            const dx = this.positionsX[i] - x;
+            const dy = this.positionsY[i] - y;
+            const dSq = dx*dx + dy*dy;
+            
+            if (dSq < bestDistSq) {
+                bestDistSq = dSq;
+                bestIdx = i;
+            }
+        }
+        return bestIdx;
     }
 
     public removeSprigsAt(x: number, y: number, radius: number) {
