@@ -1,12 +1,14 @@
 import { Ticker, Graphics, Point } from 'pixi.js';
 import { ITool } from './ITool';
 import { SprigSystem } from '../SprigSystem';
+import { MovementPathSystem } from '../systems/MovementPathSystem';
 import { CONFIG } from '../config';
 
 type OmniMode = 'IDLE' | 'PREPARE_LASSO' | 'PREPARE_PATH';
 
 export class OmniPencilTool implements ITool {
     private sprigSystem: SprigSystem;
+    private movementPathSystem: MovementPathSystem;
     
     private mode: OmniMode = 'IDLE';
     private dragOrigin: Point = new Point();
@@ -16,8 +18,9 @@ export class OmniPencilTool implements ITool {
     private isDragging: boolean = false;
     private readonly DRAG_THRESHOLD_SQ = 5 * 5;
 
-    constructor(sprigSystem: SprigSystem) {
+    constructor(sprigSystem: SprigSystem, movementPathSystem: MovementPathSystem) {
         this.sprigSystem = sprigSystem;
+        this.movementPathSystem = movementPathSystem;
     }
 
     onActivate(): void {
@@ -28,9 +31,6 @@ export class OmniPencilTool implements ITool {
     onDeactivate(): void {
         this.mode = 'IDLE';
         this.resetDrag();
-        // Clear selection? Spec doesn't say.
-        // Usually switching tools keeps selection?
-        // But "Omni" implies it handles everything.
     }
 
     onDown(x: number, y: number): void {
@@ -40,7 +40,8 @@ export class OmniPencilTool implements ITool {
 
         // Hit Test
         const hitSprigIdx = this.sprigSystem.getSprigAt(x, y, 20); // 20px hit radius
-        const isSelected = hitSprigIdx !== -1 && this.sprigSystem.getSelectedIndices().includes(hitSprigIdx);
+        const selectedIndices = this.sprigSystem.getSelectedIndices();
+        const isSelected = hitSprigIdx !== -1 && selectedIndices.includes(hitSprigIdx);
 
         if (hitSprigIdx !== -1) {
             // Clicked Unit
@@ -53,7 +54,7 @@ export class OmniPencilTool implements ITool {
         } else {
             // Clicked Empty
             // Spec: If selection empty -> Lasso. If selection has units -> Deselect All + Lasso.
-            if (this.sprigSystem.getSelectedIndices().length > 0) {
+            if (selectedIndices.length > 0) {
                 this.clearSelection();
             }
             this.mode = 'PREPARE_LASSO';
@@ -116,9 +117,6 @@ export class OmniPencilTool implements ITool {
             
             if (this.mode === 'PREPARE_LASSO') {
                 // Dashed Line for Lasso
-                // Pixi v8 stroke doesn't do dashed easily?
-                // Just do solid for now, or dots.
-                // Or manual segments.
                 for (let i = 1; i < this.points.length; i++) {
                     g.lineTo(this.points[i].x, this.points[i].y);
                 }
@@ -135,9 +133,6 @@ export class OmniPencilTool implements ITool {
                 }
                 g.lineTo(x, y);
                 g.stroke({ width: 3, color: 0xFFFFFF }); // Ink Color
-                
-                // Arrowhead at tip
-                // ...
             }
         }
     }
@@ -154,22 +149,12 @@ export class OmniPencilTool implements ITool {
     }
 
     private finishLasso() {
-        // Raycast / Polygon Check
-        // Simple bounding box + point in poly
-        // Or just radius check for simple lasso?
-        // Let's implement standard Point-In-Polygon
-        
         // 1. Close loop
         // this.points is the polygon
         
-        // 2. Iterate all sprigs (Optimization: use spatial grid later)
-        // For now, iterate all active.
+        // 2. Iterate all sprigs
         const sprigs = this.sprigSystem.activeSprigCount;
         for (let i = 0; i < sprigs; i++) {
-            const sx = this.sprigSystem['positionsX'][i]; // Access private? SprigSystem needs getter?
-            // Wait, I can't access private fields. 
-            // SprigSystem needs to expose position getter or `selectInPolygon`.
-            // For now, I'll use `getSprigBounds` which is public.
             const pos = this.sprigSystem.getSprigBounds(i);
             
             if (this.isPointInPolygon(pos.x, pos.y, this.points)) {
@@ -179,13 +164,18 @@ export class OmniPencilTool implements ITool {
     }
 
     private finishPath() {
+        if (this.points.length < 2) return;
+
         // Create MovementPath Entity
-        // Spec: "Simplify raw input points... Create MovementPath... Assign to units"
-        // Phase 3 is Path System. 
-        // For now, just Log it.
-        console.log("Path Created:", this.points.length, "points");
+        const pathId = this.movementPathSystem.createPath(this.points);
         
-        // Trigger "Order Received" feedback
+        // Assign to selected units
+        const indices = this.sprigSystem.getSelectedIndices();
+        indices.forEach(idx => {
+            this.sprigSystem.setPath(idx, pathId);
+        });
+        
+        console.log("Path Created:", pathId, "for", indices.length, "units");
     }
 
     // Ray-casting algorithm
