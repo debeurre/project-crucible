@@ -94,6 +94,7 @@ export class Game {
             this.graphSystem,
             this.flowFieldSystem,
             this.sprigSystem,
+            this.movementPathSystem, // Added
             this.toolbar
         );
 
