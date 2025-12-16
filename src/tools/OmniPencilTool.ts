@@ -108,16 +108,67 @@ export class OmniPencilTool implements ITool {
     update(ticker: Ticker): void {}
 
     renderCursor(g: Graphics, x: number, y: number): void {
-        const cursorColor = 0x000000; // Black (as requested for cursor itself)
-        const cursorAlpha = 0.75;
+        const cursorColor = CONFIG.PENCIL_VISUALS.COLOR;
+        const cursorAlpha = CONFIG.PENCIL_VISUALS.ALPHA;
+        const size = CONFIG.PENCIL_VISUALS.CURSOR_SIZE; // e.g. 15
+
+        // Draw Isosceles Triangle Cursor
+        // Tip at (x,y)
+        // Pointing Up-Left (standard cursor orientation)
+        // We simulate a rotation of -45 degrees
         
+        // Unrotated (Pointing Down): Tip(0,0), Left(-w/2, -h), Right(w/2, -h) ??? No, Tip is usually 0,0.
+        // Let's define shape relative to Tip (0,0).
+        // Let's make it look like a standard mouse pointer (Right Triangle-ish but user asked for Isosceles).
+        // Isosceles pointing Top-Left:
+        // Tip: 0,0
+        // Base Midpoint: 12, 12 (approx)
+        
+        // Let's just draw points manually.
+        // Tip
+        const p1x = x;
+        const p1y = y;
+        
+        // Bottom Left (relative to tip)
+        const p2x = x;
+        const p2y = y + size * 1.5;
+        
+        // Right
+        const p3x = x + size;
+        const p3y = y + size; // Slightly higher than p2 to make it angled?
+        
+        // If strict Isosceles:
+        // Tip (0,0). Base center (0, H). Width W.
+        // P1(0,0). P2(-W/2, H). P3(W/2, H).
+        // Rotate -30 deg.
+        
+        const w = size;
+        const h = size * 1.5;
+        
+        // Rotation -30 deg (approx -0.5 rad)
+        const cos = 0.866;
+        const sin = -0.5;
+        
+        // P2 (Left Base): (-w/2, h)
+        // P3 (Right Base): (w/2, h)
+        
+        const dx2 = -w/2 * cos - h * sin;
+        const dy2 = -w/2 * sin + h * cos;
+        
+        const dx3 = w/2 * cos - h * sin;
+        const dy3 = w/2 * sin + h * cos;
+        
+        g.poly([
+            p1x, p1y,
+            p1x + dx2, p1y + dy2,
+            p1x + dx3, p1y + dy3
+        ]).fill({ color: cursorColor, alpha: cursorAlpha });
+
+
+        // Draw In-Progress Action
         const pathColor = CONFIG.PENCIL_VISUALS.COLOR;
         const pathAlpha = CONFIG.PENCIL_VISUALS.ALPHA;
 
-        // Draw Cursor Tip
-        g.circle(x, y, 5).fill({ color: cursorColor, alpha: cursorAlpha });
-
-        // Draw In-Progress Action
         if (this.isDragging && this.points.length > 1) {
             g.moveTo(this.points[0].x, this.points[0].y);
             
