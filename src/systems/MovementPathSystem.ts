@@ -35,6 +35,10 @@ export class MovementPathSystem {
         return this.paths.find(p => p.id === id);
     }
 
+    public getAllPathIds(): number[] {
+        return this.paths.map(p => p.id);
+    }
+
     public removePath(id: number) {
         this.paths = this.paths.filter(p => p.id !== id);
         this.draw();

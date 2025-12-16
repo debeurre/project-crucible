@@ -465,6 +465,18 @@ export class SprigSystem {
 
     public setPath(idx: number, pathId: number) {
         this.pathIds[idx] = pathId;
+        this.pathNodeIndices[idx] = 0; // Reset progress
+    }
+
+    public getActivePathIds(): Set<number> {
+        const activeIds = new Set<number>();
+        for (let i = 0; i < this.activeSprigCount; i++) {
+            const id = this.pathIds[i];
+            if (id !== -1) {
+                activeIds.add(id);
+            }
+        }
+        return activeIds;
     }
 
     public getSelectedIndices(): number[] {

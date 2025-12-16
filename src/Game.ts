@@ -172,6 +172,21 @@ export class Game {
         this.updateGameLogic(ticker);
         this.renderVisuals(ticker);
         this.toolManager.update(ticker);
+        
+        // Garbage collect unused paths
+        this.cleanupPaths();
+    }
+
+    private cleanupPaths() {
+        const activePathIds = this.sprigSystem.getActivePathIds();
+        const allPathIds = this.movementPathSystem.getAllPathIds();
+        
+        for (const id of allPathIds) {
+            if (!activePathIds.has(id)) {
+                // Path is empty of units -> destroy it
+                this.movementPathSystem.removePath(id);
+            }
+        }
     }
 
     private handleInput(ticker: Ticker) {
