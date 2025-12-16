@@ -105,10 +105,17 @@ export const CONFIG = {
     4: 'FOCUS'
   },
   INTENT_ALPHA: {
-    0: 0.5, // GREEN_HARVEST
-    1: 0.5, // RED_ATTACK
-    2: 0.5, // BLUE_SCOUT,
-    3: 0.5, // YELLOW_ASSIST
-    4: 0.5  // WHITE_FOCUS
+    0: 0.25, // GREEN_HARVEST
+    1: 0.25, // RED_ATTACK
+    2: 0.25, // BLUE_SCOUT
+    3: 0.25, // YELLOW_ASSIST
+    4: 0.4   // WHITE_FOCUS
+  },
+
+  // Omni-Pencil Visuals
+  PENCIL_VISUALS: {
+      COLOR: 0x808080, // Gray
+      ALPHA: 0.8,
+      HIGHLIGHT_COLOR: 0x808080
   }
 };

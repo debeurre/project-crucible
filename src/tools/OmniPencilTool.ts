@@ -108,8 +108,11 @@ export class OmniPencilTool implements ITool {
     update(ticker: Ticker): void {}
 
     renderCursor(g: Graphics, x: number, y: number): void {
-        const cursorColor = 0x000000; // Black
+        const cursorColor = 0x000000; // Black (as requested for cursor itself)
         const cursorAlpha = 0.75;
+        
+        const pathColor = CONFIG.PENCIL_VISUALS.COLOR;
+        const pathAlpha = CONFIG.PENCIL_VISUALS.ALPHA;
 
         // Draw Cursor Tip
         g.circle(x, y, 5).fill({ color: cursorColor, alpha: cursorAlpha });
@@ -122,17 +125,17 @@ export class OmniPencilTool implements ITool {
                 for (let i = 1; i < this.points.length; i++) {
                     g.lineTo(this.points[i].x, this.points[i].y);
                 }
-                g.stroke({ width: 1, color: 0x808080, alpha: 0.5 }); // Gray lasso
+                g.stroke({ width: 1, color: pathColor, alpha: 0.5 }); // Gray lasso
                 
                 // Closing line (preview)
                 g.lineTo(x, y);
-                g.stroke({ width: 1, color: 0x808080, alpha: 0.2 }); // Faded gray
+                g.stroke({ width: 1, color: pathColor, alpha: 0.2 }); // Faded gray
             } else if (this.mode === 'PREPARE_PATH') {
                 for (let i = 1; i < this.points.length; i++) {
                     g.lineTo(this.points[i].x, this.points[i].y);
                 }
                 g.lineTo(x, y);
-                g.stroke({ width: 3, color: 0x808080 }); // Gray path
+                g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); // Gray path
             }
         }
     }

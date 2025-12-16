@@ -1,4 +1,5 @@
 import { Container, Graphics, Point } from 'pixi.js';
+import { CONFIG } from '../config';
 
 export interface MovementPath {
     id: number;
@@ -68,14 +69,15 @@ export class MovementPathSystem {
         for (const path of this.paths) {
             if (path.points.length < 2) continue;
 
-            const color = path.selected ? 0xFFFF00 : 0xFFFFFF; // Yellow if selected, White otherwise
+            const color = path.selected ? 0xFFFF00 : CONFIG.PENCIL_VISUALS.COLOR; // Yellow if selected, Gray otherwise
+            const alpha = CONFIG.PENCIL_VISUALS.ALPHA;
             
             // Draw Line
             this.graphics.moveTo(path.points[0].x, path.points[0].y);
             for (let i = 1; i < path.points.length; i++) {
                 this.graphics.lineTo(path.points[i].x, path.points[i].y);
             }
-            this.graphics.stroke({ width: 3, color: color, alpha: 0.8 });
+            this.graphics.stroke({ width: 3, color: color, alpha: alpha });
 
             // Draw Arrowhead at End
             const end = path.points[path.points.length - 1];
@@ -95,7 +97,7 @@ export class MovementPathSystem {
                 end.x - headLen * Math.cos(angle + Math.PI / 6),
                 end.y - headLen * Math.sin(angle + Math.PI / 6)
             );
-            this.graphics.stroke({ width: 3, color: color });
+            this.graphics.stroke({ width: 3, color: color, alpha: alpha });
             
             // If selected, show delete button (Red X) near handle?
             // For now, just highlighting the arrow is enough context.
