@@ -15,6 +15,8 @@ export class SprigSystem {
     private flashTimers: Uint8Array;
     private cargos: Uint8Array; // 0 = None, 1 = Wood
     private intents: Int32Array; // TaskIntent
+    private selected: Uint8Array; // 0 = False, 1 = True
+    private pathIds: Int32Array; // -1 = None
     
     // Spatial Hash Grid
     private gridHead: Int32Array;
@@ -27,6 +29,7 @@ export class SprigSystem {
     private sprigContainers: Container[]; // Main container for each sprig
     private sprigBodySprites: Sprite[];   // The body sprite (for tinting)
     private cargoSprites: Sprite[];       // The cargo sprite
+    private selectionSprites: Graphics[]; // Selection ring
     private sprigTexture: Texture; 
     private cargoTexture: Texture; 
 
@@ -52,6 +55,8 @@ export class SprigSystem {
         this.flashTimers = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.cargos = new Uint8Array(this.MAX_SPRIG_COUNT); 
         this.intents = new Int32Array(this.MAX_SPRIG_COUNT);
+        this.selected = new Uint8Array(this.MAX_SPRIG_COUNT);
+        this.pathIds = new Int32Array(this.MAX_SPRIG_COUNT);
         
         // Initialize Spatial Hash Arrays (sized for max potential usage, resized in resize())
         this.gridNext = new Int32Array(this.MAX_SPRIG_COUNT);
@@ -61,6 +66,7 @@ export class SprigSystem {
         this.sprigContainers = [];
         this.sprigBodySprites = [];
         this.cargoSprites = [];
+        this.selectionSprites = [];
         this.sprigTexture = Texture.EMPTY; 
         this.cargoTexture = Texture.EMPTY; 
 
@@ -126,12 +132,19 @@ export class SprigSystem {
             cargoSprite.visible = false; 
             cargoSprite.y = -12; 
 
+            // Selection Ring
+            const selectionRing = new Graphics();
+            selectionRing.circle(0, 0, CONFIG.SPRIG_RADIUS + 4).stroke({ width: 2, color: 0xFFFFFF });
+            selectionRing.visible = false;
+
+            container.addChild(selectionRing); // Add first (bottom) or last (top)? Top is better visibility.
             container.addChild(bodySprite);
             container.addChild(cargoSprite);
 
             this.sprigContainers.push(container);
             this.sprigBodySprites.push(bodySprite);
             this.cargoSprites.push(cargoSprite);
+            this.selectionSprites.push(selectionRing);
             
             this.container.addChild(container); 
         }
@@ -158,6 +171,8 @@ export class SprigSystem {
         this.flashTimers[i] = 0;
         this.cargos[i] = 0; 
         this.intents[i] = -1; // Default intent
+        this.selected[i] = 0;
+        this.pathIds[i] = -1;
 
         this.sprigContainers[i].x = this.positionsX[i];
         this.sprigContainers[i].y = this.positionsY[i];
@@ -165,6 +180,7 @@ export class SprigSystem {
         
         this.sprigBodySprites[i].tint = CONFIG.SPRIG_COLOR;
         this.cargoSprites[i].visible = false; 
+        this.selectionSprites[i].visible = false;
 
         this.activeSprigCount++;
     }
@@ -376,14 +392,36 @@ export class SprigSystem {
         this.velocitiesY[idx] = tempVelocity.y;
     }
 
+    public setSelected(idx: number, isSelected: boolean) {
+        this.selected[idx] = isSelected ? 1 : 0;
+    }
+
+    public setPath(idx: number, pathId: number) {
+        this.pathIds[idx] = pathId;
+    }
+
+    public getSelectedIndices(): number[] {
+        const indices = [];
+        for (let i = 0; i < this.activeSprigCount; i++) {
+            if (this.selected[i] === 1) {
+                indices.push(i);
+            }
+        }
+        return indices;
+    }
+
     private updateVisuals(idx: number) {
         const container = this.sprigContainers[idx];
         const bodySprite = this.sprigBodySprites[idx];
         const cargoSprite = this.cargoSprites[idx];
+        const selectionRing = this.selectionSprites[idx];
         const flashTimer = this.flashTimers[idx];
 
         container.x = this.positionsX[idx];
         container.y = this.positionsY[idx];
+
+        // Selection Visuals
+        selectionRing.visible = this.selected[idx] === 1;
 
         if (flashTimer > 0) {
             bodySprite.tint = CONFIG.SPRIG_FLASH_COLOR;

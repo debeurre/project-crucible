@@ -23,6 +23,9 @@ export function createInputManager(app: Application): InputState {
         touchCount: 0
     };
 
+    const dragStartPos = new Point();
+    const DRAG_THRESHOLD_SQ = 5 * 5; // 5px threshold
+
     // 1. Enable interactivity on the stage
     // In v8, we use 'eventMode' instead of 'interactive'
     app.stage.eventMode = 'static';
@@ -35,21 +38,28 @@ export function createInputManager(app: Application): InputState {
     app.stage.on('pointerdown', (e: FederatedPointerEvent) => {
         activePointers.add(e.pointerId);
         state.touchCount = activePointers.size;
-        state.mousePosition.copyFrom(e.global); // Update position
+        state.mousePosition.copyFrom(e.global); 
+        dragStartPos.copyFrom(e.global); // Record start pos
 
         if (e.button === 2) {
             state.isRightDown = true;
         } else {
             state.isDown = true;
-            state.isDragging = false;
+            state.isDragging = false; // Reset dragging
             state.isHolding = true;
         }
     });
 
     app.stage.on('pointermove', (e: FederatedPointerEvent) => {
         state.mousePosition.copyFrom(e.global); // Update position
-        if (state.isDown) {
-            state.isDragging = true;
+        
+        if (state.isDown && !state.isDragging) {
+            // Check threshold
+            const dx = state.mousePosition.x - dragStartPos.x;
+            const dy = state.mousePosition.y - dragStartPos.y;
+            if (dx*dx + dy*dy > DRAG_THRESHOLD_SQ) {
+                state.isDragging = true;
+            }
         }
     });
 
@@ -60,10 +70,10 @@ export function createInputManager(app: Application): InputState {
         if (e.button === 2) {
             state.isRightDown = false;
         } else {
-            // Reset drag state only when ALL fingers are up (or simple logic for now)
             if (state.touchCount === 0) {
                 state.isDown = false;
                 state.isHolding = false;
+                state.isDragging = false; // Reset on up
             }
         }
     });
@@ -78,6 +88,7 @@ export function createInputManager(app: Application): InputState {
             if (state.touchCount === 0) {
                 state.isDown = false;
                 state.isHolding = false;
+                state.isDragging = false;
             }
         }
     });
