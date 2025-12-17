@@ -194,7 +194,7 @@ export class OmniPencilTool implements ITool {
         const pathColor = CONFIG.PENCIL_VISUALS.COLOR;
         const pathAlpha = CONFIG.PENCIL_VISUALS.ALPHA;
 
-        if (this.isDragging && this.points.length > 1) {
+        if (this.isDragging && this.points.length > 1) { // Check length > 1 for valid line segments
             if (this.mode === 'PREPARE_LASSO') {
                 g.moveTo(this.points[0].x, this.points[0].y);
                 
@@ -204,8 +204,7 @@ export class OmniPencilTool implements ITool {
                 const lineWidth = 3;  
                 const patternLength = dashLength + gapLength;
 
-                // Continuous Dash Rendering
-                let currentPatternDist = 0; 
+                let currentPatternDist = 0;
 
                 for (let i = 1; i < this.points.length; i++) {
                     let p1 = this.points[i-1];
@@ -277,11 +276,10 @@ export class OmniPencilTool implements ITool {
                 for (let i = 1; i < this.points.length; i++) {
                     g.lineTo(this.points[i].x, this.points[i].y);
                 }
-                            g.lineTo(x, y);
-                            g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); // Gray path
-                        }
-                    }
-                }
+                g.lineTo(x, y);
+                g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); 
+            }
+        }
     }
 
     private deselectAllPaths() {
