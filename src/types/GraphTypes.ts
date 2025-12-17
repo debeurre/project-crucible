@@ -2,8 +2,7 @@ export enum TaskIntent {
     GREEN_HARVEST = 0,
     RED_ATTACK = 1,
     BLUE_SCOUT = 2,
-    YELLOW_ASSIST = 3,
-    WHITE_FOCUS = 4
+    YELLOW_ASSIST = 3
 }
 
 export enum NodeType {
