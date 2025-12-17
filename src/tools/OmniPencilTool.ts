@@ -195,26 +195,27 @@ export class OmniPencilTool implements ITool {
         const pathAlpha = CONFIG.PENCIL_VISUALS.ALPHA;
 
         if (this.isDragging && this.points.length > 1) {
-            g.moveTo(this.points[0].x, this.points[0].y);
-            
-            if (this.mode === 'PREPARE_LASSO') {
-                for (let i = 1; i < this.points.length; i++) {
-                    g.lineTo(this.points[i].x, this.points[i].y);
+                        g.moveTo(this.points[0].x, this.points[0].y);
+                        
+                        if (this.mode === 'PREPARE_LASSO') {
+                            for (let i = 1; i < this.points.length; i++) {
+                                g.lineTo(this.points[i].x, this.points[i].y);
+                            }
+                            g.stroke({ width: 1, color: pathColor, alpha: 0.5 }); // Gray lasso trail
+                            
+                            // Closing line (ghost line from current pointer to drag origin)
+                            g.moveTo(x, y);
+                            g.lineTo(this.dragOrigin.x, this.dragOrigin.y);
+                            g.stroke({ width: 1, color: pathColor, alpha: 0.2 }); // Faded gray
+                        } else if (this.mode === 'PREPARE_PATH') {
+                            for (let i = 1; i < this.points.length; i++) {
+                                g.lineTo(this.points[i].x, this.points[i].y);
+                            }
+                            g.lineTo(x, y);
+                            g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); // Gray path
+                        }
+                    }
                 }
-                g.stroke({ width: 1, color: pathColor, alpha: 0.5 }); // Gray lasso
-                
-                // Closing line (preview)
-                g.lineTo(x, y);
-                g.stroke({ width: 1, color: pathColor, alpha: 0.2 }); // Faded gray
-            } else if (this.mode === 'PREPARE_PATH') {
-                for (let i = 1; i < this.points.length; i++) {
-                    g.lineTo(this.points[i].x, this.points[i].y);
-                }
-                g.lineTo(x, y);
-                g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); // Gray path
-            }
-        }
-    }
 
     private deselectAllPaths() {
         const ids = this.movementPathSystem.getAllPathIds();
