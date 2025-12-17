@@ -24,7 +24,7 @@ export function createInputManager(app: Application): InputState {
     };
 
     const dragStartPos = new Point();
-    const DRAG_THRESHOLD_SQ = 5 * 5; // 5px threshold
+    const DRAG_THRESHOLD_SQ = 10 * 10; // 10px threshold
 
     // 1. Enable interactivity on the stage
     // In v8, we use 'eventMode' instead of 'interactive'

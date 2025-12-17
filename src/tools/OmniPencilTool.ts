@@ -16,7 +16,7 @@ export class OmniPencilTool implements ITool {
     
     // State
     private isDragging: boolean = false;
-    private readonly DRAG_THRESHOLD_SQ = 5 * 5;
+    private readonly DRAG_THRESHOLD_SQ = 10 * 10;
 
     constructor(sprigSystem: SprigSystem, movementPathSystem: MovementPathSystem) {
         this.sprigSystem = sprigSystem;
@@ -42,25 +42,16 @@ export class OmniPencilTool implements ITool {
         const deletePathId = this.movementPathSystem.isDeleteButtonAt(x, y);
         if (deletePathId !== -1) {
             this.movementPathSystem.removePath(deletePathId);
-            // Clear sprig assignments? Garbage collection handles it, but explicit reset is faster.
-            // Let's rely on cleanupPaths in Game loop or implement reset here.
-            // Actually, we should probably clear selection if the deleted path was selected?
-            // The path is gone, so selection state on it is gone.
             return;
         }
 
         // 2. Check Path Selection
         const hitPathId = this.movementPathSystem.getPathAt(x, y);
         if (hitPathId !== -1) {
-            // Select Path (Toggle?)
-            // Spec: "Tapping a path selects it and renders a red x button where it was tapped"
-            // Deselect others? Spec implies exclusive or toggle. "Tapping empty space deselects paths".
-            // Let's deselect all, then select this one.
             this.deselectAllPaths();
             this.movementPathSystem.setPathSelection(hitPathId, true, new Point(x, y));
             return;
         } else {
-            // Tapped empty/sprig -> Deselect paths
             this.deselectAllPaths();
         }
 
@@ -79,11 +70,9 @@ export class OmniPencilTool implements ITool {
             this.mode = 'PREPARE_PATH';
         } else {
             // Clicked Empty
-            // Spec: If selection empty -> Lasso. If selection has units -> Deselect All + Lasso.
-            if (selectedIndices.length > 0) {
-                this.clearSelection();
-            }
-            this.mode = 'PREPARE_LASSO';
+            // Don't deselect yet! Wait to see if it's a drag (Path) or tap (Deselect).
+            // Default to IDLE until drag starts.
+            this.mode = 'IDLE';
         }
     }
 
@@ -94,6 +83,16 @@ export class OmniPencilTool implements ITool {
             const dy = y - this.dragOrigin.y;
             if (dx*dx + dy*dy > this.DRAG_THRESHOLD_SQ) {
                 this.isDragging = true;
+                
+                // Determine Mode on Drag Start
+                if (this.mode === 'IDLE') {
+                    const selectedIndices = this.sprigSystem.getSelectedIndices();
+                    if (selectedIndices.length > 0) {
+                        this.mode = 'PREPARE_PATH';
+                    } else {
+                        this.mode = 'PREPARE_LASSO';
+                    }
+                }
             }
         }
 
