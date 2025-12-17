@@ -197,14 +197,12 @@ export class OmniPencilTool implements ITool {
         if (this.isDragging && this.points.length > 1) {
                             g.moveTo(this.points[0].x, this.points[0].y);
                             
-                            // Lasso with thicker, dotted style
-                            const dashLength = 1; // Dot size
-                            const gapLength = 5;  // Gap between dots
+                            // Lasso with thicker, dashed style
+                            const dashLength = 8; 
+                            const gapLength = 6;  
                             const lineWidth = 3;  // Match path thickness
 
-                            const px = this.points[0].x;
-                            const py = this.points[0].y;
-                            
+                            // Draw dashed polyline
                             for (let i = 1; i < this.points.length; i++) {
                                 const x1 = this.points[i-1].x;
                                 const y1 = this.points[i-1].y;
@@ -234,8 +232,31 @@ export class OmniPencilTool implements ITool {
                             g.stroke({ width: lineWidth, color: pathColor, alpha: pathAlpha }); // Gray lasso trail
                             
                             // Closing line (ghost line from current pointer to drag origin)
-                            g.moveTo(x, y);
-                            g.lineTo(this.dragOrigin.x, this.dragOrigin.y);
+                            // Draw dashed as well.
+                            const x1 = x;
+                            const y1 = y;
+                            const x2 = this.dragOrigin.x;
+                            const y2 = this.dragOrigin.y;
+
+                            const dx = x2 - x1;
+                            const dy = y2 - y1;
+                            const len = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (len > 0) { // Only draw if not at origin
+                                const numSegments = Math.floor(len / (dashLength + gapLength));
+                                const unitVx = dx / len;
+                                const unitVy = dy / len;
+
+                                for (let j = 0; j < numSegments; j++) {
+                                    const startX = x1 + j * (dashLength + gapLength) * unitVx;
+                                    const startY = y1 + j * (dashLength + gapLength) * unitVy;
+                                    const endX = startX + dashLength * unitVx;
+                                    const endY = startY + dashLength * unitVy;
+                                    
+                                    g.moveTo(startX, startY);
+                                    g.lineTo(endX, endY);
+                                }
+                            }
                             g.stroke({ width: lineWidth, color: pathColor, alpha: pathAlpha * 0.5 }); // Faded gray
                         } else if (this.mode === 'PREPARE_PATH') {
                             for (let i = 1; i < this.points.length; i++) {
