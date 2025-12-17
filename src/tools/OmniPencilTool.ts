@@ -245,7 +245,6 @@ export class OmniPencilTool implements ITool {
                             g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); // Gray path
                         }
                     }
-                }
 
     private deselectAllPaths() {
         const ids = this.movementPathSystem.getAllPathIds();
