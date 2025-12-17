@@ -349,8 +349,13 @@ export class Toolbar extends Container {
         });
 
         // Position Map Button
-        const mapStartX = swatchStartX + (numSwatches > 0 ? (numSwatches - 1) * swatchGap : 0) + (numSwatches > 0 ? swatchW / 2 : 0) + separator;
-        this.mapBtn.x = mapStartX + mapBtnW / 2; // Center the map button based on its own width
+        // Calculate based on the position of the last swatch to ensure no overlap
+        const lastSwatchX = swatchStartX + (numSwatches > 0 ? (numSwatches - 1) * (swatchW + swatchGap) : 0);
+        const mapStartX = numSwatches > 0 
+            ? lastSwatchX + swatchW / 2 + separator + mapBtnW / 2 
+            : swatchStartX + mapBtnW / 2; // Fallback if no swatches (unlikely)
+            
+        this.mapBtn.x = mapStartX;
         this.mapBtn.y = 0; // Center vertically
         
         // Position Menu above Button
