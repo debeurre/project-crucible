@@ -277,10 +277,12 @@ export class OmniPencilTool implements ITool {
                 for (let i = 1; i < this.points.length; i++) {
                     g.lineTo(this.points[i].x, this.points[i].y);
                 }
-                g.lineTo(x, y);
-                g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); 
-            }
-        }
+                            g.lineTo(x, y);
+                            g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); // Gray path
+                        }
+                    }
+                }
+    }
 
     private deselectAllPaths() {
         const ids = this.movementPathSystem.getAllPathIds();
