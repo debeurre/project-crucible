@@ -313,11 +313,13 @@ export class Toolbar extends Container {
         const mapBtnW = 80;
         
         // Tools: 4 buttons
-        // Swatches: 5 buttons
-        // Map: 1 button
-        
-        const toolsWidth = 4 * btnW + 3 * gap;
-        const swatchesWidth = 5 * swatchW + 4 * swatchGap;
+        const numTools = 4;
+        const toolsWidth = numTools * btnW + (numTools - 1) * gap;
+
+        // Swatches: Dynamic count
+        const numSwatches = this.swatches.length;
+        const swatchesWidth = numSwatches * swatchW + (numSwatches > 0 ? (numSwatches - 1) * swatchGap : 0);
+
         const mapWidth = mapBtnW;
         const separator = 20;
         const padding = 20;
@@ -340,15 +342,15 @@ export class Toolbar extends Container {
         this.eraserBtn.x = startX + (btnW + gap) * 3;
         
         // Position Swatches
-        const swatchStartX = startX + (btnW + gap) * 3 + btnW / 2 + separator + swatchW / 2;
+        const swatchStartX = startX + (btnW + gap) * (numTools - 1) + btnW / 2 + separator + swatchW / 2;
         this.swatches.forEach((swatch, i) => {
             swatch.x = swatchStartX + i * (swatchW + swatchGap);
             swatch.y = 0;
         });
 
         // Position Map Button
-        const mapStartX = swatchStartX + 4 * (swatchW + swatchGap) + swatchW / 2 + separator;
-        this.mapBtn.x = mapStartX;
+        const mapStartX = swatchStartX + (numSwatches > 0 ? (numSwatches - 1) * swatchGap : 0) + (numSwatches > 0 ? swatchW / 2 : 0) + separator;
+        this.mapBtn.x = mapStartX + mapBtnW / 2; // Center the map button based on its own width
         this.mapBtn.y = 0; // Center vertically
         
         // Position Menu above Button
