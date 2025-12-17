@@ -107,8 +107,7 @@ export const CONFIG = {
     1: 0.5, // RED_ATTACK
     2: 0.5, // BLUE_SCOUT
     3: 0.5  // YELLOW_ASSIST
-  } as Record<number, number>
-};
+  } as Record<number, number>,
 
   // Omni-Pencil Visuals
   PENCIL_VISUALS: {
@@ -118,4 +117,4 @@ export const CONFIG = {
       HIGHLIGHT_ALPHA: 0.75,
       CURSOR_SIZE: 10 // Size of the triangle cursor
   }
-}
+};
