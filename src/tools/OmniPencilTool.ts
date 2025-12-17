@@ -200,52 +200,68 @@ export class OmniPencilTool implements ITool {
                             // Lasso with thicker, dashed style
                             const dashLength = 8; 
                             const gapLength = 6;  
-                            const lineWidth = 3;  // Match path thickness
+                            const lineWidth = 3;  
+                            const patternLength = dashLength + gapLength;
 
-                            // Draw dashed polyline
+                            // Continuous Dash Rendering
+                            let currentPatternDist = 0; // Tracks progress within the [dash, gap] cycle
+
                             for (let i = 1; i < this.points.length; i++) {
-                                const x1 = this.points[i-1].x;
-                                const y1 = this.points[i-1].y;
-                                const x2 = this.points[i].x;
-                                const y2 = this.points[i].y;
+                                let p1 = this.points[i-1];
+                                const p2 = this.points[i];
 
-                                const dx = x2 - x1;
-                                const dy = y2 - y1;
+                                const dx = p2.x - p1.x;
+                                const dy = p2.y - p1.y;
                                 const len = Math.sqrt(dx * dx + dy * dy);
                                 
                                 if (len === 0) continue;
-                                
-                                const numSegments = Math.floor(len / (dashLength + gapLength));
-                                const unitVx = dx / len;
-                                const unitVy = dy / len;
 
-                                for (let j = 0; j < numSegments; j++) {
-                                    const startX = x1 + j * (dashLength + gapLength) * unitVx;
-                                    const startY = y1 + j * (dashLength + gapLength) * unitVy;
-                                    const endX = startX + dashLength * unitVx;
-                                    const endY = startY + dashLength * unitVy;
+                                const ux = dx / len;
+                                const uy = dy / len;
+                                
+                                let distTraveled = 0;
+
+                                while (distTraveled < len) {
+                                    const phase = currentPatternDist % patternLength;
+                                    const isDash = phase < dashLength;
+                                    const distRemainingInPhase = isDash ? (dashLength - phase) : (patternLength - phase);
                                     
-                                    g.moveTo(startX, startY);
-                                    g.lineTo(endX, endY);
+                                    const drawDist = Math.min(len - distTraveled, distRemainingInPhase);
+
+                                    const startX = p1.x + distTraveled * ux;
+                                    const startY = p1.y + distTraveled * uy;
+                                    const endX = startX + drawDist * ux;
+                                    const endY = startY + drawDist * uy;
+
+                                    if (isDash) {
+                                        g.moveTo(startX, startY);
+                                        g.lineTo(endX, endY);
+                                    }
+
+                                    distTraveled += drawDist;
+                                    currentPatternDist += drawDist;
                                 }
                             }
                             g.stroke({ width: lineWidth, color: pathColor, alpha: pathAlpha }); // Gray lasso trail
                             
                             // Closing line (ghost line from current pointer to drag origin)
                             // Draw dashed as well.
+                            // Reset pattern dist? No, maybe simpler to just draw separate logic or continue.
+                            // Let's just draw standard dashed logic for the closing line, not strictly continuous with the main line is fine.
+                            
                             const x1 = x;
                             const y1 = y;
                             const x2 = this.dragOrigin.x;
                             const y2 = this.dragOrigin.y;
 
-                            const dx = x2 - x1;
-                            const dy = y2 - y1;
-                            const len = Math.sqrt(dx * dx + dy * dy);
+                            const cdx = x2 - x1;
+                            const cdy = y2 - y1;
+                            const clen = Math.sqrt(cdx * cdx + cdy * cdy);
                             
-                            if (len > 0) { // Only draw if not at origin
-                                const numSegments = Math.floor(len / (dashLength + gapLength));
-                                const unitVx = dx / len;
-                                const unitVy = dy / len;
+                            if (clen > 0) { 
+                                const numSegments = Math.floor(clen / (dashLength + gapLength));
+                                const unitVx = cdx / clen;
+                                const unitVy = cdy / clen;
 
                                 for (let j = 0; j < numSegments; j++) {
                                     const startX = x1 + j * (dashLength + gapLength) * unitVx;
