@@ -5,6 +5,7 @@ export interface MovementPath {
     id: number;
     points: Point[];
     selected: boolean;
+    selectedAt: Point | null; // Where the path was tapped for selection
 }
 
 export class MovementPathSystem {
@@ -25,7 +26,8 @@ export class MovementPathSystem {
         this.paths.push({
             id,
             points: [...points], // Copy
-            selected: false
+            selected: false,
+            selectedAt: null
         });
         this.draw();
         return id;
@@ -44,27 +46,58 @@ export class MovementPathSystem {
         this.draw();
     }
 
-    public setPathSelection(id: number, selected: boolean) {
+    public setPathSelection(id: number, selected: boolean, selectedAt: Point | null = null) {
         const path = this.paths.find(p => p.id === id);
         if (path) {
             path.selected = selected;
+            path.selectedAt = selectedAt;
             this.draw();
         }
     }
 
-    // Hit test for path handles (Arrowheads at the end)
-    public getPathAt(x: number, y: number, radius: number = 20): number {
-        const rSq = radius * radius;
+    // Check if the delete button (Red X) of a selected path is tapped
+    public isDeleteButtonAt(x: number, y: number): number {
+        const radius = 20; // Hit radius for button
         for (const path of this.paths) {
-            if (path.points.length === 0) continue;
-            const end = path.points[path.points.length - 1];
-            const dx = end.x - x;
-            const dy = end.y - y;
-            if (dx * dx + dy * dy < rSq) {
-                return path.id;
+            if (path.selected && path.selectedAt) {
+                const dx = path.selectedAt.x - x;
+                const dy = path.selectedAt.y - y;
+                if (dx*dx + dy*dy < radius*radius) {
+                    return path.id;
+                }
             }
         }
         return -1;
+    }
+
+    // Hit test for path segments
+    public getPathAt(x: number, y: number, radius: number = 20): number {
+        const rSq = radius * radius;
+        for (const path of this.paths) {
+            if (path.points.length < 2) continue;
+            
+            for (let i = 0; i < path.points.length - 1; i++) {
+                const p1 = path.points[i];
+                const p2 = path.points[i+1];
+                
+                // Distance from point to segment
+                const distSq = this.distToSegmentSq(x, y, p1.x, p1.y, p2.x, p2.y);
+                if (distSq < rSq) {
+                    return path.id;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private distToSegmentSq(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+        const l2 = (x1 - x2)**2 + (y1 - y2)**2;
+        if (l2 === 0) return (px - x1)**2 + (py - y1)**2;
+        
+        let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        
+        return (px - (x1 + t * (x2 - x1)))**2 + (py - (y1 + t * (y2 - y1)))**2;
     }
 
     private draw() {
@@ -101,10 +134,24 @@ export class MovementPathSystem {
                 end.x - headLen * Math.cos(angle + Math.PI / 6),
                 end.y - headLen * Math.sin(angle + Math.PI / 6)
             );
-            this.graphics.stroke({ width: 3, color: color, alpha: alpha });
+            this.graphics.stroke({ width: 3, color: color });
             
-            // If selected, show delete button (Red X) near handle?
-            // For now, just highlighting the arrow is enough context.
+            // Draw Delete Button if selected
+            if (path.selected && path.selectedAt) {
+                const btnX = path.selectedAt.x;
+                const btnY = path.selectedAt.y;
+                const r = 15;
+                
+                // White BG
+                this.graphics.circle(btnX, btnY, r).fill(0xFFFFFF).stroke({ width: 2, color: 0x000000 });
+                
+                // Red X
+                this.graphics.moveTo(btnX - 8, btnY - 8);
+                this.graphics.lineTo(btnX + 8, btnY + 8);
+                this.graphics.moveTo(btnX + 8, btnY - 8);
+                this.graphics.lineTo(btnX - 8, btnY + 8);
+                this.graphics.stroke({ width: 3, color: 0xFF0000 });
+            }
         }
     }
 }

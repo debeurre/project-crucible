@@ -38,7 +38,33 @@ export class OmniPencilTool implements ITool {
         this.isDragging = false;
         this.points = [new Point(x, y)];
 
-        // Hit Test
+        // 1. Check Path Delete Button
+        const deletePathId = this.movementPathSystem.isDeleteButtonAt(x, y);
+        if (deletePathId !== -1) {
+            this.movementPathSystem.removePath(deletePathId);
+            // Clear sprig assignments? Garbage collection handles it, but explicit reset is faster.
+            // Let's rely on cleanupPaths in Game loop or implement reset here.
+            // Actually, we should probably clear selection if the deleted path was selected?
+            // The path is gone, so selection state on it is gone.
+            return;
+        }
+
+        // 2. Check Path Selection
+        const hitPathId = this.movementPathSystem.getPathAt(x, y);
+        if (hitPathId !== -1) {
+            // Select Path (Toggle?)
+            // Spec: "Tapping a path selects it and renders a red x button where it was tapped"
+            // Deselect others? Spec implies exclusive or toggle. "Tapping empty space deselects paths".
+            // Let's deselect all, then select this one.
+            this.deselectAllPaths();
+            this.movementPathSystem.setPathSelection(hitPathId, true, new Point(x, y));
+            return;
+        } else {
+            // Tapped empty/sprig -> Deselect paths
+            this.deselectAllPaths();
+        }
+
+        // Hit Test Sprigs
         const hitSprigIdx = this.sprigSystem.getSprigAt(x, y, 20); // 20px hit radius
         const selectedIndices = this.sprigSystem.getSelectedIndices();
         const isSelected = hitSprigIdx !== -1 && selectedIndices.includes(hitSprigIdx);
@@ -189,6 +215,11 @@ export class OmniPencilTool implements ITool {
                 g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); // Gray path
             }
         }
+    }
+
+    private deselectAllPaths() {
+        const ids = this.movementPathSystem.getAllPathIds();
+        ids.forEach(id => this.movementPathSystem.setPathSelection(id, false));
     }
 
     private clearSelection() {
