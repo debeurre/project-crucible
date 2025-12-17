@@ -310,7 +310,7 @@ export class SprigSystem {
     
     // ... applyBoids, updatePosition (unchanged)
 
-    private applyBoids(idx: number, _dt: number) {
+    private applyBoids(idx: number, dt: number) {
         let sepX = 0, sepY = 0;
         let aliX = 0, aliY = 0;
         let cohX = 0, cohY = 0;
