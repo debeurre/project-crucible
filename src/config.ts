@@ -118,6 +118,6 @@ export const CONFIG = {
       ALPHA: 0.75,
       HIGHLIGHT_COLOR: 0x000000, // Black
       HIGHLIGHT_ALPHA: 0.75,
-      CURSOR_SIZE: 15 // Size of the triangle cursor
+      CURSOR_SIZE: 10 // Size of the triangle cursor
   }
 };
