@@ -27,9 +27,9 @@ export class EraserTool implements ITool {
         this.performErasure(x, y);
     }
 
-    onUp(x: number, y: number): void {}
+    onUp(_x: number, _y: number): void {}
 
-    update(ticker: Ticker): void {}
+    update(_ticker: Ticker): void {}
     
     renderCursor(g: Graphics, x: number, y: number): void {
         g.circle(x, y, this.RADIUS).stroke({ width: 2, color: 0x000000 });

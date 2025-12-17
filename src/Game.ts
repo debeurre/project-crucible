@@ -1,4 +1,4 @@
-import { Application, Graphics, Container, Point, Ticker } from 'pixi.js';
+import { Application, Graphics, Container, Ticker } from 'pixi.js';
 import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
 import { CONFIG } from './config';

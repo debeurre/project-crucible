@@ -7,7 +7,6 @@ import { CONFIG } from '../config';
 export class BrushTool implements ITool {
     private flowFieldSystem: FlowFieldSystem;
     private toolManager: ToolManager;
-    private readonly CELL_SIZE = CONFIG.FLOW_FIELD_CELL_SIZE;
     // Matching FlowFieldSystem logic: radiusSq = 6 (cell units)
     // Sqrt(6) * 20 = 2.45 * 20 = 49px
     private readonly BRUSH_PIXEL_RADIUS = 49;
@@ -24,13 +23,13 @@ export class BrushTool implements ITool {
         this.paint(x, y);
     }
 
-    onHold(x: number, y: number, ticker: Ticker): void {
+    onHold(x: number, y: number, _ticker: Ticker): void {
         this.paint(x, y);
     }
 
-    onUp(x: number, y: number): void {}
+    onUp(_x: number, _y: number): void {}
 
-    update(ticker: Ticker): void {}
+    update(_ticker: Ticker): void {}
     
     renderCursor(g: Graphics, x: number, y: number): void {
         g.circle(x, y, this.BRUSH_PIXEL_RADIUS).stroke({ width: 2, color: 0x000000 });

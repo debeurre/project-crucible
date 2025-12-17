@@ -2,8 +2,7 @@ import { Application, Graphics, Container, Texture, Sprite, Ticker } from 'pixi.
 import { CONFIG } from './config';
 import { MapSystem } from './systems/MapSystem';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
-import { TaskIntent } from './types/GraphTypes';
-import { MovementPathSystem } from './systems/MovementPathSystem'; // New import
+import { MovementPathSystem } from './systems/MovementPathSystem';
 
 // No more Sprig interface in DOD
 
@@ -311,7 +310,7 @@ export class SprigSystem {
     
     // ... applyBoids, updatePosition (unchanged)
 
-    private applyBoids(idx: number, dt: number) {
+    private applyBoids(idx: number, _dt: number) {
         let sepX = 0, sepY = 0;
         let aliX = 0, aliY = 0;
         let cohX = 0, cohY = 0;
