@@ -84,7 +84,7 @@ export class Toolbar extends Container {
         
         // Background
         const bg = new Graphics();
-        bg.roundRect(0, -15, 80, 30, 15).fill({ color: 0x333333 }).stroke({ width: 1, color: 0xAAAAAA });
+        bg.roundRect(-40, -15, 80, 30, 15).fill({ color: 0x333333 }).stroke({ width: 1, color: 0xAAAAAA });
         btn.addChild(bg);
 
         // Label
@@ -97,7 +97,7 @@ export class Toolbar extends Container {
         });
         this.mapLabel = new Text({ text: 'RECT', style });
         this.mapLabel.anchor.set(0.5);
-        this.mapLabel.x = 40; // Center of 80 width
+        this.mapLabel.x = 0; // Center
         btn.addChild(this.mapLabel);
 
         // Event
@@ -128,7 +128,7 @@ export class Toolbar extends Container {
         
         // Background for menu
         const bg = new Graphics();
-        bg.roundRect(0, -modes.length * itemHeight - 10, width, modes.length * itemHeight + 10, 10)
+        bg.roundRect(-width/2, -modes.length * itemHeight - 10, width, modes.length * itemHeight + 10, 10)
           .fill({ color: 0x222222, alpha: 0.95 })
           .stroke({ width: 1, color: 0x555555 });
         this.mapMenuContainer.addChild(bg);
@@ -136,7 +136,7 @@ export class Toolbar extends Container {
         modes.forEach((mode, i) => {
             const btn = new Container();
             btn.y = -(i + 1) * itemHeight; // Stack upwards
-            btn.x = width / 2; // Centered relative to container
+            btn.x = 0; // Centered relative to container
 
             const label = new Text({ text: mode, style: {
                 fontFamily: 'monospace',
