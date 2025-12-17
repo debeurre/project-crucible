@@ -27,7 +27,6 @@ export class Toolbar extends Container {
 
     private activeTool: ToolMode = 'PENCIL';
     private activeIntent: TaskIntent = TaskIntent.GREEN_HARVEST;
-    private activeMapMode: MapShape = MapShape.RECT; // Default
     private isChaining: boolean = false; 
     
     private onToolSelected: (tool: ToolMode) => void;
@@ -170,7 +169,6 @@ export class Toolbar extends Container {
     }
 
     public setMapMode(mode: MapShape) {
-        this.activeMapMode = mode;
         this.mapLabel.text = mode;
         // Don't redraw whole toolbar, just label
     }

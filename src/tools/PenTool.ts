@@ -1,8 +1,7 @@
-import { Point, Ticker, Graphics } from 'pixi.js';
+import { Point } from 'pixi.js';
 import { ITool } from './ITool';
 import { GraphSystem } from '../systems/GraphSystem';
 import { Toolbar } from '../ui/Toolbar';
-import { TaskIntent } from '../types/GraphTypes';
 import { ToolManager } from './ToolManager';
 
 type PenState = 'IDLE' | 'DRAGGING' | 'CHAINING';
@@ -74,7 +73,7 @@ export class PenTool implements ITool {
         }
     }
 
-    onHold(x: number, y: number, ticker: Ticker): void {
+    onHold(x: number, y: number): void {
         if (this.state === 'DRAGGING') {
             // Visualize Drag
             let targetX = x;
@@ -133,11 +132,11 @@ export class PenTool implements ITool {
         }
     }
 
-    update(ticker: Ticker): void {
+    update(): void {
         // Optional visual updates
     }
     
-    renderCursor(g: Graphics, x: number, y: number): void {}
+    renderCursor(): void {}
 
     // Explicit Actions
     public commit() {
@@ -149,7 +148,7 @@ export class PenTool implements ITool {
     }
 
     public abort() {
-        this.graphSystem.abortActiveNodes();
+        this.graphSystem.performAbort();
         this.state = 'IDLE';
         this.lastNodeId = null;
         this.graphSystem.clearPreview();

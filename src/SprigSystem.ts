@@ -201,7 +201,7 @@ export class SprigSystem {
             let onPath = false;
             
             if (pathId !== -1) {
-                onPath = this.applyPathMovement(i, dt, pathId);
+                onPath = this.applyPathMovement(i, pathId);
             }
 
             if (!onPath) {
@@ -215,7 +215,7 @@ export class SprigSystem {
         }
     }
 
-    private applyPathMovement(idx: number, dt: number, pathId: number): boolean {
+    private applyPathMovement(idx: number, pathId: number): boolean {
         const path = this.movementPathSystem.getPath(pathId);
         if (!path) {
             // Path destroyed or invalid

@@ -2,7 +2,6 @@ import { Ticker, Graphics } from 'pixi.js';
 import { ITool } from './ITool';
 import { FlowFieldSystem } from '../systems/FlowFieldSystem';
 import { ToolManager } from './ToolManager';
-import { CONFIG } from '../config';
 
 export class BrushTool implements ITool {
     private flowFieldSystem: FlowFieldSystem;

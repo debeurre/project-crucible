@@ -1,4 +1,4 @@
-import { Ticker, Graphics, Point } from 'pixi.js';
+import { Graphics, Point } from 'pixi.js';
 import { ITool } from './ITool';
 import { SprigSystem } from '../SprigSystem';
 import { MovementPathSystem } from '../systems/MovementPathSystem';
@@ -76,7 +76,7 @@ export class OmniPencilTool implements ITool {
         }
     }
 
-    onHold(x: number, y: number, ticker: Ticker): void {
+    onHold(x: number, y: number): void {
         // Drag Detection
         if (!this.isDragging) {
             const dx = x - this.dragOrigin.x;
@@ -130,7 +130,7 @@ export class OmniPencilTool implements ITool {
         this.resetDrag();
     }
 
-    update(ticker: Ticker): void {}
+    update(): void {}
 
     renderCursor(g: Graphics, x: number, y: number): void {
         const cursorColor = CONFIG.PENCIL_VISUALS.COLOR;
@@ -153,14 +153,6 @@ export class OmniPencilTool implements ITool {
         // Tip
         const p1x = x;
         const p1y = y;
-        
-        // Bottom Left (relative to tip)
-        const p2x = x;
-        const p2y = y + size * 1.5;
-        
-        // Right
-        const p3x = x + size;
-        const p3y = y + size; // Slightly higher than p2 to make it angled?
         
         // If strict Isosceles:
         // Tip (0,0). Base center (0, H). Width W.

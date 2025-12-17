@@ -3,7 +3,6 @@ import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
 import { CONFIG } from './config';
 import { MapSystem } from './systems/MapSystem';
-import { MapShape } from './types/MapTypes';
 import { VisualEffects } from './systems/VisualEffects';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { ResourceSystem } from './systems/ResourceSystem';

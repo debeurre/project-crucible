@@ -23,7 +23,7 @@ export class EraserTool implements ITool {
         this.performErasure(x, y);
     }
 
-    onHold(x: number, y: number, ticker: Ticker): void {
+    onHold(x: number, y: number): void {
         this.performErasure(x, y);
     }
 

@@ -50,43 +50,7 @@ export class GraphSystem {
         this.draw();
     }
 
-    public abortActiveNodes() {
-        // Destroy all nodes marked as active
-        const idsToRemove = new Set<number>();
-        this.nodes = this.nodes.filter(n => {
-            if (n.active) {
-                idsToRemove.add(n.id);
-                return false;
-            }
-            return true;
-        });
-        
-        // Remove connected edges and Clear their Flow
-        if (idsToRemove.size > 0) {
-            // Find edges to be removed
-            const edgesToRemove = this.edges.filter(e => idsToRemove.has(e.nodeAId) || idsToRemove.has(e.nodeBId));
-            
-            for (const edge of edgesToRemove) {
-                // We need to retrieve the nodes to calculate the path to clear
-                // But the nodes might have just been removed from this.nodes!
-                // Wait, we filtered this.nodes. We lost the node data.
-                // We need to snapshot nodes before filtering or find them in the removed set.
-                
-                // Let's refactor the node removal to keep references first.
-            }
-            
-            // Refactored logic:
-            // 1. Identify removal targets
-            // 2. Clear flow for edges connecting them
-            // 3. Delete data
-        }
-        
-        // Let's retry the method implementation
-        this.performAbort();
-        this.draw();
-    }
-
-    private performAbort() {
+    public performAbort() {
         const nodesToRemove = this.nodes.filter(n => n.active);
         if (nodesToRemove.length === 0) return;
 
