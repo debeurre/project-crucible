@@ -195,93 +195,92 @@ export class OmniPencilTool implements ITool {
         const pathAlpha = CONFIG.PENCIL_VISUALS.ALPHA;
 
         if (this.isDragging && this.points.length > 1) {
-                            g.moveTo(this.points[0].x, this.points[0].y);
-                            
-                            // Lasso with thicker, dashed style
-                            const dashLength = 8; 
-                            const gapLength = 6;  
-                            const lineWidth = 3;  
-                            const patternLength = dashLength + gapLength;
+            if (this.mode === 'PREPARE_LASSO') {
+                g.moveTo(this.points[0].x, this.points[0].y);
+                
+                // Lasso with thicker, dashed style
+                const dashLength = 8; 
+                const gapLength = 6;  
+                const lineWidth = 3;  
+                const patternLength = dashLength + gapLength;
 
-                            // Continuous Dash Rendering
-                            let currentPatternDist = 0; // Tracks progress within the [dash, gap] cycle
+                // Continuous Dash Rendering
+                let currentPatternDist = 0; 
 
-                            for (let i = 1; i < this.points.length; i++) {
-                                let p1 = this.points[i-1];
-                                const p2 = this.points[i];
+                for (let i = 1; i < this.points.length; i++) {
+                    let p1 = this.points[i-1];
+                    const p2 = this.points[i];
 
-                                const dx = p2.x - p1.x;
-                                const dy = p2.y - p1.y;
-                                const len = Math.sqrt(dx * dx + dy * dy);
-                                
-                                if (len === 0) continue;
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const len = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (len === 0) continue;
 
-                                const ux = dx / len;
-                                const uy = dy / len;
-                                
-                                let distTraveled = 0;
+                    const ux = dx / len;
+                    const uy = dy / len;
+                    
+                    let distTraveled = 0;
 
-                                while (distTraveled < len) {
-                                    const phase = currentPatternDist % patternLength;
-                                    const isDash = phase < dashLength;
-                                    const distRemainingInPhase = isDash ? (dashLength - phase) : (patternLength - phase);
-                                    
-                                    const drawDist = Math.min(len - distTraveled, distRemainingInPhase);
+                    while (distTraveled < len) {
+                        const phase = currentPatternDist % patternLength;
+                        const isDash = phase < dashLength;
+                        const distRemainingInPhase = isDash ? (dashLength - phase) : (patternLength - phase);
+                        
+                        const drawDist = Math.min(len - distTraveled, distRemainingInPhase);
 
-                                    const startX = p1.x + distTraveled * ux;
-                                    const startY = p1.y + distTraveled * uy;
-                                    const endX = startX + drawDist * ux;
-                                    const endY = startY + drawDist * uy;
+                        const startX = p1.x + distTraveled * ux;
+                        const startY = p1.y + distTraveled * uy;
+                        const endX = startX + drawDist * ux;
+                        const endY = startY + drawDist * uy;
 
-                                    if (isDash) {
-                                        g.moveTo(startX, startY);
-                                        g.lineTo(endX, endY);
-                                    }
-
-                                    distTraveled += drawDist;
-                                    currentPatternDist += drawDist;
-                                }
-                            }
-                            g.stroke({ width: lineWidth, color: pathColor, alpha: pathAlpha }); // Gray lasso trail
-                            
-                            // Closing line (ghost line from current pointer to drag origin)
-                            // Draw dashed as well.
-                            // Reset pattern dist? No, maybe simpler to just draw separate logic or continue.
-                            // Let's just draw standard dashed logic for the closing line, not strictly continuous with the main line is fine.
-                            
-                            const x1 = x;
-                            const y1 = y;
-                            const x2 = this.dragOrigin.x;
-                            const y2 = this.dragOrigin.y;
-
-                            const cdx = x2 - x1;
-                            const cdy = y2 - y1;
-                            const clen = Math.sqrt(cdx * cdx + cdy * cdy);
-                            
-                            if (clen > 0) { 
-                                const numSegments = Math.floor(clen / (dashLength + gapLength));
-                                const unitVx = cdx / clen;
-                                const unitVy = cdy / clen;
-
-                                for (let j = 0; j < numSegments; j++) {
-                                    const startX = x1 + j * (dashLength + gapLength) * unitVx;
-                                    const startY = y1 + j * (dashLength + gapLength) * unitVy;
-                                    const endX = startX + dashLength * unitVx;
-                                    const endY = startY + dashLength * unitVy;
-                                    
-                                    g.moveTo(startX, startY);
-                                    g.lineTo(endX, endY);
-                                }
-                            }
-                            g.stroke({ width: lineWidth, color: pathColor, alpha: pathAlpha * 0.5 }); // Faded gray
-                        } else if (this.mode === 'PREPARE_PATH') {
-                            for (let i = 1; i < this.points.length; i++) {
-                                g.lineTo(this.points[i].x, this.points[i].y);
-                            }
-                            g.lineTo(x, y);
-                            g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); // Gray path
+                        if (isDash) {
+                            g.moveTo(startX, startY);
+                            g.lineTo(endX, endY);
                         }
+
+                        distTraveled += drawDist;
+                        currentPatternDist += drawDist;
                     }
+                }
+                g.stroke({ width: lineWidth, color: pathColor, alpha: pathAlpha }); 
+                
+                // Closing line (ghost line)
+                const x1 = x;
+                const y1 = y;
+                const x2 = this.dragOrigin.x;
+                const y2 = this.dragOrigin.y;
+
+                const cdx = x2 - x1;
+                const cdy = y2 - y1;
+                const clen = Math.sqrt(cdx * cdx + cdy * cdy);
+                
+                if (clen > 0) { 
+                    const numSegments = Math.floor(clen / (dashLength + gapLength));
+                    const unitVx = cdx / clen;
+                    const unitVy = cdy / clen;
+
+                    for (let j = 0; j < numSegments; j++) {
+                        const startX = x1 + j * (dashLength + gapLength) * unitVx;
+                        const startY = y1 + j * (dashLength + gapLength) * unitVy;
+                        const endX = startX + dashLength * unitVx;
+                        const endY = startY + dashLength * unitVy;
+                        
+                        g.moveTo(startX, startY);
+                        g.lineTo(endX, endY);
+                    }
+                }
+                g.stroke({ width: lineWidth, color: pathColor, alpha: pathAlpha * 0.5 }); 
+
+            } else if (this.mode === 'PREPARE_PATH') {
+                g.moveTo(this.points[0].x, this.points[0].y);
+                for (let i = 1; i < this.points.length; i++) {
+                    g.lineTo(this.points[i].x, this.points[i].y);
+                }
+                g.lineTo(x, y);
+                g.stroke({ width: 3, color: pathColor, alpha: pathAlpha }); 
+            }
+        }
 
     private deselectAllPaths() {
         const ids = this.movementPathSystem.getAllPathIds();
