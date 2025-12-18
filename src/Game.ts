@@ -10,6 +10,7 @@ import { FloatingTextSystem } from './systems/FloatingTextSystem';
 import { GraphSystem } from './systems/GraphSystem';
 import { MovementPathSystem } from './systems/MovementPathSystem';
 import { SystemManager } from './systems/SystemManager';
+import { ToolOverlaySystem } from './systems/ToolOverlaySystem';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
@@ -31,12 +32,12 @@ export class Game {
     private floatingTextSystem: FloatingTextSystem;
     private graphSystem: GraphSystem;
     private movementPathSystem: MovementPathSystem;
+    private toolOverlaySystem: ToolOverlaySystem;
     
     private toolManager: ToolManager;
     private inputState: InputState;
     private debugOverlay: DebugOverlay;
     private toolbar: Toolbar;
-    private cursorGraphics: Graphics;
 
     // State
     private score = 0;
@@ -61,8 +62,6 @@ export class Game {
         this.background = new Graphics();
         this.worldContainer = new Container();
         this.crucible = new Graphics();
-        this.cursorGraphics = new Graphics();
-        this.cursorGraphics.eventMode = 'none'; // Pass through clicks
 
         // Initialize Systems
         this.systemManager = new SystemManager();
@@ -74,6 +73,9 @@ export class Game {
         this.floatingTextSystem = new FloatingTextSystem();
         this.graphSystem = new GraphSystem(this.flowFieldSystem);
         this.movementPathSystem = new MovementPathSystem();
+        this.toolOverlaySystem = new ToolOverlaySystem();
+        this.toolOverlaySystem.container.eventMode = 'none';
+
         // SprigSystem needs MovementPathSystem
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem);
 
@@ -86,6 +88,7 @@ export class Game {
         this.systemManager.addSystem(this.sprigSystem);
         this.systemManager.addSystem(this.visualEffects);
         this.systemManager.addSystem(this.floatingTextSystem);
+        this.systemManager.addSystem(this.toolOverlaySystem);
 
         // Initialize UI
         this.toolbar = new Toolbar(
@@ -108,6 +111,7 @@ export class Game {
             this.flowFieldSystem,
             this.sprigSystem,
             this.movementPathSystem, // Added
+            this.toolOverlaySystem,
             this.toolbar
         );
 
@@ -159,7 +163,7 @@ export class Game {
         
         // 6. UI (Overlay)
         this.app.stage.addChild(this.toolbar);
-        this.app.stage.addChild(this.cursorGraphics);
+        this.app.stage.addChild(this.toolOverlaySystem.container);
         
         // 7. Apply Effects
         this.visualEffects.applyTo(this.worldContainer);
@@ -383,12 +387,11 @@ export class Game {
         this.updateCrucibleAnimation(ticker);
         
         // Render Cursor
-        this.cursorGraphics.clear();
         // Only draw if within bounds? Pixi handles off-screen.
         // Get mouse pos
         const mx = this.inputState.mousePosition.x;
         const my = this.inputState.mousePosition.y;
-        this.toolManager.renderCursor(this.cursorGraphics, mx, my);
+        this.toolManager.renderCursor(this.toolOverlaySystem.graphics, mx, my);
     }
 
     private updateCrucibleAnimation(ticker: Ticker) {

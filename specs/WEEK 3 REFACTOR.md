@@ -62,5 +62,5 @@ The goal is to transition from a "rapid prototype" codebase to a stable, scalabl
 When prompting me, tackle one area at a time:
 1. ✅ "Refactor SprigSystem to use Spatial Hash for queries."
 2. ✅ "Extract System management from Game.ts into a SystemManager."
-3. ❌ "Refactor cursor rendering to use a standardized ToolOverlaySystem."
+3. ✅ "Refactor cursor rendering to use a standardized ToolOverlaySystem."
 3. ❌ "Move Input handling logic out of Game.ts."

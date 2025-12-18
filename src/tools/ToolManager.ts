@@ -8,7 +8,8 @@ import { GraphSystem } from '../systems/GraphSystem';
 import { FlowFieldSystem } from '../systems/FlowFieldSystem';
 import { SprigSystem } from '../SprigSystem';
 import { MovementPathSystem } from '../systems/MovementPathSystem';
-import { Ticker } from 'pixi.js';
+import { ToolOverlaySystem } from '../systems/ToolOverlaySystem';
+import { Graphics, Ticker } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
 
 export class ToolManager {
@@ -23,6 +24,7 @@ export class ToolManager {
         flowFieldSystem: FlowFieldSystem, 
         sprigSystem: SprigSystem,
         movementPathSystem: MovementPathSystem,
+        _toolOverlaySystem: ToolOverlaySystem,
         toolbar: Toolbar
     ) {
         this.toolbar = toolbar;
@@ -87,7 +89,7 @@ export class ToolManager {
         this.activeTool.update(ticker);
     }
 
-    public renderCursor(g: any, x: number, y: number) {
+    public renderCursor(g: Graphics, x: number, y: number) {
         this.activeTool.renderCursor(g, x, y);
     }
 }
