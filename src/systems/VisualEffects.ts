@@ -30,7 +30,7 @@ export class VisualEffects {
     
             // Default OFF
     
-    private container: Container | null = null;
+    private targetContainer: Container | null = null;
 
     constructor() {
         // 1. Blur
@@ -91,7 +91,7 @@ export class VisualEffects {
     }
 
     public applyTo(container: Container) {
-        this.container = container;
+        this.targetContainer = container;
         this.rebuildFilters();
     }
 
@@ -101,13 +101,13 @@ export class VisualEffects {
     public toggleNoise() { this.noiseEnabled = !this.noiseEnabled; this.rebuildFilters(); }
 
     private rebuildFilters() {
-        if (!this.container) return;
+        if (!this.targetContainer) return;
         const filters = [];
         if (this.blurEnabled) filters.push(this.blur);
         if (this.thresholdEnabled) filters.push(this.threshold);
         if (this.displacementEnabled) filters.push(this.displacement);
         if (this.noiseEnabled) filters.push(this.noise);
-        this.container.filters = filters;
+        this.targetContainer.filters = filters;
     }
     
     public update(ticker: any) {

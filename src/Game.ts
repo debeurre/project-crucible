@@ -8,7 +8,8 @@ import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { ResourceSystem } from './systems/ResourceSystem';
 import { FloatingTextSystem } from './systems/FloatingTextSystem';
 import { GraphSystem } from './systems/GraphSystem';
-import { MovementPathSystem } from './systems/MovementPathSystem'; // New
+import { MovementPathSystem } from './systems/MovementPathSystem';
+import { SystemManager } from './systems/SystemManager';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
@@ -21,6 +22,7 @@ export class Game {
     private crucible: Graphics;
     
     // Systems
+    private systemManager: SystemManager;
     private mapSystem: MapSystem;
     private sprigSystem: SprigSystem;
     private visualEffects: VisualEffects;
@@ -28,7 +30,7 @@ export class Game {
     private resourceSystem: ResourceSystem;
     private floatingTextSystem: FloatingTextSystem;
     private graphSystem: GraphSystem;
-    private movementPathSystem: MovementPathSystem; // New
+    private movementPathSystem: MovementPathSystem;
     
     private toolManager: ToolManager;
     private inputState: InputState;
@@ -63,6 +65,8 @@ export class Game {
         this.cursorGraphics.eventMode = 'none'; // Pass through clicks
 
         // Initialize Systems
+        this.systemManager = new SystemManager();
+
         this.mapSystem = new MapSystem(app);
         this.visualEffects = new VisualEffects();
         this.flowFieldSystem = new FlowFieldSystem(app);
@@ -72,6 +76,16 @@ export class Game {
         this.movementPathSystem = new MovementPathSystem();
         // SprigSystem needs MovementPathSystem
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem);
+
+        // Register Systems
+        this.systemManager.addSystem(this.mapSystem);
+        this.systemManager.addSystem(this.flowFieldSystem);
+        this.systemManager.addSystem(this.resourceSystem);
+        this.systemManager.addSystem(this.graphSystem);
+        this.systemManager.addSystem(this.movementPathSystem);
+        this.systemManager.addSystem(this.sprigSystem);
+        this.systemManager.addSystem(this.visualEffects);
+        this.systemManager.addSystem(this.floatingTextSystem);
 
         // Initialize UI
         this.toolbar = new Toolbar(
@@ -155,10 +169,7 @@ export class Game {
         this.background.clear();
         this.background.rect(0, 0, this.app.screen.width, this.app.screen.height).fill(CONFIG.BG_COLOR);
         
-        this.mapSystem.resize();
-        this.flowFieldSystem.resize();
-        this.resourceSystem.resize();
-        this.sprigSystem.resize();
+        this.systemManager.resize(this.app.screen.width, this.app.screen.height);
         
         this.crucible.x = this.app.screen.width / 2;
         this.crucible.y = this.app.screen.height / 2;
@@ -365,8 +376,7 @@ export class Game {
             }
         }
 
-        this.sprigSystem.update(ticker);
-        this.visualEffects.update(ticker);
+        this.systemManager.update(ticker);
     }
 
     private renderVisuals(ticker: Ticker) {
