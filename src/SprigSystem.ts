@@ -556,19 +556,31 @@ export class SprigSystem {
     }
 
     public getSprigAt(x: number, y: number, radius: number = CONFIG.SPRIG_RADIUS): number {
-        // Simple iteration for now. Can use spatial grid for optimization later.
         const rSq = radius * radius;
         let bestDistSq = rSq;
         let bestIdx = -1;
 
-        for (let i = 0; i < this.activeSprigCount; i++) {
-            const dx = this.positionsX[i] - x;
-            const dy = this.positionsY[i] - y;
-            const dSq = dx*dx + dy*dy;
-            
-            if (dSq < bestDistSq) {
-                bestDistSq = dSq;
-                bestIdx = i;
+        const startX = Math.max(0, Math.floor((x - radius) / this.cellSize));
+        const endX = Math.min(this.gridCols - 1, Math.floor((x + radius) / this.cellSize));
+        const startY = Math.max(0, Math.floor((y - radius) / this.cellSize));
+        const endY = Math.min(this.gridRows - 1, Math.floor((y + radius) / this.cellSize));
+
+        for (let cy = startY; cy <= endY; cy++) {
+            for (let cx = startX; cx <= endX; cx++) {
+                const cellIndex = cy * this.gridCols + cx;
+                let i = this.gridHead[cellIndex];
+
+                while (i !== -1) {
+                    const dx = this.positionsX[i] - x;
+                    const dy = this.positionsY[i] - y;
+                    const dSq = dx * dx + dy * dy;
+
+                    if (dSq < bestDistSq) {
+                        bestDistSq = dSq;
+                        bestIdx = i;
+                    }
+                    i = this.gridNext[i];
+                }
             }
         }
         return bestIdx;
@@ -576,36 +588,55 @@ export class SprigSystem {
 
     public removeSprigsAt(x: number, y: number, radius: number) {
         const rSq = radius * radius;
-        let i = 0;
-        while (i < this.activeSprigCount) {
-            const dx = this.positionsX[i] - x;
-            const dy = this.positionsY[i] - y;
-            if (dx*dx + dy*dy < rSq) {
-                // Remove sprig (Swap with last active)
-                const last = this.activeSprigCount - 1;
-                
-                if (i !== last) {
-                    this.positionsX[i] = this.positionsX[last];
-                    this.positionsY[i] = this.positionsY[last];
-                    this.velocitiesX[i] = this.velocitiesX[last];
-                    this.velocitiesY[i] = this.velocitiesY[last];
-                    this.flashTimers[i] = this.flashTimers[last];
-                    this.cargos[i] = this.cargos[last];
-                    this.intents[i] = this.intents[last];
-                    // Visuals are pooled, just need to update their usage in next frame update
-                    // But we should swap visual state if needed? 
-                    // Actually, visuals are linked by index `i` in updateVisuals.
-                    // So we effectively moved the data of 'last' to 'i'.
+        const toRemove: number[] = [];
+
+        const startX = Math.max(0, Math.floor((x - radius) / this.cellSize));
+        const endX = Math.min(this.gridCols - 1, Math.floor((x + radius) / this.cellSize));
+        const startY = Math.max(0, Math.floor((y - radius) / this.cellSize));
+        const endY = Math.min(this.gridRows - 1, Math.floor((y + radius) / this.cellSize));
+
+        for (let cy = startY; cy <= endY; cy++) {
+            for (let cx = startX; cx <= endX; cx++) {
+                const cellIndex = cy * this.gridCols + cx;
+                let i = this.gridHead[cellIndex];
+
+                while (i !== -1) {
+                    const dx = this.positionsX[i] - x;
+                    const dy = this.positionsY[i] - y;
+                    const dSq = dx * dx + dy * dy;
+
+                    if (dSq < rSq) {
+                        toRemove.push(i);
+                    }
+                    i = this.gridNext[i];
                 }
-                
-                // Hide the removed container (which was at 'last', now effectively unused)
-                this.sprigContainers[last].visible = false;
-                
-                this.activeSprigCount--;
-                // Don't increment i, check the swapped sprig
-            } else {
-                i++;
             }
+        }
+
+        if (toRemove.length === 0) return;
+
+        // Sort descending to handle swap-remove safely
+        toRemove.sort((a, b) => b - a);
+
+        for (const idx of toRemove) {
+            if (idx >= this.activeSprigCount) continue;
+
+            const last = this.activeSprigCount - 1;
+            if (idx !== last) {
+                this.positionsX[idx] = this.positionsX[last];
+                this.positionsY[idx] = this.positionsY[last];
+                this.velocitiesX[idx] = this.velocitiesX[last];
+                this.velocitiesY[idx] = this.velocitiesY[last];
+                this.flashTimers[idx] = this.flashTimers[last];
+                this.cargos[idx] = this.cargos[last];
+                this.intents[idx] = this.intents[last];
+                this.selected[idx] = this.selected[last];
+                this.pathIds[idx] = this.pathIds[last];
+                this.pathNodeIndices[idx] = this.pathNodeIndices[last];
+            }
+            
+            this.sprigContainers[last].visible = false;
+            this.activeSprigCount--;
         }
     }
 
