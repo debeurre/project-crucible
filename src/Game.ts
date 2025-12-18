@@ -11,10 +11,10 @@ import { GraphSystem } from './systems/GraphSystem';
 import { MovementPathSystem } from './systems/MovementPathSystem';
 import { SystemManager } from './systems/SystemManager';
 import { ToolOverlaySystem } from './systems/ToolOverlaySystem';
+import { InputController } from './InputController';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
-import { TaskIntent } from './types/GraphTypes';
 
 export class Game {
     private app: Application;
@@ -36,23 +36,17 @@ export class Game {
     
     private toolManager: ToolManager;
     private inputState: InputState;
+    private inputController: InputController;
     private debugOverlay: DebugOverlay;
     private toolbar: Toolbar;
 
     // State
     private score = 0;
-    private spawnTimer = 0;
     
     // Animation State
     private tapAnimProgress = 1.0;
     private holdAnimPhase = 0;
     
-    // Input Logic State
-    private wasDown = false;
-    private inputDownTime = 0;
-    private maxTouches = 0;
-    private interactionMode: 'NONE' | 'CRUCIBLE' | 'TOOL' = 'NONE';
-
     constructor(app: Application) {
         this.app = app;
         this.inputState = createInputManager(app);
@@ -114,6 +108,26 @@ export class Game {
             this.toolOverlaySystem,
             this.toolbar
         );
+
+        this.inputController = new InputController(
+            this.inputState,
+            this.toolManager,
+            this.sprigSystem,
+            this.mapSystem,
+            this.visualEffects,
+            this.flowFieldSystem,
+            this.graphSystem,
+            this.debugOverlay
+        );
+
+        this.inputController.onCrucibleTap = () => {
+             this.tapAnimProgress = 0;
+             this.updateUI();
+        };
+
+        this.inputController.onUIUpdate = () => {
+            this.updateUI();
+        };
 
         this.setupWorld();
         
@@ -177,12 +191,13 @@ export class Game {
         
         this.crucible.x = this.app.screen.width / 2;
         this.crucible.y = this.app.screen.height / 2;
+        this.inputController.updateCruciblePosition(this.crucible.x, this.crucible.y);
         
         this.toolbar.resize(this.app.screen.width, this.app.screen.height);
     }
 
     private update(ticker: Ticker) {
-        this.handleInput(ticker);
+        this.inputController.update(ticker);
         this.updateGameLogic(ticker);
         this.renderVisuals(ticker);
         this.toolManager.update(ticker);
@@ -201,151 +216,6 @@ export class Game {
                 this.movementPathSystem.removePath(id);
             }
         }
-    }
-
-    private handleInput(ticker: Ticker) {
-        // Debug/Tool Input
-        if (this.inputState.debugKey) {
-            const k = this.inputState.debugKey;
-            switch (k) {
-                // Intent Hotkeys
-                case '1': this.toolManager.setActiveIntent(TaskIntent.GREEN_HARVEST); break;
-                case '2': this.toolManager.setActiveIntent(TaskIntent.RED_ATTACK); break;
-                case '3': this.toolManager.setActiveIntent(TaskIntent.BLUE_SCOUT); break;
-                case '4': this.toolManager.setActiveIntent(TaskIntent.YELLOW_ASSIST); break;
-                
-                // Old map hotkeys removed/remapped?
-                // Spec says "Remove map relaed hotkeys".
-                
-                case 'Q': this.visualEffects.toggleBlur(); break;
-                case 'W': this.visualEffects.toggleThreshold(); break;
-                case 'E': this.visualEffects.toggleDisplacement(); break;
-                case 'R': this.visualEffects.toggleNoise(); break;
-                
-                case 'G': this.flowFieldSystem.toggleGrid(); break;
-                case 'D': this.debugOverlay.toggle(); break;
-                case 'T': 
-                    const currentMode = this.toolManager.getActiveToolMode();
-                    const nextTool = currentMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
-                    this.toolManager.setTool(nextTool);
-                    break;
-                
-                case 'ESCAPE':
-                case 'BACKSPACE':
-                case 'DELETE':
-                    if (this.toolManager.getActiveToolMode() === 'PEN') {
-                        this.toolManager.getPenTool().abort();
-                    }
-                    break;
-                
-                case 'ENTER':
-                case 'SPACE':
-                    if (this.toolManager.getActiveToolMode() === 'PEN') {
-                        this.toolManager.getPenTool().commit();
-                    }
-                    break;
-
-                case 'F': 
-                    // Global Wipe
-                    this.flowFieldSystem.clearAll();
-                    this.sprigSystem.clearAll();
-                    this.graphSystem.clearAll();
-                    break;
-                
-                case 'S': this.sprigSystem.clearAll(); break;
-            }
-            this.updateUI();
-            this.inputState.debugKey = null;
-        }
-
-        const isDown = this.inputState.isDown;
-        const now = performance.now();
-        const mx = this.inputState.mousePosition.x;
-        const my = this.inputState.mousePosition.y;
-
-        // Track max touches
-        if (isDown) {
-            this.maxTouches = Math.max(this.maxTouches, this.inputState.touchCount);
-        }
-
-        // 0. Right Click (Commit)
-        if (this.inputState.isRightDown) {
-             if (this.toolManager.getActiveToolMode() === 'PEN') {
-                this.toolManager.getPenTool().commit();
-            }
-        }
-
-        // 1. Just Pressed
-        if (isDown && !this.wasDown) {
-            this.inputDownTime = now;
-            this.maxTouches = this.inputState.touchCount; // Init tracking
-            
-            // Interaction Mode Logic
-            const dx = mx - this.crucible.x;
-            const dy = my - this.crucible.y;
-            const distSq = dx*dx + dy*dy;
-
-            if (distSq < CONFIG.CRUCIBLE_RADIUS**2) {
-                this.interactionMode = 'CRUCIBLE';
-            } else {
-                this.interactionMode = 'TOOL';
-                this.toolManager.onDown(mx, my);
-            }
-        }
-
-        // 2. Holding / Dragging
-        if (isDown) {
-            if (this.interactionMode === 'CRUCIBLE') {
-                const holdDuration = now - this.inputDownTime;
-                if (holdDuration >= CONFIG.TAP_THRESHOLD_MS) {
-                    this.spawnTimer += ticker.deltaMS / 1000;
-                    const spawnInterval = 1 / CONFIG.SPRIGS_PER_SECOND_HELD;
-                    while (this.spawnTimer >= spawnInterval) {
-                        this.sprigSystem.spawnSprig(this.crucible.x, this.crucible.y);
-                        this.spawnTimer -= spawnInterval;
-                        this.updateUI();
-                    }
-                }
-            } else if (this.interactionMode === 'TOOL') {
-                this.toolManager.onHold(mx, my, ticker);
-            }
-        }
-
-        // 3. Just Released
-        if (!isDown && this.wasDown) {
-            // Multi-touch Abort Check
-            if (this.maxTouches >= 2) {
-                if (this.toolManager.getActiveToolMode() === 'PEN') {
-                    this.toolManager.getPenTool().abort();
-                }
-                // Reset
-                this.interactionMode = 'NONE';
-                this.spawnTimer = 0;
-                this.wasDown = isDown;
-                this.maxTouches = 0;
-                return;
-            }
-
-            if (this.interactionMode === 'CRUCIBLE') {
-                const holdDuration = now - this.inputDownTime;
-                if (holdDuration < CONFIG.TAP_THRESHOLD_MS) {
-                    for(let i=0; i<CONFIG.SPRIGS_PER_TAP; i++) {
-                         this.sprigSystem.spawnSprig(this.crucible.x, this.crucible.y);
-                    }
-                    this.updateUI();
-                    this.tapAnimProgress = 0;
-                }
-            } else if (this.interactionMode === 'TOOL') {
-                this.toolManager.onUp(mx, my);
-            }
-            
-            // Reset
-            this.interactionMode = 'NONE';
-            this.spawnTimer = 0;
-            this.maxTouches = 0;
-        }
-
-        this.wasDown = isDown;
     }
 
     private updateGameLogic(ticker: Ticker) {
@@ -405,7 +275,7 @@ export class Game {
             scaleX = 1.0 - (t * CONFIG.CRUCIBLE_ANIMATION.TAP_SQUEEZE_FACTOR); 
         } 
         // 2. Hold Animation (Rhythmic)
-        else if (this.interactionMode === 'CRUCIBLE' && (performance.now() - this.inputDownTime) >= CONFIG.TAP_THRESHOLD_MS) {
+        else if (this.inputController.isCrucibleMode && (performance.now() - this.inputController.lastInputDownTime) >= CONFIG.TAP_THRESHOLD_MS) {
             const phaseInc = (ticker.deltaMS / CONFIG.CRUCIBLE_ANIMATION.HOLD_CYCLE_DURATION_MS) * 2 * Math.PI;
             this.holdAnimPhase += phaseInc;
             const t = (Math.sin(this.holdAnimPhase) + 1) / 2;
