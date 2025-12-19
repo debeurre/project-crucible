@@ -6,6 +6,8 @@ export class TextureFactory {
     // Cache for generated textures
     private static sprigTextures: Texture[] = [];
     private static cargoTexture: Texture | null = null;
+    private static resourceNodeTexture: Texture | null = null;
+    private static crucibleTexture: Texture | null = null;
 
     /**
      * Generates a set of wiggly sprig textures (frames for animation).
@@ -29,12 +31,7 @@ export class TextureFactory {
             // Draw filled circle with rough style
             rc.circle(size / 2, size / 2, d, {
                 fill: '#ffffff', // White for tinting
-                fillStyle: 'solid', // Solid fill for base visibility, or 'hachure' for sketchiness?
-                // Spec says: "MVP: Just increase line width... We will apply the Rough.js texture later."
-                // Spec V2 says: "Hachure Fill (The Scribble): Do not use graphics.fill()."
-                // But for the Sprig (tiny unit), hachure might be too noisy.
-                // "Kirby's Dream Land 3" style is often solid color with crayon edge.
-                // Let's try solid fill with rough stroke first.
+                fillStyle: 'solid',
                 roughness: 2.5,
                 stroke: '#ffffff',
                 strokeWidth: 2,
@@ -76,5 +73,75 @@ export class TextureFactory {
 
         this.cargoTexture = Texture.from(canvas);
         return this.cargoTexture;
+    }
+
+    public static getResourceNodeTexture(_renderer: Renderer): Texture {
+        if (this.resourceNodeTexture) return this.resourceNodeTexture;
+
+        const radius = CONFIG.RESOURCE_NODE_RADIUS;
+        const width = radius * 2;
+        const height = radius * 1.5;
+        const padding = 10;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = width + padding * 2;
+        canvas.height = height + padding * 2;
+        
+        const rc = rough.canvas(canvas);
+        
+        // Draw centered in canvas
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        
+        const offset = radius * 0.5;
+        const w2 = width / 2;
+        const h2 = height / 2;
+
+        // Points relative to center
+        // TL, TR, BR, BL
+        const points: [number, number][] = [
+            [cx - w2, cy - h2],
+            [cx + w2, cy - h2],
+            [cx + w2 - offset, cy + h2],
+            [cx - w2 + offset, cy + h2]
+        ];
+
+        rc.polygon(points, {
+            fill: '#ffffff',
+            fillStyle: 'hachure',
+            hachureGap: 4,
+            roughness: 2,
+            stroke: '#ffffff',
+            strokeWidth: 2
+        });
+
+        this.resourceNodeTexture = Texture.from(canvas);
+        return this.resourceNodeTexture;
+    }
+
+    public static getCrucibleTexture(_renderer: Renderer): Texture {
+        if (this.crucibleTexture) return this.crucibleTexture;
+
+        const r = CONFIG.CRUCIBLE_RADIUS;
+        const d = r * 2;
+        const padding = 8;
+        const size = d + padding * 2;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        
+        const rc = rough.canvas(canvas);
+        
+        rc.circle(size / 2, size / 2, d, {
+            fill: '#ffffff', 
+            fillStyle: 'solid',
+            roughness: 1.5,
+            stroke: '#ffffff',
+            strokeWidth: 3
+        });
+
+        this.crucibleTexture = Texture.from(canvas);
+        return this.crucibleTexture;
     }
 }

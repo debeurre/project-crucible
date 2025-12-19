@@ -1,4 +1,4 @@
-import { Application, Graphics, Container, Ticker } from 'pixi.js';
+import { Application, Graphics, Container, Ticker, Sprite } from 'pixi.js';
 import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
 import { CONFIG } from './config';
@@ -15,12 +15,13 @@ import { InputController } from './InputController';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
+import { TextureFactory } from './systems/TextureFactory';
 
 export class Game {
     private app: Application;
     private worldContainer: Container;
     private background: Graphics;
-    private crucible: Graphics;
+    private crucible: Sprite;
     
     // Systems
     private systemManager: SystemManager;
@@ -55,7 +56,10 @@ export class Game {
         // Initialize Visual Containers
         this.background = new Graphics();
         this.worldContainer = new Container();
-        this.crucible = new Graphics();
+        const crucibleTex = TextureFactory.getCrucibleTexture(app.renderer);
+        this.crucible = new Sprite(crucibleTex);
+        this.crucible.anchor.set(0.5);
+        this.crucible.tint = CONFIG.CRUCIBLE_COLOR;
 
         // Initialize Systems
         this.systemManager = new SystemManager();
@@ -169,7 +173,6 @@ export class Game {
         this.worldContainer.addChild(this.movementPathSystem.container);
 
         // 4. Crucible (On top of map/sprigs)
-        this.crucible.circle(0, 0, CONFIG.CRUCIBLE_RADIUS).fill(CONFIG.CRUCIBLE_COLOR);
         this.worldContainer.addChild(this.crucible);
 
         // 5. Floating Text (Always on top)
