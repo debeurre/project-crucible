@@ -3,6 +3,7 @@ import { CONFIG } from './config';
 import { MapSystem } from './systems/MapSystem';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { MovementPathSystem } from './systems/MovementPathSystem';
+import { TextureFactory } from './systems/TextureFactory';
 
 // No more Sprig interface in DOD
 
@@ -18,6 +19,7 @@ export class SprigSystem {
     private selected: Uint8Array; // 0 = False, 1 = True
     private pathIds: Int32Array; // -1 = None
     private pathNodeIndices: Int32Array; // Index of the next target node in the path
+    private animOffsets: Uint8Array; // Animation Frame Offset
     
     // Spatial Hash Grid
     private gridHead: Int32Array;
@@ -31,8 +33,9 @@ export class SprigSystem {
     private sprigBodySprites: Sprite[];   // The body sprite (for tinting)
     private cargoSprites: Sprite[];       // The cargo sprite
     private selectionSprites: Graphics[]; // Selection ring
-    private sprigTexture: Texture; 
+    private sprigTextures: Texture[]; 
     private cargoTexture: Texture; 
+    private globalTime: number = 0; // For sync animation
 
     private app: Application;
     private mapSystem: MapSystem;
@@ -61,7 +64,8 @@ export class SprigSystem {
         this.selected = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.pathIds = new Int32Array(this.MAX_SPRIG_COUNT);
         this.pathNodeIndices = new Int32Array(this.MAX_SPRIG_COUNT); // Track progress
-        
+        this.animOffsets = new Uint8Array(this.MAX_SPRIG_COUNT);
+
         // Initialize Spatial Hash Arrays (sized for max potential usage, resized in resize())
         this.gridNext = new Int32Array(this.MAX_SPRIG_COUNT);
         // Initial dummy size for gridHead, will be properly sized in resize()
@@ -71,7 +75,7 @@ export class SprigSystem {
         this.sprigBodySprites = [];
         this.cargoSprites = [];
         this.selectionSprites = [];
-        this.sprigTexture = Texture.EMPTY; 
+        this.sprigTextures = []; 
         this.cargoTexture = Texture.EMPTY; 
 
         this.initTextures();
@@ -93,31 +97,11 @@ export class SprigSystem {
     }
 
     private initTextures() {
-        // Sprig Texture (Circle) via Canvas for robustness
-        const r = CONFIG.SPRIG_RADIUS;
-        const d = r * 2;
-        const canvas = document.createElement('canvas');
-        canvas.width = d;
-        canvas.height = d;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(r, r, r, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        this.sprigTexture = Texture.from(canvas);
+        // Sprig Textures (Frames 1-3)
+        this.sprigTextures = TextureFactory.getSprigTextures(this.app.renderer);
 
-        // Cargo Texture (Square) via Canvas
-        const canvas2 = document.createElement('canvas');
-        canvas2.width = d;
-        canvas2.height = d;
-        const ctx2 = canvas2.getContext('2d');
-        if (ctx2) {
-            ctx2.fillStyle = '#ffffff';
-            ctx2.fillRect(0, 0, d, d);
-        }
-        this.cargoTexture = Texture.from(canvas2);
+        // Cargo Texture
+        this.cargoTexture = TextureFactory.getCargoTexture(this.app.renderer);
     }
 
 
@@ -126,7 +110,8 @@ export class SprigSystem {
             const container = new Container();
             container.visible = false;
 
-            const bodySprite = new Sprite(this.sprigTexture);
+            // Start with Frame 0
+            const bodySprite = new Sprite(this.sprigTextures[0]);
             bodySprite.tint = CONFIG.SPRIG_COLOR; 
             bodySprite.anchor.set(0.5); 
             
@@ -178,6 +163,7 @@ export class SprigSystem {
         this.selected[i] = 0;
         this.pathIds[i] = -1;
         this.pathNodeIndices[i] = 0; // Start at beginning of path
+        this.animOffsets[i] = Math.floor(Math.random() * 3); // Random 0, 1, 2
 
         this.sprigContainers[i].x = this.positionsX[i];
         this.sprigContainers[i].y = this.positionsY[i];
@@ -192,6 +178,7 @@ export class SprigSystem {
     
     public update(ticker: Ticker) {
         const dt = ticker.deltaTime; // Use scalar deltaTime (1.0 at target FPS)
+        this.globalTime += dt / 60; // Approximate seconds
         
         this.updateSpatialHash();
 
@@ -497,6 +484,11 @@ export class SprigSystem {
 
         container.x = this.positionsX[idx];
         container.y = this.positionsY[idx];
+
+        // Animation Loop (12 FPS)
+        const frame = Math.floor(this.globalTime * 12);
+        const texIdx = (frame + this.animOffsets[idx]) % 3;
+        bodySprite.texture = this.sprigTextures[texIdx];
 
         // Selection Visuals
         selectionRing.visible = this.selected[idx] === 1;
