@@ -142,5 +142,5 @@ export const CONFIG = {
       strokeWidth: 3,
       fillStyle: 'solid'
     }
-  } as Record<string, any>
+  } as const
 };
