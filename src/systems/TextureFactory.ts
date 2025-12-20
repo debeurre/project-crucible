@@ -15,7 +15,7 @@ export class TextureFactory {
     public static getSprigTextures(_renderer: Renderer): Texture[] {
         if (this.sprigTextures.length > 0) return this.sprigTextures;
 
-        const count = 3; // 3 frames for the wiggle loop
+        const count = CONFIG.ROUGHJS.WIGGLE_FRAMES; 
         const r = CONFIG.SPRIG_RADIUS;
         const d = r * 2;
         const padding = 4; // Extra space for roughness

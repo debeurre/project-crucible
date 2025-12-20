@@ -163,7 +163,7 @@ export class SprigSystem {
         this.selected[i] = 0;
         this.pathIds[i] = -1;
         this.pathNodeIndices[i] = 0; // Start at beginning of path
-        this.animOffsets[i] = Math.floor(Math.random() * 3); // Random 0, 1, 2
+        this.animOffsets[i] = Math.floor(Math.random() * CONFIG.ROUGHJS.WIGGLE_FRAMES); 
 
         this.sprigContainers[i].x = this.positionsX[i];
         this.sprigContainers[i].y = this.positionsY[i];
@@ -485,9 +485,9 @@ export class SprigSystem {
         container.x = this.positionsX[idx];
         container.y = this.positionsY[idx];
 
-        // Animation Loop (12 FPS)
-        const frame = Math.floor(this.globalTime * 12);
-        const texIdx = (frame + this.animOffsets[idx]) % 3;
+        // Animation Loop
+        const frame = Math.floor(this.globalTime * CONFIG.ROUGHJS.WIGGLE_FPS);
+        const texIdx = (frame + this.animOffsets[idx]) % CONFIG.ROUGHJS.WIGGLE_FRAMES;
         bodySprite.texture = this.sprigTextures[texIdx];
 
         // Selection Visuals

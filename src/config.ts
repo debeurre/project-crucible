@@ -120,6 +120,8 @@ export const CONFIG = {
 
   // RoughJS Visual Style (Texture Generation)
   ROUGHJS: {
+    WIGGLE_FPS: 3,
+    WIGGLE_FRAMES: 3,
     SPRIG: {
       roughness: 2.5,
       strokeWidth: 2,
