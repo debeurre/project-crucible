@@ -31,10 +31,8 @@ export class TextureFactory {
             // Draw filled circle with rough style
             rc.circle(size / 2, size / 2, d, {
                 fill: '#ffffff', // White for tinting
-                fillStyle: 'solid',
-                roughness: 2.5,
                 stroke: '#ffffff',
-                strokeWidth: 2,
+                ...CONFIG.ROUGHJS.SPRIG,
             });
 
             // Convert canvas to Texture
@@ -64,11 +62,8 @@ export class TextureFactory {
         // Draw rough square
         rc.rectangle(padding, padding, s, s, {
             fill: '#ffffff',
-            fillStyle: 'zigzag', // Scribble fill for cargo
-            hachureGap: 3,
-            roughness: 2,
             stroke: '#ffffff',
-            strokeWidth: 2
+            ...CONFIG.ROUGHJS.CARGO,
         });
 
         this.cargoTexture = Texture.from(canvas);
@@ -108,11 +103,8 @@ export class TextureFactory {
 
         rc.polygon(points, {
             fill: '#ffffff',
-            fillStyle: 'hachure',
-            hachureGap: 4,
-            roughness: 2,
             stroke: '#ffffff',
-            strokeWidth: 2
+            ...CONFIG.ROUGHJS.RESOURCE_NODE,
         });
 
         this.resourceNodeTexture = Texture.from(canvas);
@@ -135,10 +127,8 @@ export class TextureFactory {
         
         rc.circle(size / 2, size / 2, d, {
             fill: '#ffffff', 
-            fillStyle: 'solid',
-            roughness: 1.5,
             stroke: '#ffffff',
-            strokeWidth: 3
+            ...CONFIG.ROUGHJS.CRUCIBLE,
         });
 
         this.crucibleTexture = Texture.from(canvas);

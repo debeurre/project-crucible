@@ -73,7 +73,7 @@ export const CONFIG = {
   // Sprig Cargo
   SPRIG_CARGO_SLOWDOWN_FACTOR: 0.7, // Sprigs move slower when carrying cargo
   SPRIG_CARGO_OFFSET_Y: -12, // Y-offset for cargo sprite relative to sprig
-  SPRIG_CARGO_SCALE: 0.75, // Scale of the cargo sprite
+  SPRIG_CARGO_SCALE: 0.5, // Scale of the cargo sprite
   SPRIG_SQUASH_Y_WITH_CARGO: 0.9, // Y-scale of sprig when carrying cargo (volume preserved via X-scale)
 
   // Floating Text (+1 Pop)
@@ -116,5 +116,31 @@ export const CONFIG = {
       HIGHLIGHT_COLOR: 0x000000, // Black
       HIGHLIGHT_ALPHA: 0.75,
       CURSOR_SIZE: 10 // Size of the triangle cursor
-  }
+  },
+
+  // RoughJS Visual Style (Texture Generation)
+  ROUGHJS: {
+    SPRIG: {
+      roughness: 2.5,
+      strokeWidth: 2,
+      fillStyle: 'solid'
+    },
+    CARGO: {
+      roughness: 2.0,
+      strokeWidth: 2,
+      fillStyle: 'zigzag',
+      hachureGap: 3
+    },
+    RESOURCE_NODE: {
+      roughness: 2.0,
+      strokeWidth: 2,
+      fillStyle: 'hachure',
+      hachureGap: 4
+    },
+    CRUCIBLE: {
+      roughness: 1.5,
+      strokeWidth: 3,
+      fillStyle: 'solid'
+    }
+  } as Record<string, any>
 };
