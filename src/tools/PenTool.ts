@@ -94,18 +94,24 @@ export class PenTool implements ITool {
         const currentIntent = this.toolManager.getActiveIntent();
 
         if (this.state === 'DRAGGING') {
+            // 1. Check for Snap Target (Building/Resource) - Higher priority/radius
+            const snapNode = this.graphSystem.getSnapTarget(x, y, 40); 
+            
+            // 2. Check for Standard Node (Waypoint)
             const hoverNode = this.graphSystem.getNodeAt(x, y);
             
-            if (hoverNode && hoverNode.id !== this.lastNodeId) {
+            const targetNode = snapNode || hoverNode;
+            
+            if (targetNode && targetNode.id !== this.lastNodeId) {
                 // Linked to existing
                 if (this.lastNodeId !== null) {
-                    this.graphSystem.createLink(this.lastNodeId, hoverNode.id, currentIntent);
+                    this.graphSystem.createLink(this.lastNodeId, targetNode.id, currentIntent);
                 }
-                this.lastNodeId = hoverNode.id;
-                this.graphSystem.setActiveNode(hoverNode.id);
+                this.lastNodeId = targetNode.id;
+                this.graphSystem.setActiveNode(targetNode.id);
                 this.state = 'CHAINING';
                 this.toolbar.setPenState(true);
-            } else if (!hoverNode) {
+            } else if (!targetNode) {
                 // Dragged to empty -> Create new node
                 const distSq = (x - this.dragStartPos.x)**2 + (y - this.dragStartPos.y)**2;
                 if (distSq > 100) { 

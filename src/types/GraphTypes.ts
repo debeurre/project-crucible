@@ -25,6 +25,7 @@ export interface GraphEdge {
     nodeBId: number;
     intent: TaskIntent;
     isActive: boolean;
+    points: GridCoord[]; // Sticky Road Points
 }
 
 export interface GridCoord {

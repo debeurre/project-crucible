@@ -86,23 +86,24 @@ export class GraphSystem {
         const nodeB = this.nodes.find(n => n.id === nodeBId);
         if (!nodeA || !nodeB) return;
 
+        const path = Pathfinder.getPath(nodeA.x, nodeA.y, nodeB.x, nodeB.y, CONFIG.FLOW_FIELD_CELL_SIZE);
+
         const edge: GraphEdge = {
             id: this.nextEdgeId++,
             nodeAId,
             nodeBId,
             intent,
-            isActive: true
+            isActive: true,
+            points: path
         };
         this.edges.push(edge);
 
         // Bake the path
-        this.bakeEdge(nodeA, nodeB, intent);
+        this.bakeEdge(path, nodeB.x, nodeB.y, intent);
         this.draw();
     }
 
-    private bakeEdge(nodeA: GraphNode, nodeB: GraphNode, intent: TaskIntent) {
-        const path = Pathfinder.getPath(nodeA.x, nodeA.y, nodeB.x, nodeB.y, CONFIG.FLOW_FIELD_CELL_SIZE);
-        
+    private bakeEdge(path: {gx: number, gy: number}[], targetX: number, targetY: number, intent: TaskIntent) {
         // Bake vector into each cell
         for (let i = 0; i < path.length; i++) {
             const current = path[i];
@@ -121,8 +122,8 @@ export class GraphSystem {
                 // Let's point to node B center relative to cell center
                 const cellCenterX = current.gx * CONFIG.FLOW_FIELD_CELL_SIZE + CONFIG.FLOW_FIELD_CELL_SIZE / 2;
                 const cellCenterY = current.gy * CONFIG.FLOW_FIELD_CELL_SIZE + CONFIG.FLOW_FIELD_CELL_SIZE / 2;
-                dx = nodeB.x - cellCenterX;
-                dy = nodeB.y - cellCenterY;
+                dx = targetX - cellCenterX;
+                dy = targetY - cellCenterY;
             }
 
             // Normalize
@@ -199,6 +200,26 @@ export class GraphSystem {
             }
         }
         return null;
+    }
+
+    public getSnapTarget(x: number, y: number, radius: number): GraphNode | null {
+        const rSq = radius * radius;
+        let bestDistSq = rSq;
+        let bestNode: GraphNode | null = null;
+
+        for (const node of this.nodes) {
+            if (node.type === NodeType.WAYPOINT) continue; // Only snap to buildings/resources
+
+            const dx = node.x - x;
+            const dy = node.y - y;
+            const dSq = dx*dx + dy*dy;
+            
+            if (dSq < bestDistSq) {
+                bestDistSq = dSq;
+                bestNode = node;
+            }
+        }
+        return bestNode;
     }
 
     public removeElementsAt(x: number, y: number, radius: number) {
