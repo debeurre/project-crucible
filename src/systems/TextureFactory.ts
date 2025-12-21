@@ -31,7 +31,7 @@ export class TextureFactory {
             // Draw filled circle with rough style
             rc.circle(size / 2, size / 2, d, {
                 fill: '#ffffff', // White for tinting
-                stroke: '#ffffff',
+                stroke: '#000000ff',
                 ...CONFIG.ROUGHJS.SPRIG,
             });
 

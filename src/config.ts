@@ -6,7 +6,7 @@ export const CONFIG = {
   SPRIGS_PER_TAP: 2, // Spawn count on tap
   TAP_THRESHOLD_MS: 200, // Max duration for a tap
 
-  SPRIG_RADIUS: 6,
+  SPRIG_RADIUS: 8,
   SPRIG_COLOR: 0x228B22, // Forest Green
   SPRIG_FLASH_COLOR: 0xffffff,
   
@@ -112,19 +112,19 @@ export const CONFIG = {
   // Omni-Pencil Visuals
   PENCIL_VISUALS: {
       COLOR: 0x000000, // Black
-      ALPHA: 0.75,
+      ALPHA: 0.5,
       HIGHLIGHT_COLOR: 0x000000, // Black
-      HIGHLIGHT_ALPHA: 0.75,
+      HIGHLIGHT_ALPHA: 0.5,
       CURSOR_SIZE: 10 // Size of the triangle cursor
   },
 
   // RoughJS Visual Style (Texture Generation)
   ROUGHJS: {
-    WIGGLE_FPS: 3,
+    WIGGLE_FPS: 2,
     WIGGLE_FRAMES: 3,
     SPRIG: {
-      roughness: 2.5,
-      strokeWidth: 2,
+      roughness: 1.5,
+      strokeWidth: 0.5,
       fillStyle: 'solid'
     },
     CARGO: {
@@ -141,8 +141,10 @@ export const CONFIG = {
     },
     CRUCIBLE: {
       roughness: 1.5,
-      strokeWidth: 3,
-      fillStyle: 'solid'
+      strokeWidth: 2,
+      fillStyle: 'zigzag',
+      hachureGap: 6,
+      hachureAngle: 45
     }
   } as const
 };
