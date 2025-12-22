@@ -222,6 +222,41 @@ export class GraphSystem {
         return bestNode;
     }
 
+    public getNearestEdge(x: number, y: number, radius: number): GraphEdge | null {
+        // Find edge closest to point. 
+        // Ideally check distance to segments.
+        // For prototype, check distance to points in edge.points (which are dense).
+        const rSq = radius * radius;
+        let bestDistSq = rSq;
+        let bestEdge: GraphEdge | null = null;
+
+        for (const edge of this.edges) {
+            if (!edge.points || edge.points.length === 0) continue;
+            
+            // Check a few sample points or all?
+            // Optimization: Spatial Hash for edges?
+            // For now, simple loop.
+            for (const p of edge.points) {
+                const px = p.gx * CONFIG.FLOW_FIELD_CELL_SIZE + CONFIG.FLOW_FIELD_CELL_SIZE/2;
+                const py = p.gy * CONFIG.FLOW_FIELD_CELL_SIZE + CONFIG.FLOW_FIELD_CELL_SIZE/2;
+                const dx = px - x;
+                const dy = py - y;
+                const dSq = dx*dx + dy*dy;
+                
+                if (dSq < bestDistSq) {
+                    bestDistSq = dSq;
+                    bestEdge = edge;
+                    // Optimization: Break inner loop if close enough? No, want closest.
+                }
+            }
+        }
+        return bestEdge;
+    }
+
+    public getEdge(id: number): GraphEdge | undefined {
+        return this.edges.find(e => e.id === id);
+    }
+
     public removeElementsAt(x: number, y: number, radius: number) {
         const rSq = radius * radius;
         

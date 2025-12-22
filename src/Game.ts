@@ -1,4 +1,4 @@
-import { Application, Graphics, Container, Ticker, Sprite } from 'pixi.js';
+import { Application, Graphics, Container, Ticker } from 'pixi.js';
 import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
 import { CONFIG } from './config';
@@ -15,13 +15,11 @@ import { InputController } from './InputController';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
-import { TextureFactory } from './systems/TextureFactory';
 
 export class Game {
     private app: Application;
     private worldContainer: Container;
     private background: Graphics;
-    private crucible: Sprite;
     
     // Systems
     private systemManager: SystemManager;
@@ -56,10 +54,6 @@ export class Game {
         // Initialize Visual Containers
         this.background = new Graphics();
         this.worldContainer = new Container();
-        const crucibleTex = TextureFactory.getCrucibleTexture(app.renderer);
-        this.crucible = new Sprite(crucibleTex);
-        this.crucible.anchor.set(0.5);
-        this.crucible.tint = CONFIG.CRUCIBLE_COLOR;
 
         // Initialize Systems
         this.systemManager = new SystemManager();
@@ -75,7 +69,7 @@ export class Game {
         this.toolOverlaySystem.container.eventMode = 'none';
 
         // SprigSystem needs MovementPathSystem
-        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem);
+        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem);
 
         // Register Systems
         this.systemManager.addSystem(this.mapSystem);
@@ -173,7 +167,7 @@ export class Game {
         this.worldContainer.addChild(this.movementPathSystem.container);
 
         // 4. Crucible (On top of map/sprigs)
-        this.worldContainer.addChild(this.crucible);
+        // Handled by ResourceSystem
 
         // 5. Floating Text (Always on top)
         this.worldContainer.addChild(this.floatingTextSystem.container);
@@ -192,9 +186,8 @@ export class Game {
         
         this.systemManager.resize(this.app.screen.width, this.app.screen.height);
         
-        this.crucible.x = this.app.screen.width / 2;
-        this.crucible.y = this.app.screen.height / 2;
-        this.inputController.updateCruciblePosition(this.crucible.x, this.crucible.y);
+        const heartPos = this.resourceSystem.getHeartPosition();
+        this.inputController.updateCruciblePosition(heartPos.x, heartPos.y);
         
         this.toolbar.resize(this.app.screen.width, this.app.screen.height);
     }
@@ -234,21 +227,19 @@ export class Game {
             }
 
             // Dropoff
-            const dx = sprigBounds.x - this.crucible.x;
-            const dy = sprigBounds.y - this.crucible.y;
-            const distSq = dx*dx + dy*dy;
-            
-            if (this.sprigSystem.isCarrying(i) && distSq < (CONFIG.CRUCIBLE_RADIUS + sprigBounds.radius)**2) {
+            if (this.sprigSystem.isCarrying(i) && this.resourceSystem.isInsideHeart(sprigBounds.x, sprigBounds.y)) {
                 this.sprigSystem.setCargo(i, 0);
                 this.score++;
+                this.resourceSystem.feedHeart(10);
                 this.updateUI();
                 
                 // Spawn Floating Text (+1 Pop)
+                const heartPos = this.resourceSystem.getHeartPosition();
                 this.floatingTextSystem.spawn(
-                    this.crucible.x, 
-                    this.crucible.y, 
+                    heartPos.x, 
+                    heartPos.y, 
                     CONFIG.FLOATING_TEXT.TEXT, 
-                    CONFIG.RESOURCE_NODE_COLOR // Use resource color for text
+                    CONFIG.RESOURCE_NODE_COLOR 
                 );
             }
         }
@@ -289,7 +280,7 @@ export class Game {
         }
         
         const scaleY = 1.0 / Math.max(0.1, scaleX); 
-        this.crucible.scale.set(scaleX, scaleY);
+        this.resourceSystem.heartSprite.scale.set(scaleX, scaleY);
     }
 
     private updateUI() {

@@ -4,6 +4,8 @@ import { MapSystem } from './systems/MapSystem';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { MovementPathSystem } from './systems/MovementPathSystem';
 import { TextureFactory } from './systems/TextureFactory';
+import { GraphSystem } from './systems/GraphSystem';
+import { TaskIntent } from './types/GraphTypes';
 
 // No more Sprig interface in DOD
 
@@ -18,7 +20,8 @@ export class SprigSystem {
     private intents: Int32Array; // TaskIntent
     private selected: Uint8Array; // 0 = False, 1 = True
     private pathIds: Int32Array; // -1 = None
-    private pathNodeIndices: Int32Array; // Index of the next target node in the path
+    private roadEdgeIds: Int32Array; // -1 = None (For Sticky Roads)
+    private pathNodeIndices: Int32Array; // Index of the next target node in the path (Shared for both)
     private animOffsets: Uint8Array; // Animation Frame Offset
     
     // Spatial Hash Grid
@@ -40,17 +43,19 @@ export class SprigSystem {
     private app: Application;
     private mapSystem: MapSystem;
     private flowFieldSystem: FlowFieldSystem; 
-    private movementPathSystem: MovementPathSystem; // New prop
+    private movementPathSystem: MovementPathSystem; 
+    private graphSystem: GraphSystem; // New dependency
     public container: Container; 
 
     private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; 
     public activeSprigCount: number = 0; 
 
-    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem) {
+    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem, graphSystem: GraphSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
         this.flowFieldSystem = flowFieldSystem; 
         this.movementPathSystem = movementPathSystem;
+        this.graphSystem = graphSystem;
         this.container = new Container();
 
         // Initialize typed arrays
@@ -63,6 +68,7 @@ export class SprigSystem {
         this.intents = new Int32Array(this.MAX_SPRIG_COUNT);
         this.selected = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.pathIds = new Int32Array(this.MAX_SPRIG_COUNT);
+        this.roadEdgeIds = new Int32Array(this.MAX_SPRIG_COUNT);
         this.pathNodeIndices = new Int32Array(this.MAX_SPRIG_COUNT); // Track progress
         this.animOffsets = new Uint8Array(this.MAX_SPRIG_COUNT);
 
@@ -162,6 +168,7 @@ export class SprigSystem {
         this.intents[i] = -1; // Default intent
         this.selected[i] = 0;
         this.pathIds[i] = -1;
+        this.roadEdgeIds[i] = -1;
         this.pathNodeIndices[i] = 0; // Start at beginning of path
         this.animOffsets[i] = Math.floor(Math.random() * CONFIG.ROUGHJS.WIGGLE_FRAMES); 
 
@@ -191,7 +198,13 @@ export class SprigSystem {
                 onPath = this.applyPathMovement(i, pathId);
             }
 
-            if (!onPath) {
+            // Sticky Road Logic (Chest / Yellow Assist)
+            let onRoad = false;
+            if (!onPath && this.intents[i] === TaskIntent.YELLOW_ASSIST && this.isCarrying(i)) {
+                onRoad = this.applyStickyRoadMovement(i);
+            }
+
+            if (!onPath && !onRoad) {
                 // Default Behavior (Boids + Flow)
                 this.applyBoids(i, dt);
                 this.applyFlowField(i, dt); 
@@ -277,6 +290,74 @@ export class SprigSystem {
             this.gridNext[i] = this.gridHead[cellIndex];
             this.gridHead[cellIndex] = i;
         }
+    }
+
+    private applyStickyRoadMovement(idx: number): boolean {
+        let edgeId = this.roadEdgeIds[idx];
+        
+        if (edgeId === -1) {
+            const x = this.positionsX[idx];
+            const y = this.positionsY[idx];
+            const edge = this.graphSystem.getNearestEdge(x, y, 40); 
+            
+            if (edge) {
+                edgeId = edge.id;
+                this.roadEdgeIds[idx] = edgeId;
+                this.pathNodeIndices[idx] = this.findClosestPointIndex(edge.points, x, y);
+            } else {
+                return false; 
+            }
+        }
+
+        const edge = this.graphSystem.getEdge(edgeId);
+        if (!edge || !edge.points || edge.points.length === 0) {
+            this.roadEdgeIds[idx] = -1;
+            return false;
+        }
+
+        let targetIdx = this.pathNodeIndices[idx];
+        if (targetIdx >= edge.points.length) {
+            this.roadEdgeIds[idx] = -1;
+            return false;
+        }
+
+        const pt = edge.points[targetIdx];
+        const tx = pt.gx * CONFIG.FLOW_FIELD_CELL_SIZE + CONFIG.FLOW_FIELD_CELL_SIZE/2;
+        const ty = pt.gy * CONFIG.FLOW_FIELD_CELL_SIZE + CONFIG.FLOW_FIELD_CELL_SIZE/2;
+
+        const sx = this.positionsX[idx];
+        const sy = this.positionsY[idx];
+        
+        const dx = tx - sx;
+        const dy = ty - sy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        if (dist > 0) {
+            const speed = CONFIG.MAX_SPEED * 1.5; 
+            this.velocitiesX[idx] = (dx / dist) * speed;
+            this.velocitiesY[idx] = (dy / dist) * speed;
+        }
+
+        if (dist < 10) {
+            this.pathNodeIndices[idx]++;
+        }
+
+        return true;
+    }
+
+    private findClosestPointIndex(points: {gx: number, gy: number}[], x: number, y: number): number {
+        let bestDist = Infinity;
+        let bestIdx = 0;
+        for(let i=0; i<points.length; i++) {
+            const px = points[i].gx * CONFIG.FLOW_FIELD_CELL_SIZE + CONFIG.FLOW_FIELD_CELL_SIZE/2;
+            const py = points[i].gy * CONFIG.FLOW_FIELD_CELL_SIZE + CONFIG.FLOW_FIELD_CELL_SIZE/2;
+            const d = (px-x)**2 + (py-y)**2;
+            if (d < bestDist) {
+                bestDist = d;
+                bestIdx = i;
+            }
+        }
+        return bestIdx;
     }
 
     private applyFlowField(idx: number, dt: number) {
