@@ -22,7 +22,6 @@ export class ResourceSystem implements ISystem {
     private readonly DRAIN_RATE: number = 1; // 1 per second per spec
     
     private energyBar: Graphics;
-    private statusTimer: number = 0;
 
     constructor(app: Application, mapSystem: MapSystem, floatingTextSystem: FloatingTextSystem) {
         this.app = app;
@@ -71,18 +70,6 @@ export class ResourceSystem implements ISystem {
         if (this.heartEnergy > 0) {
             this.heartEnergy -= this.DRAIN_RATE * dt;
             if (this.heartEnergy < 0) this.heartEnergy = 0;
-        }
-        
-        // Status Text Timer (Every 3 seconds)
-        this.statusTimer += dt;
-        if (this.statusTimer >= 3) {
-            this.statusTimer = 0;
-            this.floatingTextSystem.spawn(
-                this.heartPosition.x, 
-                this.heartPosition.y, 
-                `Heart: ${Math.floor(this.heartEnergy)}%`, 
-                0x8B4513 // Brownish color for castle
-            );
         }
         
         // Update Bar
