@@ -94,7 +94,7 @@ export class Toolbar extends Container {
             fontWeight: 'bold',
             align: 'center'
         });
-        this.mapLabel = new Text({ text: 'RECT', style });
+        this.mapLabel = new Text({ text: 'FULL', style });
         this.mapLabel.anchor.set(0.5);
         this.mapLabel.x = 0; // Center
         btn.addChild(this.mapLabel);
