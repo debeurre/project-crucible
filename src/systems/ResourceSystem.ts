@@ -3,6 +3,7 @@ import { CONFIG } from '../config';
 import { TextureFactory } from './TextureFactory';
 import { MapSystem } from './MapSystem';
 import { ISystem } from './ISystem';
+import { FloatingTextSystem } from './FloatingTextSystem';
 
 export class ResourceSystem implements ISystem {
     public container: Container; 
@@ -11,19 +12,22 @@ export class ResourceSystem implements ISystem {
     
     private app: Application;
     private mapSystem: MapSystem;
+    private floatingTextSystem: FloatingTextSystem;
     
     private nodePosition: Point; // Berry Bush Pos
     private heartPosition: Point; // Castle Pos
     
     private heartEnergy: number = 100;
     private readonly MAX_ENERGY: number = 100;
-    private readonly DRAIN_RATE: number = 5; // Energy per second
+    private readonly DRAIN_RATE: number = 1; // 1 per second per spec
     
     private energyBar: Graphics;
+    private statusTimer: number = 0;
 
-    constructor(app: Application, mapSystem: MapSystem) {
+    constructor(app: Application, mapSystem: MapSystem, floatingTextSystem: FloatingTextSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
+        this.floatingTextSystem = floatingTextSystem;
         this.container = new Container();
         
         // 1. Berry Bush (Source)
@@ -67,6 +71,18 @@ export class ResourceSystem implements ISystem {
         if (this.heartEnergy > 0) {
             this.heartEnergy -= this.DRAIN_RATE * dt;
             if (this.heartEnergy < 0) this.heartEnergy = 0;
+        }
+        
+        // Status Text Timer (Every 3 seconds)
+        this.statusTimer += dt;
+        if (this.statusTimer >= 3) {
+            this.statusTimer = 0;
+            this.floatingTextSystem.spawn(
+                this.heartPosition.x, 
+                this.heartPosition.y, 
+                `Heart: ${Math.floor(this.heartEnergy)}%`, 
+                0x8B4513 // Brownish color for castle
+            );
         }
         
         // Update Bar
@@ -122,6 +138,18 @@ export class ResourceSystem implements ISystem {
         const dx = x - this.nodePosition.x;
         const dy = y - this.nodePosition.y;
         return (dx * dx + dy * dy) < CONFIG.RESOURCE_NODE_RADIUS**2;
+    }
+
+    public isNearSource(x: number, y: number, radius: number = 40): boolean {
+        const dx = x - this.nodePosition.x;
+        const dy = y - this.nodePosition.y;
+        return (dx * dx + dy * dy) < (CONFIG.RESOURCE_NODE_RADIUS + radius)**2;
+    }
+
+    public harvestSource(x: number, y: number): boolean {
+        // Validation logic (e.g. cooldowns?)
+        // For now, infinite resource, instant success if near.
+        return this.isNearSource(x, y);
     }
 
     public isInsideHeart(x: number, y: number): boolean {

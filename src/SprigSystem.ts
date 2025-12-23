@@ -6,6 +6,14 @@ import { MovementPathSystem } from './systems/MovementPathSystem';
 import { TextureFactory } from './systems/TextureFactory';
 import { GraphSystem } from './systems/GraphSystem';
 import { TaskIntent } from './types/GraphTypes';
+import { ResourceSystem } from './systems/ResourceSystem';
+
+enum SprigState {
+    IDLE = 0,
+    HARVESTING = 1,
+    HAULING = 2,
+    FIGHTING = 3
+}
 
 // No more Sprig interface in DOD
 
@@ -24,6 +32,12 @@ export class SprigSystem {
     private pathNodeIndices: Int32Array; // Index of the next target node in the path (Shared for both)
     private animOffsets: Uint8Array; // Animation Frame Offset
     
+    // Inference Engine State
+    private states: Uint8Array;
+    private workTimers: Float32Array;
+    private targets: Int32Array; // EntityID or NodeID
+    private teams: Uint8Array; // 0 = Player, 1 = Germ
+
     // Spatial Hash Grid
     private gridHead: Int32Array;
     private gridNext: Int32Array;
@@ -44,18 +58,20 @@ export class SprigSystem {
     private mapSystem: MapSystem;
     private flowFieldSystem: FlowFieldSystem; 
     private movementPathSystem: MovementPathSystem; 
-    private graphSystem: GraphSystem; // New dependency
+    private graphSystem: GraphSystem; 
+    private resourceSystem: ResourceSystem; // New dependency
     public container: Container; 
 
     private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; 
     public activeSprigCount: number = 0; 
 
-    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem, graphSystem: GraphSystem) {
+    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem, graphSystem: GraphSystem, resourceSystem: ResourceSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
         this.flowFieldSystem = flowFieldSystem; 
         this.movementPathSystem = movementPathSystem;
         this.graphSystem = graphSystem;
+        this.resourceSystem = resourceSystem;
         this.container = new Container();
 
         // Initialize typed arrays
@@ -69,8 +85,13 @@ export class SprigSystem {
         this.selected = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.pathIds = new Int32Array(this.MAX_SPRIG_COUNT);
         this.roadEdgeIds = new Int32Array(this.MAX_SPRIG_COUNT);
-        this.pathNodeIndices = new Int32Array(this.MAX_SPRIG_COUNT); // Track progress
+        this.pathNodeIndices = new Int32Array(this.MAX_SPRIG_COUNT); 
         this.animOffsets = new Uint8Array(this.MAX_SPRIG_COUNT);
+        
+        this.states = new Uint8Array(this.MAX_SPRIG_COUNT);
+        this.workTimers = new Float32Array(this.MAX_SPRIG_COUNT);
+        this.targets = new Int32Array(this.MAX_SPRIG_COUNT);
+        this.teams = new Uint8Array(this.MAX_SPRIG_COUNT);
 
         // Initialize Spatial Hash Arrays (sized for max potential usage, resized in resize())
         this.gridNext = new Int32Array(this.MAX_SPRIG_COUNT);
@@ -145,16 +166,20 @@ export class SprigSystem {
         }
     }
 
-    public spawnSprig(x: number, y: number) {
+    public spawnSprig(x: number, y: number, team: number = 0) {
         if (this.activeSprigCount >= this.MAX_SPRIG_COUNT) {
             return; 
         }
 
         const i = this.activeSprigCount; 
 
-        // Spawn at random angle around the crucible with padding
+        // Spawn at random angle around the crucible with padding (only if player?)
+        // If Germ (team 1), maybe spawn at x,y directly?
+        // Logic: spawnSprig(x,y) spawns AT x,y but maybe with scatter?
+        // Existing logic used scatter around crucible.
+        // I'll keep scatter logic but center on x,y.
         const angle = Math.random() * Math.PI * 2;
-        const dist = CONFIG.CRUCIBLE_RADIUS + CONFIG.CRUCIBLE_SPAWN_PADDING;
+        const dist = 5; // Small scatter
         
         this.positionsX[i] = x + Math.cos(angle) * dist;
         this.positionsY[i] = y + Math.sin(angle) * dist;
@@ -170,13 +195,23 @@ export class SprigSystem {
         this.pathIds[i] = -1;
         this.roadEdgeIds[i] = -1;
         this.pathNodeIndices[i] = 0; // Start at beginning of path
-        this.animOffsets[i] = Math.floor(Math.random() * CONFIG.ROUGHJS.WIGGLE_FRAMES); 
+        this.animOffsets[i] = Math.floor(Math.random() * CONFIG.ROUGHJS.WIGGLE_FRAMES);
+        
+        this.states[i] = SprigState.IDLE;
+        this.workTimers[i] = 0;
+        this.targets[i] = -1;
+        this.teams[i] = team;
 
         this.sprigContainers[i].x = this.positionsX[i];
         this.sprigContainers[i].y = this.positionsY[i];
         this.sprigContainers[i].visible = true;
         
-        this.sprigBodySprites[i].tint = CONFIG.SPRIG_COLOR;
+        if (team === 1) {
+            this.sprigBodySprites[i].tint = 0x808080; // Grey for Germs
+        } else {
+            this.sprigBodySprites[i].tint = CONFIG.SPRIG_COLOR;
+        }
+        
         this.cargoSprites[i].visible = false; 
         this.selectionSprites[i].visible = false;
 
@@ -184,35 +219,157 @@ export class SprigSystem {
     }
     
     public update(ticker: Ticker) {
-        const dt = ticker.deltaTime; // Use scalar deltaTime (1.0 at target FPS)
-        this.globalTime += dt / 60; // Approximate seconds
+        const dt = ticker.deltaTime; 
+        this.globalTime += dt / 60; 
         
         this.updateSpatialHash();
 
         for (let i = 0; i < this.activeSprigCount; i++) { 
-            // Check if on a Movement Path (High Priority)
+            // 1. Path Override (Lasso)
             const pathId = this.pathIds[i];
-            let onPath = false;
-            
             if (pathId !== -1) {
-                onPath = this.applyPathMovement(i, pathId);
+                this.applyPathMovement(i, pathId);
+                this.updatePosition(i, dt);
+                this.updateVisuals(i);
+                continue;
             }
 
-            // Sticky Road Logic (Chest / Yellow Assist)
-            let onRoad = false;
-            if (!onPath && this.intents[i] === TaskIntent.YELLOW_ASSIST && this.isCarrying(i)) {
-                onRoad = this.applyStickyRoadMovement(i);
+            // 2. Germ Logic
+            if (this.teams[i] === 1) {
+                this.applyGermLogic(i);
+                if (i >= this.activeSprigCount) { i--; continue; } // Sprig removed
+                this.updatePosition(i, dt);
+                this.updateVisuals(i);
+                continue;
             }
 
-            if (!onPath && !onRoad) {
-                // Default Behavior (Boids + Flow)
-                this.applyBoids(i, dt);
-                this.applyFlowField(i, dt); 
-            }
+            // 3. Inference Engine
+            this.checkContext(i);
+            
+            // 4. State Execution
+            this.executeState(i, dt);
             
             this.updatePosition(i, dt);
             this.updateVisuals(i);
         }
+    }
+
+    private checkContext(i: number) {
+        // A. Hauler
+        if (this.cargos[i] === 1) {
+            this.states[i] = SprigState.HAULING;
+            return;
+        }
+
+        // Read Intent
+        const x = this.positionsX[i];
+        const y = this.positionsY[i];
+        const intent = this.flowFieldSystem.getIntentAt(x, y);
+        this.intents[i] = intent !== null ? intent : -1;
+
+        // B. Harvester
+        if (this.cargos[i] === 0 && intent === TaskIntent.GREEN_HARVEST) {
+            if (this.states[i] === SprigState.HARVESTING) return;
+            
+            if (this.resourceSystem.isNearSource(x, y, CONFIG.PERCEPTION_RADIUS)) {
+                this.states[i] = SprigState.HARVESTING;
+                this.workTimers[i] = 2.0; 
+                return;
+            }
+        }
+
+        // C. Guard
+        if (intent === TaskIntent.RED_ATTACK) {
+             this.states[i] = SprigState.FIGHTING;
+             return;
+        }
+
+        // D. Wanderer
+        this.states[i] = SprigState.IDLE;
+    }
+
+    private executeState(i: number, dt: number) {
+        switch(this.states[i]) {
+            case SprigState.IDLE:
+                this.applyBoids(i, dt);
+                this.applyFlowField(i, dt);
+                break;
+            case SprigState.HAULING:
+                const onRoad = this.applyStickyRoadMovement(i);
+                if (!onRoad) {
+                    const heart = this.resourceSystem.getHeartPosition();
+                    this.seek(i, heart.x, heart.y, 1.0);
+                }
+                break;
+            case SprigState.HARVESTING:
+                this.velocitiesX[i] = 0;
+                this.velocitiesY[i] = 0;
+                this.workTimers[i] -= dt / 60;
+                if (this.workTimers[i] <= 0) {
+                    this.cargos[i] = 1;
+                    this.states[i] = SprigState.HAULING;
+                }
+                break;
+            case SprigState.FIGHTING:
+                this.applyBoids(i, dt); 
+                break;
+        }
+    }
+
+    private applyGermLogic(i: number) {
+        const heart = this.resourceSystem.getHeartPosition();
+        this.seek(i, heart.x, heart.y, 0.5);
+        
+        if (this.resourceSystem.isInsideHeart(this.positionsX[i], this.positionsY[i])) {
+             this.resourceSystem.feedHeart(-20);
+             this.removeSprig(i);
+        }
+    }
+
+    private seek(idx: number, tx: number, ty: number, speedScale: number = 1.0) {
+        const sx = this.positionsX[idx];
+        const sy = this.positionsY[idx];
+        const dx = tx - sx;
+        const dy = ty - sy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        if (dist > 0) {
+            const speed = CONFIG.MAX_SPEED * speedScale;
+            this.velocitiesX[idx] = (dx / dist) * speed;
+            this.velocitiesY[idx] = (dy / dist) * speed;
+        }
+    }
+
+    private removeSprig(i: number) {
+        const last = this.activeSprigCount - 1;
+        if (i !== last) {
+            this.positionsX[i] = this.positionsX[last];
+            this.positionsY[i] = this.positionsY[last];
+            this.velocitiesX[i] = this.velocitiesX[last];
+            this.velocitiesY[i] = this.velocitiesY[last];
+            this.flashTimers[i] = this.flashTimers[last];
+            this.cargos[i] = this.cargos[last];
+            this.intents[i] = this.intents[last];
+            this.selected[i] = this.selected[last];
+            this.pathIds[i] = this.pathIds[last];
+            this.roadEdgeIds[i] = this.roadEdgeIds[last];
+            this.pathNodeIndices[i] = this.pathNodeIndices[last];
+            this.animOffsets[i] = this.animOffsets[last];
+            this.states[i] = this.states[last];
+            this.workTimers[i] = this.workTimers[last];
+            this.targets[i] = this.targets[last];
+            this.teams[i] = this.teams[last];
+            
+            // Visuals are pooled, but tint might need reset if swapping germ/player?
+            // updateVisuals handles tint based on team/intent.
+            // But if I swap a Germ (Grey) into a Player slot, updateVisuals needs to know.
+            // updateVisuals uses this.intents[i] for color.
+            // Does it use teams?
+            // I need to update updateVisuals to handle teams.
+        }
+        
+        this.sprigContainers[last].visible = false;
+        this.activeSprigCount--;
     }
 
     private applyPathMovement(idx: number, pathId: number): boolean {
@@ -577,6 +734,8 @@ export class SprigSystem {
         if (flashTimer > 0) {
             bodySprite.tint = CONFIG.SPRIG_FLASH_COLOR;
             this.flashTimers[idx]--;
+        } else if (this.teams[idx] === 1) {
+            bodySprite.tint = 0x808080; // Germ Grey
         } else {
             // Use Intent Color if present, else Default
             const intentId = this.intents[idx];

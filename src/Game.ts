@@ -41,6 +41,7 @@ export class Game {
 
     // State
     private score = 0;
+    private germTimer = 0;
     
     // Animation State
     private tapAnimProgress = 1.0;
@@ -61,15 +62,15 @@ export class Game {
         this.mapSystem = new MapSystem(app);
         this.visualEffects = new VisualEffects();
         this.flowFieldSystem = new FlowFieldSystem(app);
-        this.resourceSystem = new ResourceSystem(app, this.mapSystem);
         this.floatingTextSystem = new FloatingTextSystem();
+        this.resourceSystem = new ResourceSystem(app, this.mapSystem, this.floatingTextSystem);
         this.graphSystem = new GraphSystem(this.flowFieldSystem);
         this.movementPathSystem = new MovementPathSystem();
         this.toolOverlaySystem = new ToolOverlaySystem();
         this.toolOverlaySystem.container.eventMode = 'none';
 
         // SprigSystem needs MovementPathSystem
-        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem);
+        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem, this.resourceSystem);
 
         // Register Systems
         this.systemManager.addSystem(this.mapSystem);
@@ -194,6 +195,18 @@ export class Game {
 
     private update(ticker: Ticker) {
         this.inputController.update(ticker);
+        
+        // Germ Spawner
+        this.germTimer += ticker.deltaMS / 1000;
+        if (this.germTimer >= 15) {
+            this.germTimer = 0;
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.max(this.app.screen.width, this.app.screen.height) * 0.6;
+            const gx = this.app.screen.width/2 + Math.cos(angle) * dist;
+            const gy = this.app.screen.height/2 + Math.sin(angle) * dist;
+            this.sprigSystem.spawnSprig(gx, gy, 1);
+        }
+
         this.updateGameLogic(ticker);
         this.renderVisuals(ticker);
         this.toolManager.update(ticker);

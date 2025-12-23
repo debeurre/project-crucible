@@ -144,6 +144,20 @@ export class FlowFieldSystem {
         return {vx: currentVelX, vy: currentVelY, intent};
     }
 
+    public getIntentAt(x: number, y: number): TaskIntent | null {
+        const col = Math.floor(x / this.cellSize);
+        const row = Math.floor(y / this.cellSize);
+
+        if (col < 0 || col >= this.gridCols || row < 0 || row >= this.gridRows) {
+            return null;
+        }
+
+        const intentIndex = row * this.gridCols + col;
+        const intentId = this.fieldGraphIntent[intentIndex];
+        
+        return intentId !== -1 ? (intentId as TaskIntent) : null;
+    }
+
     public paintManualFlow(mouseX: number, mouseY: number, dragVecX: number, dragVecY: number) {
         // Apply flow to cells under the mouse (Manual Layer)
         const radius = 2; 
