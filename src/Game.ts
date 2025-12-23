@@ -63,7 +63,7 @@ export class Game {
         this.visualEffects = new VisualEffects();
         this.flowFieldSystem = new FlowFieldSystem(app);
         this.floatingTextSystem = new FloatingTextSystem();
-        this.resourceSystem = new ResourceSystem(app, this.mapSystem, this.floatingTextSystem);
+        this.resourceSystem = new ResourceSystem(app, this.mapSystem);
         this.graphSystem = new GraphSystem(this.flowFieldSystem);
         this.movementPathSystem = new MovementPathSystem();
         this.toolOverlaySystem = new ToolOverlaySystem();
@@ -94,6 +94,9 @@ export class Game {
             (mode) => {
                 this.mapSystem.setMode(mode);
                 this.resourceSystem.spawnRandomly(); 
+                this.sprigSystem.clearAll();
+                this.flowFieldSystem.clearAll();
+                this.graphSystem.clearAll(); // Also clear graph
                 this.toolbar.setMapMode(mode);
             }
         );

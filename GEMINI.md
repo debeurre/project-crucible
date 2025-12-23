@@ -18,6 +18,7 @@
 - **Config-Driven:** All "magic numbers" (speed, colors, spawn rates) go into `src/config.ts`.
 - **Spectacle First:** If a mechanic doesn't have visual juice (particles, tweens), it is not finished.
 - **Shell Safety:** Do NOT chain shell commands with `&&` (e.g., `git add . && git commit`). Run them as separate tool calls to avoid safety filter rejections.
+- **Holistic Cleanup (CRITICAL):** When encountering `TS6133` (unused variable), err on the side of **deleting** the offending variable/parameter/import rather than using workarounds like `_` underscores or `// @ts-ignore`. Think holistically about why the code exists rather than just narrowing in on killing the warning.
 
 ## 4. ARCHITECTURE & PERFORMANCE
 - **Simulation vs. Render:** Keep the math (logic) separate from the PixiJS (view).

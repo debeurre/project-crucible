@@ -3,7 +3,7 @@ import { CONFIG } from '../config';
 import { TextureFactory } from './TextureFactory';
 import { MapSystem } from './MapSystem';
 import { ISystem } from './ISystem';
-import { FloatingTextSystem } from './FloatingTextSystem';
+import { MapShape } from '../types/MapTypes';
 
 export class ResourceSystem implements ISystem {
     public container: Container; 
@@ -12,7 +12,6 @@ export class ResourceSystem implements ISystem {
     
     private app: Application;
     private mapSystem: MapSystem;
-    private floatingTextSystem: FloatingTextSystem;
     
     private nodePosition: Point; // Berry Bush Pos
     private heartPosition: Point; // Castle Pos
@@ -23,10 +22,9 @@ export class ResourceSystem implements ISystem {
     
     private energyBar: Graphics;
 
-    constructor(app: Application, mapSystem: MapSystem, floatingTextSystem: FloatingTextSystem) {
+    constructor(app: Application, mapSystem: MapSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
-        this.floatingTextSystem = floatingTextSystem;
         this.container = new Container();
         
         // 1. Berry Bush (Source)
@@ -82,6 +80,12 @@ export class ResourceSystem implements ISystem {
     }
 
     public spawnRandomly() {
+        if (this.mapSystem.getMode() === MapShape.ROOM1) {
+            this.container.visible = false;
+            return;
+        }
+        this.container.visible = true;
+
         const padding = CONFIG.RESOURCE_NODE_RADIUS + CONFIG.RESOURCE_NODE_SPAWN_MARGIN;
         const newPos = this.mapSystem.getRandomPoint(padding);
         
