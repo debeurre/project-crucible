@@ -771,6 +771,10 @@ export class SprigSystem {
         return idx < this.activeSprigCount;
     }
 
+    public isPlayer(idx: number): boolean {
+        return this.teams[idx] === 0;
+    }
+
     public isCarrying(idx: number): boolean {
         return this.cargos[idx] !== 0;
     }

@@ -246,6 +246,7 @@ export class Game {
         // Check Sprig Interactions
         for (let i = 0; i < this.sprigSystem.activeSprigCount; i++) {
             if (!this.sprigSystem.isSprigActive(i)) continue;
+            if (!this.sprigSystem.isPlayer(i)) continue; // Skip invaders
 
             const sprigBounds = this.sprigSystem.getSprigBounds(i);
 
