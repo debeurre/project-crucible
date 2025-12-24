@@ -48,7 +48,7 @@ export class ResourceSystem implements ISystem {
                 const heartTex = TextureFactory.getCrucibleTexture(this.app.renderer);
                 this.heartSprite = new Sprite(heartTex);
                 this.heartSprite.anchor.set(0.5);
-                this.heartSprite.tint = 0x8B4513; // Brown Castle
+                this.heartSprite.tint = CONFIG.CRUCIBLE_COLOR;
                 this.heartSprite.x = x;
                 this.heartSprite.y = y;
                 
