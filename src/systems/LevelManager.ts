@@ -1,9 +1,17 @@
-import { LevelManifest } from '../types/LevelTypes';
+import { LevelManifest, LevelData } from '../types/LevelTypes';
+import { MapSystem } from './MapSystem';
+import { ResourceSystem } from './ResourceSystem';
+import { MapShape } from '../types/MapTypes';
 
 export class LevelManager {
     private manifest: LevelManifest | null = null;
+    private mapSystem: MapSystem;
+    private resourceSystem: ResourceSystem;
 
-    constructor() {}
+    constructor(mapSystem: MapSystem, resourceSystem: ResourceSystem) {
+        this.mapSystem = mapSystem;
+        this.resourceSystem = resourceSystem;
+    }
 
     public async init() {
         try {
@@ -16,7 +24,30 @@ export class LevelManager {
     }
 
     public async loadLevel(id: string) {
-        console.log(`Loading level [${id}]`);
-        // Implementation will be added in a later step
+        if (!this.manifest) {
+            console.error('LevelManager: Manifest not loaded');
+            return;
+        }
+
+        const levelEntry = this.manifest.levels.find(l => l.id === id);
+        if (!levelEntry) {
+            console.error(`LevelManager: Level ${id} not found in manifest`);
+            return;
+        }
+
+        try {
+            console.log(`Loading level [${id}] from ${levelEntry.path}`);
+            const response = await fetch(levelEntry.path);
+            const data: LevelData = await response.json();
+
+            // 1. Set Map Mode
+            this.mapSystem.setMode(data.mapMode as MapShape);
+
+            // 2. Load Structures
+            this.resourceSystem.loadLevelData(data.structures);
+
+        } catch (e) {
+            console.error(`LevelManager: Failed to load level data for ${id}`, e);
+        }
     }
 }
