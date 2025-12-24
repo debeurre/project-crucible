@@ -2,8 +2,8 @@
   "id": "room1",
   "mapMode": "ROOM1",
   "structures": [
-    { "type": "CASTLE", "x": 400, "y": 300, "energy": 100 },
-    { "type": "BUSH", "x": 100, "y": 100 },
-    { "type": "BUSH", "x": 700, "y": 500 }
+    { "type": "CASTLE", "x": 0.5, "y": 0.5, "relative": true, "energy": 100 },
+    { "type": "BUSH", "x": 0.4, "y": 0.4, "relative": true },
+    { "type": "BUSH", "x": 0.6, "y": 0.6, "relative": true }
   ]
 }
