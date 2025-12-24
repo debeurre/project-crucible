@@ -117,7 +117,7 @@ export class InputController {
         const mx = this.inputState.mousePosition.x;
         const my = this.inputState.mousePosition.y;
         
-        const heartPos = this.resourceSystem.getHeartPosition();
+        const heartPos = this.resourceSystem.getCastlePosition();
 
         if (isDown) {
             this.maxTouches = Math.max(this.maxTouches, this.inputState.touchCount);
@@ -141,7 +141,7 @@ export class InputController {
             const dy = my - heartPos.y;
             const distSq = dx*dx + dy*dy;
 
-            if (distSq < CONFIG.CRUCIBLE_RADIUS**2) {
+            if (distSq < CONFIG.CASTLE_RADIUS**2) {
                 this.interactionMode = 'CRUCIBLE';
                 this.isCrucibleMode = true;
             } else {

@@ -36,7 +36,7 @@ export class SprigSystem {
     private states: Uint8Array;
     private workTimers: Float32Array;
     private targets: Int32Array; // EntityID or NodeID
-    private teams: Uint8Array; // 0 = Player, 1 = Germ
+    private teams: Uint8Array; // 0 = Player, 1 = Invader
 
     // Spatial Hash Grid
     private gridHead: Int32Array;
@@ -174,7 +174,7 @@ export class SprigSystem {
         const i = this.activeSprigCount; 
 
         // Spawn at random angle around the crucible with padding (only if player?)
-        // If Germ (team 1), maybe spawn at x,y directly?
+        // If Invader (team 1), maybe spawn at x,y directly?
         // Logic: spawnSprig(x,y) spawns AT x,y but maybe with scatter?
         // Existing logic used scatter around crucible.
         // I'll keep scatter logic but center on x,y.
@@ -207,7 +207,7 @@ export class SprigSystem {
         this.sprigContainers[i].visible = true;
         
         if (team === 1) {
-            this.sprigBodySprites[i].tint = 0x808080; // Grey for Germs
+            this.sprigBodySprites[i].tint = 0x808080; // Grey for Invaders
         } else {
             this.sprigBodySprites[i].tint = CONFIG.SPRIG_COLOR;
         }
@@ -234,9 +234,9 @@ export class SprigSystem {
                 continue;
             }
 
-            // 2. Germ Logic
+            // 2. Invader Logic
             if (this.teams[i] === 1) {
-                this.applyGermLogic(i);
+                this.applyInvaderLogic(i);
                 if (i >= this.activeSprigCount) { i--; continue; } // Sprig removed
                 this.updatePosition(i, dt);
                 this.updateVisuals(i);
@@ -297,7 +297,7 @@ export class SprigSystem {
             case SprigState.HAULING:
                 const onRoad = this.applyStickyRoadMovement(i);
                 if (!onRoad) {
-                    const heart = this.resourceSystem.getHeartPosition();
+                    const heart = this.resourceSystem.getCastlePosition();
                     this.seek(i, heart.x, heart.y, 1.0);
                 }
                 break;
@@ -316,12 +316,12 @@ export class SprigSystem {
         }
     }
 
-    private applyGermLogic(i: number) {
-        const heart = this.resourceSystem.getHeartPosition();
+    private applyInvaderLogic(i: number) {
+        const heart = this.resourceSystem.getCastlePosition();
         this.seek(i, heart.x, heart.y, 0.5);
         
-        if (this.resourceSystem.isInsideHeart(this.positionsX[i], this.positionsY[i])) {
-             this.resourceSystem.feedHeart(-20);
+        if (this.resourceSystem.isInsideCastle(this.positionsX[i], this.positionsY[i])) {
+             this.resourceSystem.feedCastle(-20);
              this.removeSprig(i);
         }
     }
@@ -735,7 +735,7 @@ export class SprigSystem {
             bodySprite.tint = CONFIG.SPRIG_FLASH_COLOR;
             this.flashTimers[idx]--;
         } else if (this.teams[idx] === 1) {
-            bodySprite.tint = 0x808080; // Germ Grey
+            bodySprite.tint = 0x808080; // Invader Grey
         } else {
             // Use Intent Color if present, else Default
             const intentId = this.intents[idx];

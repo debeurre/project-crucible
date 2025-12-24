@@ -40,12 +40,12 @@ export const CONFIG = {
       CONTRAST_AMOUNT: 5,         // High contrast to sharpen blur into blobs
   },
 
-  // Crucible (Sink)
-  CRUCIBLE_RADIUS: 25,
-  CRUCIBLE_COLOR: 0xFFD700, // Gold
-  CRUCIBLE_SPAWN_PADDING: 20, // Distance from crucible edge to spawn sprigs
+  // Castle (Sink)
+  CASTLE_RADIUS: 25,
+  CASTLE_COLOR: 0xFFD700, // Gold
+  CASTLE_SPAWN_PADDING: 20, // Distance from castle edge to spawn sprigs
   
-  CRUCIBLE_ANIMATION: {
+  CASTLE_ANIMATION: {
     TAP_SQUEEZE_FACTOR: 0.3, // How much to squeeze (1.0 - factor)
     TAP_DURATION_MS: 200,    // Length of tap animation
     HOLD_SQUEEZE_FACTOR: 0.15, 
@@ -139,12 +139,10 @@ export const CONFIG = {
       fillStyle: 'hachure',
       hachureGap: 4
     },
-    CRUCIBLE: {
+    CASTLE: {
       roughness: 1.5,
-      strokeWidth: 2,
-      fillStyle: 'zigzag',
-      hachureGap: 6,
-      hachureAngle: 45
+      strokeWidth: 3,
+      fillStyle: 'solid'
     }
   } as const
 };

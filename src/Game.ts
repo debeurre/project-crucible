@@ -1,4 +1,3 @@
-import { ToolOverlaySystem } from './systems/ToolOverlaySystem';
 import { Application, Graphics, Container, Ticker } from 'pixi.js';
 import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
@@ -11,6 +10,7 @@ import { FloatingTextSystem } from './systems/FloatingTextSystem';
 import { GraphSystem } from './systems/GraphSystem';
 import { MovementPathSystem } from './systems/MovementPathSystem';
 import { SystemManager } from './systems/SystemManager';
+import { ToolOverlaySystem } from './systems/ToolOverlaySystem';
 import { InputController } from './InputController';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
@@ -44,7 +44,7 @@ export class Game {
 
     // State
     private score = 0;
-    private germTimer = 0;
+    private invaderTimer = 0;
     
     // Animation State
     private tapAnimProgress = 1.0;
@@ -201,7 +201,7 @@ export class Game {
         
         this.systemManager.resize(this.app.screen.width, this.app.screen.height);
         
-        // const heartPos = this.resourceSystem.getHeartPosition();
+        // const heartPos = this.resourceSystem.getCastlePosition();
         // this.inputController.updateCruciblePosition(heartPos.x, heartPos.y);
         // InputController now queries ResourceSystem directly
         
@@ -211,10 +211,10 @@ export class Game {
     private update(ticker: Ticker) {
         this.inputController.update(ticker);
         
-        // Germ Spawner
-        this.germTimer += ticker.deltaMS / 1000;
-        if (this.germTimer >= 15) {
-            this.germTimer = 0;
+        // Invader Spawner
+        this.invaderTimer += ticker.deltaMS / 1000;
+        if (this.invaderTimer >= 15) {
+            this.invaderTimer = 0;
             const angle = Math.random() * Math.PI * 2;
             const dist = Math.max(this.app.screen.width, this.app.screen.height) * 0.6;
             const gx = this.app.screen.width/2 + Math.cos(angle) * dist;
@@ -255,14 +255,14 @@ export class Game {
             }
 
             // Dropoff
-            if (this.sprigSystem.isCarrying(i) && this.resourceSystem.isInsideHeart(sprigBounds.x, sprigBounds.y)) {
+            if (this.sprigSystem.isCarrying(i) && this.resourceSystem.isInsideCastle(sprigBounds.x, sprigBounds.y)) {
                 this.sprigSystem.setCargo(i, 0);
                 this.score++;
-                this.resourceSystem.feedHeart(10);
+                this.resourceSystem.feedCastle(10);
                 this.updateUI();
                 
                 // Spawn Floating Text (+1 Pop)
-                const heartPos = this.resourceSystem.getHeartPosition();
+                const heartPos = this.resourceSystem.getCastlePosition();
                 this.floatingTextSystem.spawn(
                     heartPos.x, 
                     heartPos.y, 
@@ -291,25 +291,25 @@ export class Game {
 
         // 1. Tap Animation (Priority)
         if (this.tapAnimProgress < 1.0) {
-            this.tapAnimProgress += ticker.deltaMS / CONFIG.CRUCIBLE_ANIMATION.TAP_DURATION_MS;
+            this.tapAnimProgress += ticker.deltaMS / CONFIG.CASTLE_ANIMATION.TAP_DURATION_MS;
             if (this.tapAnimProgress > 1.0) this.tapAnimProgress = 1.0;
             const t = Math.sin(this.tapAnimProgress * Math.PI); 
-            scaleX = 1.0 - (t * CONFIG.CRUCIBLE_ANIMATION.TAP_SQUEEZE_FACTOR); 
+            scaleX = 1.0 - (t * CONFIG.CASTLE_ANIMATION.TAP_SQUEEZE_FACTOR); 
         } 
         // 2. Hold Animation (Rhythmic)
         else if (this.inputController.isCrucibleMode && (performance.now() - this.inputController.lastInputDownTime) >= CONFIG.TAP_THRESHOLD_MS) {
-            const phaseInc = (ticker.deltaMS / CONFIG.CRUCIBLE_ANIMATION.HOLD_CYCLE_DURATION_MS) * 2 * Math.PI;
+            const phaseInc = (ticker.deltaMS / CONFIG.CASTLE_ANIMATION.HOLD_CYCLE_DURATION_MS) * 2 * Math.PI;
             this.holdAnimPhase += phaseInc;
             const t = (Math.sin(this.holdAnimPhase) + 1) / 2;
-            scaleX = 1.0 - (t * CONFIG.CRUCIBLE_ANIMATION.HOLD_SQUEEZE_FACTOR);
+            scaleX = 1.0 - (t * CONFIG.CASTLE_ANIMATION.HOLD_SQUEEZE_FACTOR);
         }
         else {
              this.holdAnimPhase = 0;
         }
         
         const scaleY = 1.0 / Math.max(0.1, scaleX); 
-        if (this.resourceSystem.heartSprite) {
-            this.resourceSystem.heartSprite.scale.set(scaleX, scaleY);
+        if (this.resourceSystem.castleSprite) {
+            this.resourceSystem.castleSprite.scale.set(scaleX, scaleY);
         }
     }
 
