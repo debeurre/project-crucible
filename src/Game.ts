@@ -15,6 +15,8 @@ import { InputController } from './InputController';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
+import { LevelManager } from './systems/LevelManager';
+import { MapShape } from './types/MapTypes';
 
 export class Game {
     private app: Application;
@@ -32,6 +34,7 @@ export class Game {
     private graphSystem: GraphSystem;
     private movementPathSystem: MovementPathSystem;
     private toolOverlaySystem: ToolOverlaySystem;
+    private levelManager: LevelManager;
     
     private toolManager: ToolManager;
     private inputState: InputState;
@@ -72,6 +75,12 @@ export class Game {
         // SprigSystem needs MovementPathSystem
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem, this.resourceSystem);
 
+        // Level Manager
+        this.levelManager = new LevelManager(this.mapSystem, this.resourceSystem);
+        this.levelManager.init().then(() => {
+            this.levelManager.loadLevel('room0');
+        });
+
         // Register Systems
         this.systemManager.addSystem(this.mapSystem);
         this.systemManager.addSystem(this.flowFieldSystem);
@@ -92,11 +101,12 @@ export class Game {
                 this.toolManager.setActiveIntent(intent);
             },
             (mode) => {
-                this.mapSystem.setMode(mode);
-                this.resourceSystem.spawnRandomly(); 
+                const levelId = mode === MapShape.ROOM1 ? 'room1' : 'room0';
+                this.levelManager.loadLevel(levelId);
+                
                 this.sprigSystem.clearAll();
                 this.flowFieldSystem.clearAll();
-                this.graphSystem.clearAll(); // Also clear graph
+                this.graphSystem.clearAll();
                 this.toolbar.setMapMode(mode);
             }
         );
@@ -296,7 +306,9 @@ export class Game {
         }
         
         const scaleY = 1.0 / Math.max(0.1, scaleX); 
-        this.resourceSystem.heartSprite.scale.set(scaleX, scaleY);
+        if (this.resourceSystem.heartSprite) {
+            this.resourceSystem.heartSprite.scale.set(scaleX, scaleY);
+        }
     }
 
     private updateUI() {

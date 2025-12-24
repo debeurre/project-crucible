@@ -3,75 +3,92 @@ import { CONFIG } from '../config';
 import { TextureFactory } from './TextureFactory';
 import { MapSystem } from './MapSystem';
 import { ISystem } from './ISystem';
-import { MapShape } from '../types/MapTypes';
 
 export class ResourceSystem implements ISystem {
     public container: Container; 
-    public resourceSprite: Sprite; // The Berry Bush
-    public heartSprite: Sprite;    // The Castle (Sink)
+    public heartSprite: Sprite | null = null;    // The Castle (Sink)
+    public sourceSprites: Sprite[] = [];         // Berry Bushes
     
     private app: Application;
-    private mapSystem: MapSystem;
     
-    private nodePosition: Point; // Berry Bush Pos
-    private heartPosition: Point; // Castle Pos
+    private heartPosition: Point = new Point(0, 0); 
+    private sourcePositions: Point[] = [];
     
     private heartEnergy: number = 100;
     private readonly MAX_ENERGY: number = 100;
-    private readonly DRAIN_RATE: number = 1; // 1 per second per spec
+    private readonly DRAIN_RATE: number = 1; 
     
     private energyBar: Graphics;
 
-    constructor(app: Application, mapSystem: MapSystem) {
+    constructor(app: Application, _mapSystem: MapSystem) {
         this.app = app;
-        this.mapSystem = mapSystem;
         this.container = new Container();
-        
-        // 1. Berry Bush (Source)
-        this.nodePosition = new Point(
-            app.screen.width * 0.25,
-            app.screen.height * 0.5
-        );
-        const resourceTex = TextureFactory.getResourceNodeTexture(app.renderer);
-        this.resourceSprite = new Sprite(resourceTex);
-        this.resourceSprite.anchor.set(0.5);
-        this.resourceSprite.tint = CONFIG.RESOURCE_NODE_COLOR;
-        
-        // 2. Castle (Sink)
-        this.heartPosition = new Point(
-            app.screen.width * 0.5,
-            app.screen.height * 0.5
-        );
-        const heartTex = TextureFactory.getCrucibleTexture(app.renderer);
-        this.heartSprite = new Sprite(heartTex);
-        this.heartSprite.anchor.set(0.5);
-        this.heartSprite.tint = CONFIG.CRUCIBLE_COLOR;
-        
-        // 3. Energy Bar
         this.energyBar = new Graphics();
-        this.heartSprite.addChild(this.energyBar);
+    }
 
-        this.container.addChild(this.resourceSprite);
-        this.container.addChild(this.heartSprite);
+    public loadLevelData(structures: any[]) {
+        // Clear existing
+        this.container.removeChildren();
+        this.sourceSprites = [];
+        this.sourcePositions = [];
+        this.heartSprite = null;
+        
+        const { width, height } = this.app.screen;
 
-        this.updateVisuals();
+        structures.forEach(struct => {
+            let x = struct.x;
+            let y = struct.y;
+            
+            if (struct.relative) {
+                x *= width;
+                y *= height;
+            }
 
-        // Handle resize
-        this.app.renderer.on('resize', this.resize.bind(this));
-        this.resize(this.app.screen.width, this.app.screen.height);
+            if (struct.type === 'CASTLE') {
+                const heartTex = TextureFactory.getCrucibleTexture(this.app.renderer);
+                this.heartSprite = new Sprite(heartTex);
+                this.heartSprite.anchor.set(0.5);
+                this.heartSprite.tint = CONFIG.CRUCIBLE_COLOR;
+                this.heartSprite.x = x;
+                this.heartSprite.y = y;
+                
+                this.heartPosition.set(x, y);
+                
+                // Add Bar to Heart
+                this.energyBar.clear();
+                this.heartSprite.addChild(this.energyBar);
+                
+                this.container.addChild(this.heartSprite);
+            
+            } else if (struct.type === 'RESOURCE_NODE') {
+                const resourceTex = TextureFactory.getResourceNodeTexture(this.app.renderer);
+                const sprite = new Sprite(resourceTex);
+                sprite.anchor.set(0.5);
+                sprite.tint = CONFIG.RESOURCE_NODE_COLOR;
+                sprite.x = x;
+                sprite.y = y;
+                sprite.rotation = CONFIG.RESOURCE_NODE_ROTATION; // Or random?
+
+                this.sourceSprites.push(sprite);
+                this.sourcePositions.push(new Point(x, y));
+                this.container.addChild(sprite);
+            }
+        });
+        
+        this.heartEnergy = this.MAX_ENERGY; // Reset energy
     }
     
     public update(ticker: Ticker) {
-        const dt = ticker.deltaTime / 60; // Seconds
+        const dt = ticker.deltaTime / 60; 
         
-        // Drain Energy
-        if (this.heartEnergy > 0) {
-            this.heartEnergy -= this.DRAIN_RATE * dt;
-            if (this.heartEnergy < 0) this.heartEnergy = 0;
+        if (this.heartSprite) {
+            // Drain Energy
+            if (this.heartEnergy > 0) {
+                this.heartEnergy -= this.DRAIN_RATE * dt;
+                if (this.heartEnergy < 0) this.heartEnergy = 0;
+            }
+            this.drawEnergyBar();
         }
-        
-        // Update Bar
-        this.drawEnergyBar();
     }
 
     public feedHeart(amount: number = 10) {
@@ -79,30 +96,8 @@ export class ResourceSystem implements ISystem {
         if (this.heartEnergy > this.MAX_ENERGY) this.heartEnergy = this.MAX_ENERGY;
     }
 
-    public spawnRandomly() {
-        if (this.mapSystem.getMode() === MapShape.ROOM1) {
-            this.container.visible = false;
-            return;
-        }
-        this.container.visible = true;
-
-        const padding = CONFIG.RESOURCE_NODE_RADIUS + CONFIG.RESOURCE_NODE_SPAWN_MARGIN;
-        const newPos = this.mapSystem.getRandomPoint(padding);
-        
-        this.nodePosition.copyFrom(newPos);
-        this.updateVisuals();
-    }
-
-    private updateVisuals() {
-        this.resourceSprite.x = this.nodePosition.x;
-        this.resourceSprite.y = this.nodePosition.y;
-        this.resourceSprite.rotation = CONFIG.RESOURCE_NODE_ROTATION;
-        
-        this.heartSprite.x = this.heartPosition.x;
-        this.heartSprite.y = this.heartPosition.y;
-    }
-    
     private drawEnergyBar() {
+        if (!this.heartSprite) return;
         this.energyBar.clear();
         const width = 40;
         const height = 6;
@@ -116,42 +111,38 @@ export class ResourceSystem implements ISystem {
         this.energyBar.rect(-width/2 + 1, -39, (width - 2) * pct, height - 2).fill(color);
     }
 
-    public getPosition(): Point {
-        return this.nodePosition;
-    }
-    
     public getHeartPosition(): Point {
         return this.heartPosition;
     }
 
     public isInside(x: number, y: number): boolean {
-        // Simple circle check from center of Berry Bush
-        const dx = x - this.nodePosition.x;
-        const dy = y - this.nodePosition.y;
-        return (dx * dx + dy * dy) < CONFIG.RESOURCE_NODE_RADIUS**2;
+        return this.isNearSource(x, y);
     }
 
     public isNearSource(x: number, y: number, radius: number = 40): boolean {
-        const dx = x - this.nodePosition.x;
-        const dy = y - this.nodePosition.y;
-        return (dx * dx + dy * dy) < (CONFIG.RESOURCE_NODE_RADIUS + radius)**2;
+        // Check closest source
+        const rSq = (CONFIG.RESOURCE_NODE_RADIUS + radius)**2;
+        
+        for (const pos of this.sourcePositions) {
+            const dx = x - pos.x;
+            const dy = y - pos.y;
+            if (dx*dx + dy*dy < rSq) return true;
+        }
+        return false;
     }
 
     public harvestSource(x: number, y: number): boolean {
-        // Validation logic (e.g. cooldowns?)
-        // For now, infinite resource, instant success if near.
         return this.isNearSource(x, y);
     }
 
     public isInsideHeart(x: number, y: number): boolean {
+        if (!this.heartSprite) return false;
         const dx = x - this.heartPosition.x;
         const dy = y - this.heartPosition.y;
         return (dx * dx + dy * dy) < CONFIG.CRUCIBLE_RADIUS**2;
     }
 
-    public resize(width: number, height: number) {
-        this.heartPosition.set(width * 0.5, height * 0.5);
-        this.nodePosition.set(width * 0.25, height * 0.5);
-        this.updateVisuals();
+    public resize() {
+        // Structure positions are currently absolute/relative on load and don't dynamically scale yet.
     }
 }

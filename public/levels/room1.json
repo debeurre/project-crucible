@@ -1,0 +1,13 @@
+{
+  "id": "room1",
+  "map": {
+    "shape": "ROOM1",
+    "width": 1600,
+    "height": 800
+  },
+  "structures": [
+    { "type": "CASTLE", "x": 0.5, "y": 0.5, "relative": true },
+    { "type": "RESOURCE_NODE", "x": 0.1, "y": 0.1, "relative": true },
+    { "type": "RESOURCE_NODE", "x": 0.9, "y": 0.9, "relative": true }
+  ]
+}
