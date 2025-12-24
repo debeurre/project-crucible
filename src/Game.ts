@@ -1,3 +1,4 @@
+import { ToolOverlaySystem } from './systems/ToolOverlaySystem';
 import { Application, Graphics, Container, Ticker } from 'pixi.js';
 import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
@@ -10,7 +11,6 @@ import { FloatingTextSystem } from './systems/FloatingTextSystem';
 import { GraphSystem } from './systems/GraphSystem';
 import { MovementPathSystem } from './systems/MovementPathSystem';
 import { SystemManager } from './systems/SystemManager';
-import { ToolOverlaySystem } from './systems/ToolOverlaySystem';
 import { InputController } from './InputController';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { Toolbar } from './ui/Toolbar';
@@ -129,7 +129,8 @@ export class Game {
             this.visualEffects,
             this.flowFieldSystem,
             this.graphSystem,
-            this.debugOverlay
+            this.debugOverlay,
+            this.resourceSystem
         );
 
         this.inputController.onCrucibleTap = () => {
@@ -200,8 +201,9 @@ export class Game {
         
         this.systemManager.resize(this.app.screen.width, this.app.screen.height);
         
-        const heartPos = this.resourceSystem.getHeartPosition();
-        this.inputController.updateCruciblePosition(heartPos.x, heartPos.y);
+        // const heartPos = this.resourceSystem.getHeartPosition();
+        // this.inputController.updateCruciblePosition(heartPos.x, heartPos.y);
+        // InputController now queries ResourceSystem directly
         
         this.toolbar.resize(this.app.screen.width, this.app.screen.height);
     }

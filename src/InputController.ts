@@ -9,6 +9,7 @@ import { GraphSystem } from './systems/GraphSystem';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { CONFIG } from './config';
 import { TaskIntent } from './types/GraphTypes';
+import { ResourceSystem } from './systems/ResourceSystem';
 
 export class InputController {
     private inputState: InputState;
@@ -26,16 +27,13 @@ export class InputController {
     private interactionMode: 'NONE' | 'CRUCIBLE' | 'TOOL' = 'NONE';
     private spawnTimer = 0;
     
-    // Crucible Position (Assumed centered for now, or passed in)
-    private crucibleX = 0;
-    private crucibleY = 0;
-
     // Animation State Accessors
     public lastInputDownTime = 0;
     public isCrucibleMode = false;
     
     public onCrucibleTap?: () => void;
     public onUIUpdate?: () => void;
+    private resourceSystem: ResourceSystem;
 
     constructor(
         inputState: InputState,
@@ -45,7 +43,8 @@ export class InputController {
         visualEffects: VisualEffects,
         flowFieldSystem: FlowFieldSystem,
         graphSystem: GraphSystem,
-        debugOverlay: DebugOverlay
+        debugOverlay: DebugOverlay,
+        resourceSystem: ResourceSystem
     ) {
         this.inputState = inputState;
         this.toolManager = toolManager;
@@ -54,11 +53,7 @@ export class InputController {
         this.flowFieldSystem = flowFieldSystem;
         this.graphSystem = graphSystem;
         this.debugOverlay = debugOverlay;
-    }
-
-    public updateCruciblePosition(x: number, y: number) {
-        this.crucibleX = x;
-        this.crucibleY = y;
+        this.resourceSystem = resourceSystem;
     }
 
     public update(ticker: Ticker) {
@@ -121,6 +116,8 @@ export class InputController {
         const now = performance.now();
         const mx = this.inputState.mousePosition.x;
         const my = this.inputState.mousePosition.y;
+        
+        const heartPos = this.resourceSystem.getHeartPosition();
 
         if (isDown) {
             this.maxTouches = Math.max(this.maxTouches, this.inputState.touchCount);
@@ -140,8 +137,8 @@ export class InputController {
             this.maxTouches = this.inputState.touchCount; 
             
             // Interaction Mode Logic
-            const dx = mx - this.crucibleX;
-            const dy = my - this.crucibleY;
+            const dx = mx - heartPos.x;
+            const dy = my - heartPos.y;
             const distSq = dx*dx + dy*dy;
 
             if (distSq < CONFIG.CRUCIBLE_RADIUS**2) {
@@ -162,7 +159,7 @@ export class InputController {
                     this.spawnTimer += ticker.deltaMS / 1000;
                     const spawnInterval = 1 / CONFIG.SPRIGS_PER_SECOND_HELD;
                     while (this.spawnTimer >= spawnInterval) {
-                        this.sprigSystem.spawnSprig(this.crucibleX, this.crucibleY);
+                        this.sprigSystem.spawnSprig(heartPos.x, heartPos.y);
                         this.spawnTimer -= spawnInterval;
                         if (this.onUIUpdate) this.onUIUpdate();
                     }
@@ -186,7 +183,7 @@ export class InputController {
                 const holdDuration = now - this.inputDownTime;
                 if (holdDuration < CONFIG.TAP_THRESHOLD_MS) {
                     for(let i=0; i<CONFIG.SPRIGS_PER_TAP; i++) {
-                         this.sprigSystem.spawnSprig(this.crucibleX, this.crucibleY);
+                         this.sprigSystem.spawnSprig(heartPos.x, heartPos.y);
                     }
                     if (this.onUIUpdate) this.onUIUpdate();
                     if (this.onCrucibleTap) this.onCrucibleTap();
