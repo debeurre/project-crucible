@@ -1,6 +1,7 @@
 {
+  "default": "room0",
   "levels": [
-    { "id": "room0", "name": "Debug Room", "file": "levels/room0.json" },
-    { "id": "room1", "name": "Test Room", "file": "levels/room1.json" }
+    { "id": "room0", "path": "levels/room0.json" },
+    { "id": "room1", "path": "levels/room1.json" }
   ]
 }

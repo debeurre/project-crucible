@@ -1,40 +1,60 @@
-# TEST ROOM PLAN: METABOLIC DRAIN (V1)
+# SPEC: TEST ROOM V1 (THE INFERENCE ENGINE)
 
-## 1. Goal & Success Criteria
-Validate the "Logistics Handshake" between specialized Sprigs and high-precision infrastructure.
-* **Success:** The Heart (Castle) is sustained by a continuous flow of berries transported via roads.
-* **Failure:** The Heart’s energy bar hits zero because the "Infection" (Germs) severed the supply line or the "Actors" (Sprigs) failed to coordinate.
+## 1. Design Goal
+Create a functional "Metabolic Loop" using **Generic Laborers** who infer their roles based on **Context** (Location + Inventory) rather than hard-coded types.
 
-## 2. World Layout & Static Assets
-The map is a "Single-Cell" layout focused on a single artery.
-* **The Heart (Home Base):** A **Brown Castle** at the center of the map. It possesses a `ResourceSink` component that drains energy every tick.
-* **The Source:** **Dark Green Berry Bushes** with **Pink Circles** located at the periphery.
-* **The Artery:** A **Yellow "Sticky Road"** connecting the Castle and the Berry Bushes. This path uses the refactored Pen logic to "hook" onto both building centers.
+## 2. The Resource System (The "Why")
+We need a reason for Sprigs to move.
+* **Castle Heart (`ResourceSink`):**
+    * **Logic:** Has `energy` (starts at 100). Drains 1 per second. Dies at 0.
+    * **Visual:** Brown Castle. Displays a simple floating text status (e.g., "Heart: 84%").
+    * **Interaction:** Absorbs "Pink Circles" (Resources) to restore +10 Energy.
+* **Berry Bush (`ResourceSource`):**
+    * **Logic:** Contains infinite resources but requires `workTime` (2.0s) to harvest.
+    * **Visual:** Dark Green Bush.
+    * **Interaction:** When a Sprig completes work, it spawns a "Pink Circle" `ResourceEntity` and gives it to the Sprig.
 
-## 3. The Actors (Mascot Logic)
-Units use localized seeking behavior and affinity-based prioritization.
+## 3. The Inference Engine (`SprigSystem` Refactor)
+Replace the dominant `applyFlowField` logic with a state-based decision tree.
 
-* **Cabbage (Green Circle):**
-    * **Behavior**: High affinity for **Green Brush Intents**.
-    * **Logic**: Automatically harvests the Berry Bushes and drops **Pink Circles** (Berries) at the road's endpoint.
-* **Chest (Yellow Square):**
-    * **Behavior**: High affinity for **Yellow Pen Roads**.
-    * **Logic**: Scans for Pink Circles at the bush-side road node, carries them along the "Sticky Road" to the Castle.
-* **Ingot (Red 45° Cross):**
-    * **Behavior**: **"White Blood Cell"** logic.
-    * **Logic**: Overrides all work tasks to patrol for Germs. Prioritizes threats within a radius of the Heart or the Road.
-* **Germ (Grey Circle w/ Red Eyes):**
-    * **Behavior**: **"Infection"** logic.
-    * **Logic**: Periodically spawns from the edge and moves strictly toward the Heart.
+### New State Component
+* `states`: Enum (`IDLE`, `HARVESTING`, `HAULING`, `FIGHTING`)
+* `timers`: Float (for harvest duration)
+* `targets`: EntityID (Road Node, Bush, or Enemy)
 
-## 4. Interaction Validation (Omni-Pencil)
-The Pencil acts as the manual override for this autonomous loop.
-* **Lasso Select**: Used to grab idle Ingots or redirect Chests.
-* **Path Order**: Direct move commands that override "Sticky Road" or "Brush Intent" logic.
-* **Emergency**: If the logistics line stalls, use the Pencil to manually group units and move them to the "Infection" source.
+### The Decision Logic (`checkContext`)
+Every update, a Sprig evaluates its reality:
 
-## 5. Implementation Steps
-1.  **Refactor Pen/Graph**: Implement building snapping and road point storage.
-2.  **Heart Component**: Add an energy drain variable and UI progress bar to the Castle node.
-3.  **Chest Logic**: Update the `SprigSystem` to allow Yellow affinity units to "lock" onto `GraphEdge.points` when carrying cargo.
-4.  **Moving Art V2**: Apply Rough.js sketchy textures to the Castle, Roads, and Sprigs to enhance the "Visual Pet" feel.
+**A. The "Hauler" Inference (I have stuff)**
+* **Trigger:** Inventory is Full (`cargos[i] == 1`).
+* **Action:**
+    1.  **Find Sink:** Target the Castle Heart.
+    2.  **Check Infrastructure:** Scan for a **Pen Tool Road** within `PERCEPTION_RADIUS`.
+    3.  **Movement:**
+        * *If near Road:* Snap to `edge.points` (from Pen Refactor) and traverse at 1.5x Speed (Conveyor Belt).
+        * *If off Road:* Use standard pathfinding to Castle.
+
+**B. The "Harvester" Inference (I am in a Work Zone)**
+* **Trigger:** Inventory Empty + Standing on **Green Brush Intent**.
+* **Action:**
+    1.  **Scan:** Look for `ResourceSource` (Bush) within `PERCEPTION_RADIUS`.
+    2.  **Move:** Go to Bush.
+    3.  **Work:** Enter `HARVESTING` state (freeze for 2s).
+    4.  **Result:** Receive Cargo -> State becomes `HAULING`.
+
+**C. The "Guard" Inference (I am in a Danger Zone)**
+* **Trigger:** Standing on **Red Brush Intent**.
+* **Action:**
+    1.  **Scan:** Look for `Germs` (Enemies).
+    2.  **Move:** Intercept.
+    3.  **Attack:** On contact, destroy Germ.
+
+**D. The "Wanderer" Fallback**
+* **Trigger:** None of the above.
+* **Action:** Default Boid flocking / Flow Field following (existing logic).
+
+## 4. Conflict V1 (Simple Spawns)
+* **Germ Spawner:** A simple timer in `Game.ts`.
+* **Logic:** Every 15 seconds, spawn 1 **Germ** (Grey Circle) at map edge.
+* **Behavior:** Germs pathfind directly to the **Castle Heart**.
+* **Consequence:** On contact, Castle takes -20 Energy damage.
