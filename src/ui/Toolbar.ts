@@ -78,6 +78,15 @@ export class Toolbar extends Container {
         this.setTool('PENCIL');
     }
 
+    private getMapLabel(mode: MapShape): string {
+        switch (mode) {
+            case MapShape.FULL: return 'ROOM0';
+            case MapShape.ROOM1: return 'ROOM1';
+            case MapShape.TEST_ROOM: return 'TEST';
+            default: return mode;
+        }
+    }
+
     private createMapButton(): Container {
         const btn = new Container();
         
@@ -94,7 +103,7 @@ export class Toolbar extends Container {
             fontWeight: 'bold',
             align: 'center'
         });
-        this.mapLabel = new Text({ text: 'FULL', style });
+        this.mapLabel = new Text({ text: 'ROOM0', style });
         this.mapLabel.anchor.set(0.5);
         this.mapLabel.x = 0; // Center
         btn.addChild(this.mapLabel);
@@ -134,16 +143,17 @@ export class Toolbar extends Container {
 
         modes.forEach((mode, i) => {
             const btn = new Container();
-            btn.y = -(i + 1) * itemHeight; // Stack upwards
-            btn.x = 0; // Centered relative to container
+            // Stack upwards, centering the button in its slot
+            btn.y = -((i * itemHeight) + (itemHeight / 2) + 5); 
+            btn.x = 0; 
 
-            const label = new Text({ text: mode, style: {
+            const label = new Text({ text: this.getMapLabel(mode), style: {
                 fontFamily: 'monospace',
                 fontSize: 12,
                 fill: 0xFFFFFF,
                 align: 'center'
             }});
-            label.anchor.set(0.5);
+            label.anchor.set(0.5, 0.5); // Ensure vertical center
             btn.addChild(label);
             
             // Hit area
@@ -169,8 +179,7 @@ export class Toolbar extends Container {
     }
 
     public setMapMode(mode: MapShape) {
-        this.mapLabel.text = mode;
-        // Don't redraw whole toolbar, just label
+        this.mapLabel.text = this.getMapLabel(mode);
     }
     
     // ... rest of createButton, createSwatches, icon drawers ...
