@@ -1,6 +1,6 @@
 {
   "id": "room1",
-  "mapMode": "TEST_ROOM",
+  "mapMode": "ROOM1",
   "structures": [
     { "type": "CASTLE", "x": 400, "y": 300, "energy": 100 },
     { "type": "BUSH", "x": 100, "y": 100 },

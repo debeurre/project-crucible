@@ -82,7 +82,6 @@ export class Toolbar extends Container {
         switch (mode) {
             case MapShape.FULL: return 'ROOM0';
             case MapShape.ROOM1: return 'ROOM1';
-            case MapShape.TEST_ROOM: return 'TEST';
             default: return mode;
         }
     }
