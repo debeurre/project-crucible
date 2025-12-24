@@ -38,6 +38,9 @@ export class MapSystem {
       case MapShape.ROOM1:
         this.foreground.rect(0, 0, width, height).fill(CONFIG.LAND_COLOR);
         break;
+      case MapShape.TEST_ROOM:
+        this.foreground.rect((width - 800) / 2, (height - 600) / 2, 800, 600).fill(0x333333);
+        break;
     }
   }
 
@@ -66,7 +69,7 @@ export class MapSystem {
         if (position.x > width) position.x -= width;
         if (position.y < 0) position.y += height;
         if (position.y > height) position.y -= height;
-     } else if (this.mode === MapShape.ROOM1) {
+     } else if (this.mode === MapShape.ROOM1 || this.mode === MapShape.TEST_ROOM) {
         const minX = radius;
         const maxX = width - radius;
         const minY = radius;

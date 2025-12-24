@@ -48,7 +48,7 @@ export class ResourceSystem implements ISystem {
                 const heartTex = TextureFactory.getCrucibleTexture(this.app.renderer);
                 this.heartSprite = new Sprite(heartTex);
                 this.heartSprite.anchor.set(0.5);
-                this.heartSprite.tint = CONFIG.CRUCIBLE_COLOR;
+                this.heartSprite.tint = 0x8B4513; // Brown Castle
                 this.heartSprite.x = x;
                 this.heartSprite.y = y;
                 
@@ -60,14 +60,14 @@ export class ResourceSystem implements ISystem {
                 
                 this.container.addChild(this.heartSprite);
             
-            } else if (struct.type === 'RESOURCE_NODE') {
+            } else if (struct.type === 'RESOURCE_NODE' || struct.type === 'BUSH' || struct.type === 'GENERIC') {
                 const resourceTex = TextureFactory.getResourceNodeTexture(this.app.renderer);
                 const sprite = new Sprite(resourceTex);
                 sprite.anchor.set(0.5);
-                sprite.tint = CONFIG.RESOURCE_NODE_COLOR;
+                sprite.tint = struct.type === 'BUSH' ? 0x006400 : CONFIG.RESOURCE_NODE_COLOR; // Dark Green for Bush
                 sprite.x = x;
                 sprite.y = y;
-                sprite.rotation = CONFIG.RESOURCE_NODE_ROTATION; // Or random?
+                sprite.rotation = CONFIG.RESOURCE_NODE_ROTATION;
 
                 this.sourceSprites.push(sprite);
                 this.sourcePositions.push(new Point(x, y));
@@ -76,6 +76,10 @@ export class ResourceSystem implements ISystem {
         });
         
         this.heartEnergy = this.MAX_ENERGY; // Reset energy
+    }
+    
+    public isInsideResource(x: number, y: number): boolean {
+        return this.isNearSource(x, y);
     }
     
     public update(ticker: Ticker) {
