@@ -74,39 +74,42 @@ export class TextureFactory {
     public static getResourceNodeTexture(_renderer: Renderer): Texture {
         if (this.resourceNodeTexture) return this.resourceNodeTexture;
 
-        const radius = CONFIG.RESOURCE_NODE_RADIUS;
-        const width = radius * 2;
-        const height = radius * 1.5;
-        const padding = 10;
+        const baseR = CONFIG.RESOURCE_NODE_RADIUS;
+        const leafD = baseR * 0.8; // Individual circle diameter
+        const leafR = leafD / 2;
+        
+        // Calculate canvas size to fit the staggered 2x2 grid
+        // Row 1: [0, leafD]
+        // Row 2: [leafR, leafD + leafR]
+        // Total Width approx 1.5 * leafD + buffer
+        const padding = 16;
+        const canvasW = leafD * 2.5 + padding;
+        const canvasH = leafD * 2 + padding;
         
         const canvas = document.createElement('canvas');
-        canvas.width = width + padding * 2;
-        canvas.height = height + padding * 2;
+        canvas.width = canvasW;
+        canvas.height = canvasH;
         
-            const rc = rough.canvas(canvas);
+        const rc = rough.canvas(canvas);
         
-        // Draw centered in canvas
+        const options = {
+            fill: '#ffffff',
+            ...CONFIG.ROUGHJS.RESOURCE_NODE,
+            stroke: 'none',
+            strokeWidth: 0
+        };
+
         const cx = canvas.width / 2;
         const cy = canvas.height / 2;
+
+        // Draw 4 circles in a staggered row pattern
+        // Row 1
+        rc.circle(cx - leafR, cy - leafR/2, leafD, options);
+        rc.circle(cx + leafR, cy - leafR/2, leafD, options);
         
-        const offset = radius * 0.5;
-        const w2 = width / 2;
-        const h2 = height / 2;
-
-        // Points relative to center
-        // TL, TR, BR, BL
-        const points: [number, number][] = [
-            [cx - w2, cy - h2],
-            [cx + w2, cy - h2],
-            [cx + w2 - offset, cy + h2],
-            [cx - w2 + offset, cy + h2]
-        ];
-
-        rc.polygon(points, {
-            fill: '#ffffff',
-            stroke: '#ffffff',
-            ...CONFIG.ROUGHJS.RESOURCE_NODE,
-        });
+        // Row 2 (Staggered right)
+        rc.circle(cx, cy + leafR/2, leafD, options);
+        rc.circle(cx + leafD, cy + leafR/2, leafD, options);
 
         this.resourceNodeTexture = Texture.from(canvas);
         return this.resourceNodeTexture;
