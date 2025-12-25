@@ -141,7 +141,8 @@ export class InputController {
             const dy = my - heartPos.y;
             const distSq = dx*dx + dy*dy;
 
-            if (distSq < CONFIG.CASTLE_RADIUS**2) {
+            // Only allow interaction if sink is CRUCIBLE (Yellow Circle)
+            if (this.resourceSystem.getSinkType() === 'CRUCIBLE' && distSq < CONFIG.CASTLE_RADIUS**2) {
                 this.interactionMode = 'CRUCIBLE';
                 this.isCrucibleMode = true;
             } else {

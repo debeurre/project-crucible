@@ -19,6 +19,7 @@ export class ResourceSystem implements ISystem {
     private readonly DRAIN_RATE: number = 1; 
     
     private energyBar: Graphics;
+    private sinkType: 'CASTLE' | 'CRUCIBLE' | 'NONE' = 'NONE';
 
     constructor(app: Application, _mapSystem: MapSystem) {
         this.app = app;
@@ -33,6 +34,7 @@ export class ResourceSystem implements ISystem {
         this.sourceSprites = [];
         this.sourcePositions = [];
         this.castleSprite = null;
+        this.sinkType = 'NONE';
         
         const { width, height } = this.app.screen;
 
@@ -46,6 +48,7 @@ export class ResourceSystem implements ISystem {
             }
 
             if (struct.type === 'CASTLE') {
+                this.sinkType = 'CASTLE';
                 const castleTex = TextureFactory.getCastleTexture(this.app.renderer);
                 this.castleSprite = new Sprite(castleTex);
                 this.castleSprite.anchor.set(0.5);
@@ -62,6 +65,7 @@ export class ResourceSystem implements ISystem {
                 this.container.addChild(this.castleSprite);
             
             } else if (struct.type === 'CRUCIBLE') {
+                this.sinkType = 'CRUCIBLE';
                 const crucibleTex = TextureFactory.getCrucibleTexture(this.app.renderer);
                 this.castleSprite = new Sprite(crucibleTex);
                 this.castleSprite.anchor.set(0.5);
@@ -132,6 +136,10 @@ export class ResourceSystem implements ISystem {
 
     public getCastlePosition(): Point {
         return this.castlePosition;
+    }
+
+    public getSinkType(): 'CASTLE' | 'CRUCIBLE' | 'NONE' {
+        return this.sinkType;
     }
 
     public isInside(x: number, y: number): boolean {

@@ -309,7 +309,7 @@ export class Game {
         }
         
         const scaleY = 1.0 / Math.max(0.1, scaleX); 
-        if (this.resourceSystem.castleSprite) {
+        if (this.resourceSystem.castleSprite && this.resourceSystem.getSinkType() === 'CRUCIBLE') {
             this.resourceSystem.castleSprite.scale.set(scaleX, scaleY);
         }
     }
