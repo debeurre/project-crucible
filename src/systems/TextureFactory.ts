@@ -116,21 +116,61 @@ export class TextureFactory {
         if (this.castleTexture) return this.castleTexture;
 
         const r = CONFIG.CASTLE_RADIUS;
-        const size = r * 2 + 16;
+        const w = r * 2;
+        // Height: Base (r) + Tower (r) + Flag (r) + Padding
+        const h = r * 3; 
+        const padding = 8;
         
         const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
+        canvas.width = w + padding * 2;
+        canvas.height = h + padding * 2;
         
         const rc = rough.canvas(canvas);
         
-        // Draw Castle (Square for now)
-        const padding = 8;
-        const w = r * 2;
-        rc.rectangle(padding, padding, w, w, {
+        // Coordinates (0,0 is top left of drawing area)
+        const cx = canvas.width / 2;
+        const bottomY = canvas.height - padding;
+        const baseTopY = bottomY - r;
+        const towerTopY = baseTopY - r;
+        
+        // 1. Base Rect
+        rc.rectangle(cx - r, baseTopY, w, r, {
             fill: '#ffffff', 
             stroke: '#ffffff',
             ...CONFIG.ROUGHJS.CASTLE,
+        });
+
+        // 2. Tower Rect
+        rc.rectangle(cx - r/2, towerTopY, r, r, {
+            fill: '#ffffff', 
+            stroke: '#ffffff',
+            ...CONFIG.ROUGHJS.CASTLE,
+        });
+
+        // 3. Door (Black)
+        const doorW = r / 2;
+        const doorH = r / 2;
+        rc.rectangle(cx - doorW/2, bottomY - doorH, doorW, doorH, {
+            fill: '#000000',
+            fillStyle: 'solid',
+            stroke: '#000000',
+            roughness: 1
+        });
+
+        // 4. Flag
+        const poleTopY = towerTopY - r;
+        // Pole
+        rc.line(cx, towerTopY, cx, poleTopY, { stroke: '#ffffff', strokeWidth: 2, roughness: 1 });
+        // Pennant (Triangle)
+        rc.polygon([
+            [cx, poleTopY],
+            [cx + r/1.5, poleTopY + r/4],
+            [cx, poleTopY + r/2]
+        ], {
+            fill: '#ffffff',
+            fillStyle: 'solid',
+            stroke: '#ffffff',
+            roughness: 1
         });
 
         this.castleTexture = Texture.from(canvas);
