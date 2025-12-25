@@ -7,6 +7,7 @@ import { ISystem } from './ISystem';
 export class ResourceSystem implements ISystem {
     public container: Container; 
     public castleSprite: Sprite | null = null;    // The Castle (Sink)
+    private castleContainer: Container | null = null; // Container for Sprite + UI
     public sourceSprites: Sprite[] = [];         // Berry Bushes
     
     private app: Application;
@@ -34,6 +35,7 @@ export class ResourceSystem implements ISystem {
         this.sourceSprites = [];
         this.sourcePositions = [];
         this.castleSprite = null;
+        this.castleContainer = null;
         this.sinkType = 'NONE';
         
         const { width, height } = this.app.screen;
@@ -53,16 +55,21 @@ export class ResourceSystem implements ISystem {
                 this.castleSprite = new Sprite(castleTex);
                 this.castleSprite.anchor.set(0.5);
                 this.castleSprite.tint = CONFIG.CASTLE_COLOR; // Brown
-                this.castleSprite.x = x;
-                this.castleSprite.y = y;
+                this.castleSprite.x = 0;
+                this.castleSprite.y = 0;
+                
+                this.castleContainer = new Container();
+                this.castleContainer.x = x;
+                this.castleContainer.y = y;
                 
                 this.castlePosition.set(x, y);
                 
-                // Add Bar to Castle
+                // Add Bar to Container (sibling to sprite)
                 this.energyBar.clear();
-                this.castleSprite.addChild(this.energyBar);
+                this.castleContainer.addChild(this.castleSprite);
+                this.castleContainer.addChild(this.energyBar);
                 
-                this.container.addChild(this.castleSprite);
+                this.container.addChild(this.castleContainer);
             
             } else if (struct.type === 'CRUCIBLE') {
                 this.sinkType = 'CRUCIBLE';
@@ -70,18 +77,21 @@ export class ResourceSystem implements ISystem {
                 this.castleSprite = new Sprite(crucibleTex);
                 this.castleSprite.anchor.set(0.5);
                 this.castleSprite.tint = CONFIG.CRUCIBLE_COLOR; // Gold
-                this.castleSprite.x = x;
-                this.castleSprite.y = y;
+                this.castleSprite.x = 0;
+                this.castleSprite.y = 0;
+                
+                this.castleContainer = new Container();
+                this.castleContainer.x = x;
+                this.castleContainer.y = y;
                 
                 this.castlePosition.set(x, y);
                 
-                // Add Bar to Crucible (if desired, or maybe hidden for legacy?)
-                // The spec says "Heart logic".
-                // I'll keep the bar for both.
+                // Add Bar to Container (sibling to sprite)
                 this.energyBar.clear();
-                this.castleSprite.addChild(this.energyBar);
+                this.castleContainer.addChild(this.castleSprite);
+                this.castleContainer.addChild(this.energyBar);
                 
-                this.container.addChild(this.castleSprite);
+                this.container.addChild(this.castleContainer);
 
             } else if (struct.type === 'RESOURCE_NODE' || struct.type === 'BUSH' || struct.type === 'GENERIC') {
                 const resourceTex = TextureFactory.getResourceNodeTexture(this.app.renderer);
