@@ -78,7 +78,7 @@ export class Game {
         // Level Manager
         this.levelManager = new LevelManager(this.mapSystem, this.resourceSystem);
         this.levelManager.init().then(() => {
-            this.levelManager.loadLevel('room0');
+            this.loadLevel('room0');
         });
 
         // Register Systems
@@ -102,11 +102,7 @@ export class Game {
             },
             (mode) => {
                 const levelId = mode === MapShape.ROOM1 ? 'room1' : 'room0';
-                this.levelManager.loadLevel(levelId);
-                
-                this.sprigSystem.clearAll();
-                this.flowFieldSystem.clearAll();
-                this.graphSystem.clearAll();
+                this.loadLevel(levelId);
                 this.toolbar.setMapMode(mode);
             }
         );
@@ -153,6 +149,22 @@ export class Game {
         
         // Initial UI Update
         this.updateUI();
+    }
+
+    public async loadLevel(levelId: string) {
+        await this.levelManager.loadLevel(levelId);
+        
+        this.sprigSystem.clearAll();
+        this.flowFieldSystem.clearAll();
+        this.graphSystem.clearAll();
+        
+        // Spawn initial sprigs for room1
+        if (levelId === 'room1') {
+            const castlePos = this.resourceSystem.getCastlePosition();
+            for(let i=0; i<6; i++) {
+                this.sprigSystem.spawnSprig(castlePos.x, castlePos.y, 0);
+            }
+        }
     }
 
     private setupWorld() {
