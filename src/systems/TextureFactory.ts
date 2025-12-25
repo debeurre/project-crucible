@@ -6,7 +6,8 @@ export class TextureFactory {
     // Cache for generated textures
     private static sprigTextures: Texture[] = [];
     private static cargoTexture: Texture | null = null;
-    private static resourceNodeTexture: Texture | null = null;
+    private static bushTexture: Texture | null = null;
+    private static trapezoidTexture: Texture | null = null;
     private static castleTexture: Texture | null = null;
     private static crucibleTexture: Texture | null = null;
 
@@ -71,8 +72,8 @@ export class TextureFactory {
         return this.cargoTexture;
     }
 
-    public static getResourceNodeTexture(_renderer: Renderer): Texture {
-        if (this.resourceNodeTexture) return this.resourceNodeTexture;
+    public static getBushTexture(_renderer: Renderer): Texture {
+        if (this.bushTexture) return this.bushTexture;
 
         const baseR = CONFIG.RESOURCE_NODE_RADIUS;
         const leafD = baseR * 0.8; // Individual circle diameter
@@ -111,8 +112,46 @@ export class TextureFactory {
         rc.circle(cx, cy + leafR/2, leafD, options);
         rc.circle(cx + leafD, cy + leafR/2, leafD, options);
 
-        this.resourceNodeTexture = Texture.from(canvas);
-        return this.resourceNodeTexture;
+        this.bushTexture = Texture.from(canvas);
+        return this.bushTexture;
+    }
+
+    public static getTrapezoidTexture(_renderer: Renderer): Texture {
+        if (this.trapezoidTexture) return this.trapezoidTexture;
+
+        const radius = CONFIG.RESOURCE_NODE_RADIUS;
+        const width = radius * 2;
+        const height = radius * 1.5;
+        const padding = 10;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = width + padding * 2;
+        canvas.height = height + padding * 2;
+        
+        const rc = rough.canvas(canvas);
+        
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        
+        const offset = radius * 0.5;
+        const w2 = width / 2;
+        const h2 = height / 2;
+
+        const points: [number, number][] = [
+            [cx - w2, cy - h2],
+            [cx + w2, cy - h2],
+            [cx + w2 - offset, cy + h2],
+            [cx - w2 + offset, cy + h2]
+        ];
+
+        rc.polygon(points, {
+            fill: '#ffffff',
+            stroke: '#ffffff',
+            ...CONFIG.ROUGHJS.RESOURCE_NODE,
+        });
+
+        this.trapezoidTexture = Texture.from(canvas);
+        return this.trapezoidTexture;
     }
 
     public static getCastleTexture(_renderer: Renderer): Texture {

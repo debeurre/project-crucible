@@ -94,8 +94,14 @@ export class ResourceSystem implements ISystem {
                 this.container.addChild(this.castleContainer);
 
             } else if (struct.type === 'RESOURCE_NODE' || struct.type === 'BUSH' || struct.type === 'GENERIC') {
-                const resourceTex = TextureFactory.getResourceNodeTexture(this.app.renderer);
-                const sprite = new Sprite(resourceTex);
+                let tex;
+                if (struct.type === 'BUSH') {
+                    tex = TextureFactory.getBushTexture(this.app.renderer);
+                } else {
+                    tex = TextureFactory.getTrapezoidTexture(this.app.renderer);
+                }
+                
+                const sprite = new Sprite(tex);
                 sprite.anchor.set(0.5);
                 sprite.tint = struct.type === 'BUSH' ? 0x006400 : CONFIG.RESOURCE_NODE_COLOR;
                 sprite.x = x;
