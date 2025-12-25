@@ -154,9 +154,11 @@ export class Game {
     public async loadLevel(levelId: string) {
         await this.levelManager.loadLevel(levelId);
         
+        this.score = 0;
         this.sprigSystem.clearAll();
         this.flowFieldSystem.clearAll();
         this.graphSystem.clearAll();
+        this.updateUI();
         
         // Spawn initial sprigs for room1
         if (levelId === 'room1') {
