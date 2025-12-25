@@ -27,6 +27,7 @@ export class ResourceSystem implements ISystem {
     }
 
     public loadLevelData(structures: any[]) {
+        console.log('ResourceSystem loading structures:', structures);
         // Clear existing
         this.container.removeChildren();
         this.sourceSprites = [];

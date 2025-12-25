@@ -153,7 +153,7 @@ export class TextureFactory {
         
         rc.circle(size / 2, size / 2, d, {
             fill: '#ffffff', 
-            stroke: '#ffffff',
+            stroke: '#000000',
             ...CONFIG.ROUGHJS.CRUCIBLE,
         });
 
