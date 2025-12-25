@@ -8,6 +8,7 @@ export class TextureFactory {
     private static cargoTexture: Texture | null = null;
     private static resourceNodeTexture: Texture | null = null;
     private static castleTexture: Texture | null = null;
+    private static crucibleTexture: Texture | null = null;
 
     /**
      * Generates a set of wiggly sprig textures (frames for animation).
@@ -115,6 +116,31 @@ export class TextureFactory {
         if (this.castleTexture) return this.castleTexture;
 
         const r = CONFIG.CASTLE_RADIUS;
+        const size = r * 2 + 16;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        
+        const rc = rough.canvas(canvas);
+        
+        // Draw Castle (Square for now)
+        const padding = 8;
+        const w = r * 2;
+        rc.rectangle(padding, padding, w, w, {
+            fill: '#ffffff', 
+            stroke: '#ffffff',
+            ...CONFIG.ROUGHJS.CASTLE,
+        });
+
+        this.castleTexture = Texture.from(canvas);
+        return this.castleTexture;
+    }
+
+    public static getCrucibleTexture(_renderer: Renderer): Texture {
+        if (this.crucibleTexture) return this.crucibleTexture;
+
+        const r = CONFIG.CRUCIBLE_RADIUS;
         const d = r * 2;
         const padding = 8;
         const size = d + padding * 2;
@@ -128,10 +154,10 @@ export class TextureFactory {
         rc.circle(size / 2, size / 2, d, {
             fill: '#ffffff', 
             stroke: '#ffffff',
-            ...CONFIG.ROUGHJS.CASTLE,
+            ...CONFIG.ROUGHJS.CRUCIBLE,
         });
 
-        this.castleTexture = Texture.from(canvas);
-        return this.castleTexture;
+        this.crucibleTexture = Texture.from(canvas);
+        return this.crucibleTexture;
     }
 }

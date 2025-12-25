@@ -48,7 +48,7 @@ export class ResourceSystem implements ISystem {
                 const castleTex = TextureFactory.getCastleTexture(this.app.renderer);
                 this.castleSprite = new Sprite(castleTex);
                 this.castleSprite.anchor.set(0.5);
-                this.castleSprite.tint = CONFIG.CASTLE_COLOR;
+                this.castleSprite.tint = CONFIG.CASTLE_COLOR; // Brown
                 this.castleSprite.x = x;
                 this.castleSprite.y = y;
                 
@@ -60,6 +60,24 @@ export class ResourceSystem implements ISystem {
                 
                 this.container.addChild(this.castleSprite);
             
+            } else if (struct.type === 'CRUCIBLE') {
+                const crucibleTex = TextureFactory.getCrucibleTexture(this.app.renderer);
+                this.castleSprite = new Sprite(crucibleTex);
+                this.castleSprite.anchor.set(0.5);
+                this.castleSprite.tint = CONFIG.CRUCIBLE_COLOR; // Gold
+                this.castleSprite.x = x;
+                this.castleSprite.y = y;
+                
+                this.castlePosition.set(x, y);
+                
+                // Add Bar to Crucible (if desired, or maybe hidden for legacy?)
+                // The spec says "Heart logic".
+                // I'll keep the bar for both.
+                this.energyBar.clear();
+                this.castleSprite.addChild(this.energyBar);
+                
+                this.container.addChild(this.castleSprite);
+
             } else if (struct.type === 'RESOURCE_NODE' || struct.type === 'BUSH' || struct.type === 'GENERIC') {
                 const resourceTex = TextureFactory.getResourceNodeTexture(this.app.renderer);
                 const sprite = new Sprite(resourceTex);

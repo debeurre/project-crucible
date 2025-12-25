@@ -41,10 +41,15 @@ export const CONFIG = {
   },
 
   // Castle (Sink)
-  CASTLE_RADIUS: 25,
-  CASTLE_COLOR: 0xFFD700, // Gold
-  CASTLE_SPAWN_PADDING: 20, // Distance from castle edge to spawn sprigs
+  CASTLE_RADIUS: 30,
+  CASTLE_COLOR: 0x8B4513, // Brown
+  CASTLE_SPAWN_PADDING: 20,
   
+  // Crucible (Legacy Sink)
+  CRUCIBLE_RADIUS: 25,
+  CRUCIBLE_COLOR: 0xFFD700, // Gold
+  CRUCIBLE_SPAWN_PADDING: 20,
+
   CASTLE_ANIMATION: {
     TAP_SQUEEZE_FACTOR: 0.3, // How much to squeeze (1.0 - factor)
     TAP_DURATION_MS: 200,    // Length of tap animation
@@ -140,6 +145,12 @@ export const CONFIG = {
       hachureGap: 4
     },
     CASTLE: {
+      roughness: 1.5,
+      strokeWidth: 3,
+      fillStyle: 'hachure',
+      hachureGap: 4
+    },
+    CRUCIBLE: {
       roughness: 1.5,
       strokeWidth: 3,
       fillStyle: 'solid'
