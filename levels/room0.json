@@ -1,0 +1,8 @@
+{
+  "id": "room0",
+  "mapMode": "FULL",
+  "structures": [
+    { "type": "CRUCIBLE", "x": 0.5, "y": 0.5, "relative": true },
+    { "type": "RESOURCE_NODE", "x": 0.25, "y": 0.5, "relative": true }
+  ]
+}

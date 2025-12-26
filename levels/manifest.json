@@ -1,0 +1,7 @@
+{
+  "default": "room0",
+  "levels": [
+    { "id": "room0", "path": "levels/room0.json" },
+    { "id": "room1", "path": "levels/room1.json" }
+  ]
+}
