@@ -13,7 +13,8 @@ enum SprigState {
     IDLE = 0,
     HARVESTING = 1,
     HAULING = 2,
-    FIGHTING = 3
+    FIGHTING = 3,
+    RETURNING = 4
 }
 
 // No more Sprig interface in DOD
@@ -32,6 +33,12 @@ export class SprigSystem {
     private roadEdgeIds: Int32Array; // -1 = None (For Sticky Roads)
     private pathNodeIndices: Int32Array; // Index of the next target node in the path (Shared for both)
     private animOffsets: Uint8Array; // Animation Frame Offset
+    
+    // Job Anchor System
+    private jobIntents: Int32Array; // Sticky Intent
+    private jobAnchorsX: Float32Array; // Last valid X
+    private jobAnchorsY: Float32Array; // Last valid Y
+    private jobLeashTimers: Float32Array; // Time outside zone
     
     // Inference Engine State
     private states: Uint8Array;
@@ -91,6 +98,11 @@ export class SprigSystem {
         this.pathNodeIndices = new Int32Array(this.MAX_SPRIG_COUNT); 
         this.animOffsets = new Uint8Array(this.MAX_SPRIG_COUNT);
         
+        this.jobIntents = new Int32Array(this.MAX_SPRIG_COUNT);
+        this.jobAnchorsX = new Float32Array(this.MAX_SPRIG_COUNT);
+        this.jobAnchorsY = new Float32Array(this.MAX_SPRIG_COUNT);
+        this.jobLeashTimers = new Float32Array(this.MAX_SPRIG_COUNT);
+
         this.states = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.workTimers = new Float32Array(this.MAX_SPRIG_COUNT);
         this.targets = new Int32Array(this.MAX_SPRIG_COUNT);
@@ -200,6 +212,11 @@ export class SprigSystem {
         this.pathNodeIndices[i] = 0; // Start at beginning of path
         this.animOffsets[i] = Math.floor(Math.random() * CONFIG.ROUGHJS.WIGGLE_FRAMES);
         
+        this.jobIntents[i] = -1;
+        this.jobAnchorsX[i] = x;
+        this.jobAnchorsY[i] = y;
+        this.jobLeashTimers[i] = 0;
+
         this.states[i] = SprigState.IDLE;
         this.workTimers[i] = 0;
         this.targets[i] = -1;
@@ -247,7 +264,7 @@ export class SprigSystem {
             }
 
             // 3. Inference Engine
-            this.checkContext(i);
+            this.checkContext(i, dt);
             
             // 4. State Execution
             this.executeState(i, dt);
@@ -257,7 +274,7 @@ export class SprigSystem {
         }
     }
 
-    private checkContext(i: number) {
+    private checkContext(i: number, dt: number) {
         // A. Hauler
         if (this.cargos[i] === 1) {
             this.states[i] = SprigState.HAULING;
@@ -268,6 +285,25 @@ export class SprigSystem {
         const x = this.positionsX[i];
         const y = this.positionsY[i];
         const intent = this.flowFieldSystem.getIntentAt(x, y);
+        
+        // Job Anchor Logic
+        if (intent !== null) {
+            this.jobIntents[i] = intent;
+            this.jobAnchorsX[i] = x;
+            this.jobAnchorsY[i] = y;
+            this.jobLeashTimers[i] = 0;
+        } else if (this.jobIntents[i] !== -1) {
+            // Outside Zone: Leash
+            this.jobLeashTimers[i] += dt / 60;
+            if (this.jobLeashTimers[i] > 5.0) {
+                 this.jobIntents[i] = -1; // Fired
+            } else {
+                 this.states[i] = SprigState.RETURNING;
+                 this.intents[i] = this.jobIntents[i]; // Keep visual color
+                 return;
+            }
+        }
+
         this.intents[i] = intent !== null ? intent : -1;
 
         // B. Harvester
@@ -281,7 +317,7 @@ export class SprigSystem {
             
             if (this.resourceSystem.isNearSource(x, y, CONFIG.PERCEPTION_RADIUS)) {
                 this.states[i] = SprigState.HARVESTING;
-                this.workTimers[i] = 2.0; 
+                this.workTimers[i] = 4.0; 
                 return;
             }
         }
@@ -340,6 +376,10 @@ export class SprigSystem {
                     this.velocitiesY[i] = (Math.random() - 0.5) * speed;
                 }
                 break;
+            case SprigState.RETURNING:
+                this.seek(i, this.jobAnchorsX[i], this.jobAnchorsY[i], 1.0);
+                this.applyBoids(i, dt);
+                break;
             case SprigState.FIGHTING:
                 this.applyBoids(i, dt); 
                 break;
@@ -385,6 +425,12 @@ export class SprigSystem {
             this.roadEdgeIds[i] = this.roadEdgeIds[last];
             this.pathNodeIndices[i] = this.pathNodeIndices[last];
             this.animOffsets[i] = this.animOffsets[last];
+            
+            this.jobIntents[i] = this.jobIntents[last];
+            this.jobAnchorsX[i] = this.jobAnchorsX[last];
+            this.jobAnchorsY[i] = this.jobAnchorsY[last];
+            this.jobLeashTimers[i] = this.jobLeashTimers[last];
+
             this.states[i] = this.states[last];
             this.workTimers[i] = this.workTimers[last];
             this.targets[i] = this.targets[last];
@@ -899,6 +945,11 @@ export class SprigSystem {
                 this.selected[idx] = this.selected[last];
                 this.pathIds[idx] = this.pathIds[last];
                 this.pathNodeIndices[idx] = this.pathNodeIndices[last];
+                
+                this.jobIntents[idx] = this.jobIntents[last];
+                this.jobAnchorsX[idx] = this.jobAnchorsX[last];
+                this.jobAnchorsY[idx] = this.jobAnchorsY[last];
+                this.jobLeashTimers[idx] = this.jobLeashTimers[last];
             }
             
             this.sprigContainers[last].visible = false;
