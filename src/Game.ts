@@ -162,6 +162,7 @@ export class Game {
         this.sprigSystem.clearAll();
         this.flowFieldSystem.clearAll();
         this.graphSystem.clearAll();
+        this.itemSystem.clearAll();
         this.updateUI();
         
         // Spawn initial sprigs for room1

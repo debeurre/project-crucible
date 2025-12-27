@@ -73,4 +73,13 @@ export class ItemSystem implements ISystem {
     public update(_ticker: Ticker) {
         // Items are static for now
     }
+
+    public clearAll() {
+        for (const item of this.items) {
+            item.sprite.destroy();
+        }
+        this.container.removeChildren();
+        this.items = [];
+        this.nextId = 0;
+    }
 }
