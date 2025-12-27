@@ -14,7 +14,8 @@ enum SprigState {
     HARVESTING = 1,
     HAULING = 2,
     FIGHTING = 3,
-    RETURNING = 4
+    RETURNING = 4,
+    RETRIEVING = 5
 }
 
 // No more Sprig interface in DOD
@@ -281,6 +282,17 @@ export class SprigSystem {
             return;
         }
 
+        // Porter Logic
+        if (this.states[i] === SprigState.IDLE) {
+             // Look for berries
+             const item = this.itemSystem.getNearestItem(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 3);
+             if (item) {
+                 this.states[i] = SprigState.RETRIEVING;
+                 this.targets[i] = item.id;
+                 return;
+             }
+        }
+
         // Read Intent
         const x = this.positionsX[i];
         const y = this.positionsY[i];
@@ -350,11 +362,41 @@ export class SprigSystem {
                     this.velocitiesY[i] += (Math.random() - 0.5) * wanderStrength;
                 }
                 break;
+            case SprigState.RETRIEVING:
+                const itemId = this.targets[i];
+                const item = this.itemSystem.getItem(itemId);
+                if (!item) {
+                     this.states[i] = SprigState.IDLE;
+                } else {
+                     this.seek(i, item.x, item.y, 1.0);
+                     
+                     const dx = item.x - this.positionsX[i];
+                     const dy = item.y - this.positionsY[i];
+                     if (dx*dx + dy*dy < 25) { // 5px radius squared
+                         if (this.itemSystem.removeItem(itemId)) {
+                             this.cargos[i] = 1;
+                             this.states[i] = SprigState.HAULING;
+                             this.roadEdgeIds[i] = -1;
+                             this.pathNodeIndices[i] = 0;
+                         } else {
+                             this.states[i] = SprigState.IDLE;
+                         }
+                     }
+                }
+                break;
             case SprigState.HAULING:
                 const onRoad = this.applyStickyRoadMovement(i);
                 if (!onRoad) {
                     const heart = this.resourceSystem.getCastlePosition();
                     this.seek(i, heart.x, heart.y, 1.0);
+                    
+                    const hx = heart.x - this.positionsX[i];
+                    const hy = heart.y - this.positionsY[i];
+                    if (hx*hx + hy*hy < 900) { // 30px radius squared
+                        this.cargos[i] = 0;
+                        this.states[i] = SprigState.IDLE;
+                        this.resourceSystem.feedCastle(10);
+                    }
                 }
                 break;
             case SprigState.HARVESTING:

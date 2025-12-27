@@ -3,7 +3,7 @@ import { ISystem } from './ISystem';
 import { CONFIG } from '../config';
 import { TextureFactory } from './TextureFactory';
 
-interface Item {
+export interface Item {
     id: number;
     x: number;
     y: number;
@@ -42,14 +42,16 @@ export class ItemSystem implements ISystem {
         this.items.push({ id, x: sx, y: sy, type, sprite });
     }
 
-    public removeItem(id: number) {
+    public removeItem(id: number): boolean {
         const index = this.items.findIndex(item => item.id === id);
         if (index !== -1) {
             const item = this.items[index];
             this.container.removeChild(item.sprite);
             item.sprite.destroy(); 
             this.items.splice(index, 1);
+            return true;
         }
+        return false;
     }
     
     public getNearestItem(x: number, y: number, radius: number): Item | null {
@@ -68,6 +70,10 @@ export class ItemSystem implements ISystem {
         }
         
         return bestItem;
+    }
+
+    public getItem(id: number): Item | undefined {
+        return this.items.find(item => item.id === id);
     }
 
     public update(_ticker: Ticker) {
