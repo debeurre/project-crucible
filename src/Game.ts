@@ -17,6 +17,7 @@ import { Toolbar } from './ui/Toolbar';
 import { ToolManager } from './tools/ToolManager';
 import { LevelManager } from './systems/LevelManager';
 import { MapShape } from './types/MapTypes';
+import { ItemSystem } from './systems/ItemSystem';
 
 export class Game {
     private app: Application;
@@ -35,6 +36,7 @@ export class Game {
     private movementPathSystem: MovementPathSystem;
     private toolOverlaySystem: ToolOverlaySystem;
     private levelManager: LevelManager;
+    private itemSystem: ItemSystem;
     
     private toolManager: ToolManager;
     private inputState: InputState;
@@ -71,9 +73,10 @@ export class Game {
         this.movementPathSystem = new MovementPathSystem();
         this.toolOverlaySystem = new ToolOverlaySystem();
         this.toolOverlaySystem.container.eventMode = 'none';
+        this.itemSystem = new ItemSystem(app);
 
-        // SprigSystem needs MovementPathSystem
-        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem, this.resourceSystem);
+        // SprigSystem needs MovementPathSystem and ItemSystem
+        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem, this.resourceSystem, this.itemSystem);
 
         // Level Manager
         this.levelManager = new LevelManager(this.mapSystem, this.resourceSystem);
@@ -85,6 +88,7 @@ export class Game {
         this.systemManager.addSystem(this.mapSystem);
         this.systemManager.addSystem(this.flowFieldSystem);
         this.systemManager.addSystem(this.resourceSystem);
+        this.systemManager.addSystem(this.itemSystem);
         this.systemManager.addSystem(this.graphSystem);
         this.systemManager.addSystem(this.movementPathSystem);
         this.systemManager.addSystem(this.sprigSystem);
@@ -180,6 +184,9 @@ export class Game {
         // Map (Bottom)
         this.worldContainer.addChild(this.mapSystem.container);
         
+        // Items (Ground)
+        this.worldContainer.addChild(this.itemSystem.container);
+
         // Sprigs
         this.worldContainer.addChild(this.sprigSystem.container);
         
@@ -264,10 +271,10 @@ export class Game {
 
             const sprigBounds = this.sprigSystem.getSprigBounds(i);
 
-            // Pickup
-            if (!this.sprigSystem.isCarrying(i) && this.resourceSystem.isInside(sprigBounds.x, sprigBounds.y)) {
-                this.sprigSystem.setCargo(i, 1); 
-            }
+            // Pickup (DISABLED for Eusocial Update Phase 1)
+            // if (!this.sprigSystem.isCarrying(i) && this.resourceSystem.isInside(sprigBounds.x, sprigBounds.y)) {
+            //     this.sprigSystem.setCargo(i, 1); 
+            // }
 
             // Dropoff
             if (this.sprigSystem.isCarrying(i) && this.resourceSystem.isInsideCastle(sprigBounds.x, sprigBounds.y)) {

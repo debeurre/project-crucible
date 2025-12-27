@@ -63,6 +63,12 @@ export const CONFIG = {
   RESOURCE_NODE_ROTATION: Math.PI,
   RESOURCE_NODE_SPAWN_MARGIN: 50, // Extra padding from edges when spawning
 
+  // Items (Berries)
+  ITEMS: {
+      BERRY_COLOR: 0xFF69B4, // HotPink
+      BERRY_RADIUS: 4,
+  },
+
   // Flow Field
   FLOW_FIELD_CELL_SIZE: 20,
   FLOW_FIELD_FORCE_SCALE: 0.1, // How much the flow field influences sprigs

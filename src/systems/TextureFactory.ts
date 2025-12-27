@@ -242,4 +242,24 @@ export class TextureFactory {
         this.crucibleTexture = Texture.from(canvas);
         return this.crucibleTexture;
     }
+
+    public static getBerryTexture(_renderer: Renderer): Texture {
+        const radius = CONFIG.ITEMS.BERRY_RADIUS;
+        const size = radius * 2 + 4; // Padding
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        
+        const rc = rough.canvas(canvas);
+        
+        rc.circle(size / 2, size / 2, radius * 2, {
+            fill: '#ffffff',
+            stroke: 'none',
+            fillStyle: 'solid',
+            roughness: 0.5
+        });
+
+        return Texture.from(canvas);
+    }
 }

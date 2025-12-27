@@ -7,6 +7,7 @@ import { TextureFactory } from './systems/TextureFactory';
 import { GraphSystem } from './systems/GraphSystem';
 import { TaskIntent } from './types/GraphTypes';
 import { ResourceSystem } from './systems/ResourceSystem';
+import { ItemSystem } from './systems/ItemSystem';
 
 enum SprigState {
     IDLE = 0,
@@ -59,19 +60,21 @@ export class SprigSystem {
     private flowFieldSystem: FlowFieldSystem; 
     private movementPathSystem: MovementPathSystem; 
     private graphSystem: GraphSystem; 
-    private resourceSystem: ResourceSystem; // New dependency
+    private resourceSystem: ResourceSystem; 
+    private itemSystem: ItemSystem; // New dependency
     public container: Container; 
 
     private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; 
     public activeSprigCount: number = 0; 
 
-    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem, graphSystem: GraphSystem, resourceSystem: ResourceSystem) {
+    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem, graphSystem: GraphSystem, resourceSystem: ResourceSystem, itemSystem: ItemSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
         this.flowFieldSystem = flowFieldSystem; 
         this.movementPathSystem = movementPathSystem;
         this.graphSystem = graphSystem;
         this.resourceSystem = resourceSystem;
+        this.itemSystem = itemSystem;
         this.container = new Container();
 
         // Initialize typed arrays
@@ -269,6 +272,11 @@ export class SprigSystem {
 
         // B. Harvester
         if (this.cargos[i] === 0 && intent === TaskIntent.GREEN_HARVEST) {
+            // Check for cooldown (if we just harvested)
+            if (this.states[i] === SprigState.IDLE && this.workTimers[i] > 0) {
+                 return; // Cooldown active, stay IDLE (and wander)
+            }
+
             if (this.states[i] === SprigState.HARVESTING) return;
             
             if (this.resourceSystem.isNearSource(x, y, CONFIG.PERCEPTION_RADIUS)) {
@@ -291,8 +299,20 @@ export class SprigSystem {
     private executeState(i: number, dt: number) {
         switch(this.states[i]) {
             case SprigState.IDLE:
+                // Decrement Cooldown
+                if (this.workTimers[i] > 0) {
+                    this.workTimers[i] -= dt / 60;
+                }
+
                 this.applyBoids(i, dt);
                 this.applyFlowField(i, dt);
+                
+                // Random Wander if Green Intent (to avoid clumping)
+                if (this.intents[i] === TaskIntent.GREEN_HARVEST) {
+                    const wanderStrength = 0.5;
+                    this.velocitiesX[i] += (Math.random() - 0.5) * wanderStrength;
+                    this.velocitiesY[i] += (Math.random() - 0.5) * wanderStrength;
+                }
                 break;
             case SprigState.HAULING:
                 const onRoad = this.applyStickyRoadMovement(i);
@@ -306,8 +326,18 @@ export class SprigSystem {
                 this.velocitiesY[i] = 0;
                 this.workTimers[i] -= dt / 60;
                 if (this.workTimers[i] <= 0) {
-                    this.cargos[i] = 1;
-                    this.states[i] = SprigState.HAULING;
+                    // Harvest Complete
+                    // Spawn Item
+                    this.itemSystem.spawnItem(this.positionsX[i], this.positionsY[i], 'BERRY');
+                    
+                    // Reset to Idle with Cooldown
+                    this.states[i] = SprigState.IDLE;
+                    this.workTimers[i] = 1.0; // 1s Cooldown
+                    
+                    // Wander nudge
+                    const speed = CONFIG.MAX_SPEED;
+                    this.velocitiesX[i] = (Math.random() - 0.5) * speed;
+                    this.velocitiesY[i] = (Math.random() - 0.5) * speed;
                 }
                 break;
             case SprigState.FIGHTING:
