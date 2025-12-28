@@ -3,33 +3,30 @@ import { ISystem } from './ISystem';
 import { CONFIG } from '../config';
 import { TextureFactory } from './TextureFactory';
 
-export interface Item {
+export interface Crumb {
     id: number;
     x: number;
     y: number;
-    type: string; // 'BERRY'
     sprite: Sprite;
 }
 
 export class ItemSystem implements ISystem {
     public container: Container;
-    private items: Item[] = [];
+    private items: Crumb[] = [];
     private nextId: number = 0;
-    private berryTexture: Texture;
+    private crumbTexture: Texture;
 
     constructor(app: Application) {
         this.container = new Container();
-        // Generate texture once
-        this.berryTexture = TextureFactory.getBerryTexture(app.renderer);
+        this.crumbTexture = TextureFactory.getCrumbTexture(app.renderer);
     }
 
-    public spawnItem(x: number, y: number, type: string = 'BERRY') {
+    public spawnCrumb(x: number, y: number) {
         const id = this.nextId++;
-        const sprite = new Sprite(this.berryTexture);
+        const sprite = new Sprite(this.crumbTexture);
         sprite.anchor.set(0.5);
-        sprite.tint = CONFIG.ITEMS.BERRY_COLOR;
+        sprite.tint = CONFIG.ITEMS.CRUMB_COLOR;
         
-        // Random scatter slightly so they don't stack perfectly
         const scatter = 10;
         const sx = x + (Math.random() - 0.5) * scatter;
         const sy = y + (Math.random() - 0.5) * scatter;
@@ -39,10 +36,10 @@ export class ItemSystem implements ISystem {
         
         this.container.addChild(sprite);
         
-        this.items.push({ id, x: sx, y: sy, type, sprite });
+        this.items.push({ id, x: sx, y: sy, sprite });
     }
 
-    public removeItem(id: number): boolean {
+    public removeCrumb(id: number): boolean {
         const index = this.items.findIndex(item => item.id === id);
         if (index !== -1) {
             const item = this.items[index];
@@ -54,9 +51,9 @@ export class ItemSystem implements ISystem {
         return false;
     }
     
-    public getNearestItem(x: number, y: number, radius: number): Item | null {
+    public getNearestCrumb(x: number, y: number, radius: number): Crumb | null {
         let bestDistSq = radius * radius;
-        let bestItem: Item | null = null;
+        let bestItem: Crumb | null = null;
         
         for (const item of this.items) {
             const dx = item.x - x;
@@ -72,7 +69,7 @@ export class ItemSystem implements ISystem {
         return bestItem;
     }
 
-    public getItem(id: number): Item | undefined {
+    public getCrumb(id: number): Crumb | undefined {
         return this.items.find(item => item.id === id);
     }
 

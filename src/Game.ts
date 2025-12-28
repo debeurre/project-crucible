@@ -105,7 +105,10 @@ export class Game {
                 this.toolManager.setActiveIntent(intent);
             },
             (mode) => {
-                const levelId = mode === MapShape.ROOM1 ? 'room1' : 'room0';
+                let levelId = 'room0';
+                if (mode === MapShape.ROOM1) levelId = 'room1';
+                else if (mode === MapShape.ANT_ROOM) levelId = 'room2';
+                
                 this.loadLevel(levelId);
                 this.toolbar.setMapMode(mode);
             }
@@ -153,6 +156,14 @@ export class Game {
         
         // Initial UI Update
         this.updateUI();
+
+        // Temporary Keybinds
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '2') {
+                console.log('Key 2 pressed, loading room2');
+                this.loadLevel('room2');
+            }
+        });
     }
 
     public async loadLevel(levelId: string) {

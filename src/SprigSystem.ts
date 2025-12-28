@@ -284,8 +284,8 @@ export class SprigSystem {
 
         // Porter Logic
         if (this.states[i] === SprigState.IDLE) {
-             // Look for berries
-             const item = this.itemSystem.getNearestItem(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 3);
+             // Look for crumbs
+             const item = this.itemSystem.getNearestCrumb(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 3);
              if (item) {
                  this.states[i] = SprigState.RETRIEVING;
                  this.targets[i] = item.id;
@@ -364,7 +364,7 @@ export class SprigSystem {
                 break;
             case SprigState.RETRIEVING:
                 const itemId = this.targets[i];
-                const item = this.itemSystem.getItem(itemId);
+                const item = this.itemSystem.getCrumb(itemId);
                 if (!item) {
                      this.states[i] = SprigState.IDLE;
                 } else {
@@ -373,7 +373,7 @@ export class SprigSystem {
                      const dx = item.x - this.positionsX[i];
                      const dy = item.y - this.positionsY[i];
                      if (dx*dx + dy*dy < 25) { // 5px radius squared
-                         if (this.itemSystem.removeItem(itemId)) {
+                         if (this.itemSystem.removeCrumb(itemId)) {
                              this.cargos[i] = 1;
                              this.states[i] = SprigState.HAULING;
                              this.roadEdgeIds[i] = -1;
@@ -405,8 +405,8 @@ export class SprigSystem {
                 this.workTimers[i] -= dt / 60;
                 if (this.workTimers[i] <= 0) {
                     // Harvest Complete
-                    // Spawn Item
-                    this.itemSystem.spawnItem(this.positionsX[i], this.positionsY[i], 'BERRY');
+                    // Spawn Crumb
+                    this.itemSystem.spawnCrumb(this.positionsX[i], this.positionsY[i]);
                     
                     // Reset to Idle with Cooldown
                     this.states[i] = SprigState.IDLE;

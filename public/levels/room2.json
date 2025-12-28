@@ -1,0 +1,8 @@
+{
+  "id": "room2",
+  "mapMode": "ANT_ROOM",
+  "structures": [
+    { "type": "NEST", "x": 0.5, "y": 0.5, "health": 100, "relative": true },
+    { "type": "COOKIE", "x": 0.1, "y": 0.1, "value": 50, "relative": true }
+  ]
+}

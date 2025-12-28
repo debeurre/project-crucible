@@ -93,17 +93,44 @@ export class ResourceSystem implements ISystem {
                 
                 this.container.addChild(this.castleContainer);
 
-            } else if (struct.type === 'RESOURCE_NODE' || struct.type === 'BUSH' || struct.type === 'GENERIC') {
+            } else if (struct.type === 'NEST') {
+                this.sinkType = 'CASTLE';
+                const nestTex = TextureFactory.getNestTexture(this.app.renderer);
+                this.castleSprite = new Sprite(nestTex);
+                this.castleSprite.anchor.set(0.5);
+                this.castleSprite.tint = 0xFFD700; // Gold
+                this.castleSprite.x = 0;
+                this.castleSprite.y = 0;
+                
+                this.castleContainer = new Container();
+                this.castleContainer.x = x;
+                this.castleContainer.y = y;
+                
+                this.castlePosition.set(x, y);
+                
+                this.energyBar.clear();
+                this.castleContainer.addChild(this.castleSprite);
+                this.castleContainer.addChild(this.energyBar);
+                
+                this.container.addChild(this.castleContainer);
+
+            } else if (struct.type === 'RESOURCE_NODE' || struct.type === 'BUSH' || struct.type === 'GENERIC' || struct.type === 'COOKIE') {
                 let tex;
+                let tint = CONFIG.RESOURCE_NODE_COLOR;
+
                 if (struct.type === 'BUSH') {
                     tex = TextureFactory.getBushTexture(this.app.renderer);
+                    tint = 0x006400;
+                } else if (struct.type === 'COOKIE') {
+                    tex = TextureFactory.getCookieTexture(this.app.renderer);
+                    tint = 0xD2B48C; // Tan
                 } else {
                     tex = TextureFactory.getTrapezoidTexture(this.app.renderer);
                 }
                 
                 const sprite = new Sprite(tex);
                 sprite.anchor.set(0.5);
-                sprite.tint = struct.type === 'BUSH' ? 0x006400 : CONFIG.RESOURCE_NODE_COLOR;
+                sprite.tint = tint;
                 sprite.x = x;
                 sprite.y = y;
                 sprite.rotation = CONFIG.RESOURCE_NODE_ROTATION;

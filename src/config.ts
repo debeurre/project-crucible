@@ -67,6 +67,8 @@ export const CONFIG = {
   ITEMS: {
       BERRY_COLOR: 0xFF69B4, // HotPink
       BERRY_RADIUS: 4,
+      CRUMB_COLOR: 0xD2B48C, // Tan
+      CRUMB_RADIUS: 4,
   },
 
   // Flow Field

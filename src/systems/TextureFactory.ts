@@ -10,6 +10,9 @@ export class TextureFactory {
     private static trapezoidTexture: Texture | null = null;
     private static castleTexture: Texture | null = null;
     private static crucibleTexture: Texture | null = null;
+    private static nestTexture: Texture | null = null;
+    private static cookieTexture: Texture | null = null;
+    private static crumbTexture: Texture | null = null;
 
     /**
      * Generates a set of wiggly sprig textures (frames for animation).
@@ -261,5 +264,106 @@ export class TextureFactory {
         });
 
         return Texture.from(canvas);
+    }
+
+    public static getNestTexture(_renderer: Renderer): Texture {
+        if (this.nestTexture) return this.nestTexture;
+        
+        const r = CONFIG.CASTLE_RADIUS; 
+        const padding = 8;
+        const size = r * 2 + padding * 2;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const rc = rough.canvas(canvas);
+        
+        const cx = size / 2;
+        const cy = size / 2;
+        const points: [number, number][] = [];
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i;
+            points.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
+        }
+        
+        rc.polygon(points, {
+            fill: '#ffffff', 
+            stroke: '#000000',
+            strokeWidth: 2,
+            roughness: 1.5,
+            fillStyle: 'solid' 
+        });
+        
+        this.nestTexture = Texture.from(canvas);
+        return this.nestTexture;
+    }
+
+    public static getCookieTexture(_renderer: Renderer): Texture {
+        if (this.cookieTexture) return this.cookieTexture;
+        
+        const r = CONFIG.RESOURCE_NODE_RADIUS; 
+        const padding = 8;
+        const size = r * 2 + padding * 2;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const rc = rough.canvas(canvas);
+        
+        const cx = size / 2;
+        const cy = size / 2;
+        
+        rc.circle(cx, cy, r * 2, {
+             fill: '#ffffff', 
+             stroke: '#000000',
+             strokeWidth: 2,
+             roughness: 1.5,
+             fillStyle: 'solid'
+        });
+        
+        for(let i=0; i<5; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * (r * 0.7);
+            const sr = r * 0.2;
+            rc.circle(cx + Math.cos(angle)*dist, cy + Math.sin(angle)*dist, sr*2, {
+                fill: '#808080',
+                stroke: 'none',
+                fillStyle: 'solid'
+            });
+        }
+        
+        this.cookieTexture = Texture.from(canvas);
+        return this.cookieTexture;
+    }
+
+    public static getCrumbTexture(_renderer: Renderer): Texture {
+        if (this.crumbTexture) return this.crumbTexture;
+        
+        const radius = CONFIG.ITEMS.CRUMB_RADIUS;
+        const size = radius * 3 + 4; 
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const rc = rough.canvas(canvas);
+        
+        const cx = size / 2;
+        const cy = size / 2;
+        const r = radius * 1.5;
+        
+        const points: [number, number][] = [];
+        for(let i=0; i<3; i++) {
+            const angle = -Math.PI/2 + (Math.PI * 2 / 3) * i;
+            points.push([cx + r*Math.cos(angle), cy + r*Math.sin(angle)]);
+        }
+        
+        rc.polygon(points, {
+            fill: '#ffffff',
+            stroke: 'none',
+            fillStyle: 'solid',
+            roughness: 0.5
+        });
+        
+        this.crumbTexture = Texture.from(canvas);
+        return this.crumbTexture;
     }
 }
