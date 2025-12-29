@@ -321,17 +321,6 @@ export class TextureFactory {
              fillStyle: 'solid'
         });
         
-        for(let i=0; i<5; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const dist = Math.random() * (r * 0.7);
-            const sr = r * 0.2;
-            rc.circle(cx + Math.cos(angle)*dist, cy + Math.sin(angle)*dist, sr*2, {
-                fill: '#808080',
-                stroke: 'none',
-                fillStyle: 'solid'
-            });
-        }
-        
         this.cookieTexture = Texture.from(canvas);
         return this.cookieTexture;
     }

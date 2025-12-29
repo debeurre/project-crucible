@@ -39,7 +39,7 @@ export class MapSystem {
         this.foreground.rect(0, 0, width, height).fill(CONFIG.LAND_COLOR);
         break;
       case MapShape.ANT_ROOM:
-        this.foreground.rect(0, 0, width, height).fill(0x5D4037); // Dirt
+        this.foreground.rect(0, 0, width, height).fill(0xD3D3D3); // Light Gray
         break;
     }
   }
