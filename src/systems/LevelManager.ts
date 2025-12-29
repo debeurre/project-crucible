@@ -23,6 +23,10 @@ export class LevelManager {
         }
     }
 
+    public getDefaultLevelId(): string {
+        return this.manifest?.default || 'room0';
+    }
+
     public async loadLevel(id: string) {
         if (!this.manifest) {
             console.error('LevelManager: Manifest not loaded');

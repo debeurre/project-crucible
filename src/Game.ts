@@ -81,7 +81,8 @@ export class Game {
         // Level Manager
         this.levelManager = new LevelManager(this.mapSystem, this.resourceSystem);
         this.levelManager.init().then(() => {
-            this.loadLevel('room0');
+            const defaultLevel = this.levelManager.getDefaultLevelId();
+            this.loadLevel(defaultLevel);
         });
 
         // Register Systems
