@@ -356,36 +356,28 @@ export class SprigSystem {
              return;
         }
 
-        // 4. Wander (The Leash)
+        // 4. Wander (Stateful Random Walk)
         this.states[i] = SprigState.IDLE;
-        const nestPos = this.resourceSystem.getNestPosition();
         
-        const dx = this.positionsX[i] - nestPos.x;
-        const dy = this.positionsY[i] - nestPos.y;
-        const distSq = dx*dx + dy*dy;
-        const leashRadius = 350;
+        // Use workTimers as "Time until next random decision"
+        this.workTimers[i] -= dt/60;
         
-        let targetX = this.positionsX[i];
-        let targetY = this.positionsY[i];
-
-        if (distSq > leashRadius * leashRadius) {
-            // Pull to a safe orbit (100px from center)
-            const angle = Math.atan2(dy, dx);
-            const returnDist = 100;
-            targetX = nestPos.x + Math.cos(angle) * returnDist;
-            targetY = nestPos.y + Math.sin(angle) * returnDist;
-        } else {
-            // Random Cloud Walk
+        // If timer expired OR first run (timer=0), pick a new target
+        if (this.workTimers[i] <= 0) {
+            const nestPos = this.resourceSystem.getNestPosition();
             const angle = Math.random() * Math.PI * 2;
-            const r = Math.random() * 300;
-            targetX = nestPos.x + Math.cos(angle) * r;
-            targetY = nestPos.y + Math.sin(angle) * r;
+            const r = Math.random() * 800; // Large cloud radius (encapsulates Cookie)
+            
+            // Reuse jobAnchors as "Wander Target" since IDLE state doesn't use them
+            this.jobAnchorsX[i] = nestPos.x + Math.cos(angle) * r;
+            this.jobAnchorsY[i] = nestPos.y + Math.sin(angle) * r;
+            
+            // Set duration for this leg of the journey (1-3 seconds)
+            this.workTimers[i] = 1.0 + Math.random() * 2.0; 
         }
-
-        this.seek(i, targetX, targetY, 0.5); 
         
-        this.velocitiesX[i] += (Math.random()-0.5) * 0.5;
-        this.velocitiesY[i] += (Math.random()-0.5) * 0.5;
+        // Seek the target
+        this.seek(i, this.jobAnchorsX[i], this.jobAnchorsY[i], 0.5); // Slower wander
         
         this.applyBoids(i, dt);
     }
