@@ -356,17 +356,31 @@ export class SprigSystem {
              return;
         }
 
-        // 4. Wander
+        // 4. Wander (The Leash)
         this.states[i] = SprigState.IDLE;
         const nestPos = this.resourceSystem.getNestPosition();
+        
         const dx = this.positionsX[i] - nestPos.x;
         const dy = this.positionsY[i] - nestPos.y;
-        // Move away from nest
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist > 0) {
-            this.velocitiesX[i] += (dx/dist) * 0.5 * dt; 
-            this.velocitiesY[i] += (dy/dist) * 0.5 * dt;
+        const distSq = dx*dx + dy*dy;
+        const leashRadius = 350;
+        
+        let targetX = this.positionsX[i];
+        let targetY = this.positionsY[i];
+
+        if (distSq > leashRadius * leashRadius) {
+            // Force return
+            targetX = nestPos.x;
+            targetY = nestPos.y;
+        } else {
+            // Random Cloud Walk
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.random() * 300;
+            targetX = nestPos.x + Math.cos(angle) * r;
+            targetY = nestPos.y + Math.sin(angle) * r;
         }
+
+        this.seek(i, targetX, targetY, 0.5); 
         
         this.velocitiesX[i] += (Math.random()-0.5) * 0.5;
         this.velocitiesY[i] += (Math.random()-0.5) * 0.5;
