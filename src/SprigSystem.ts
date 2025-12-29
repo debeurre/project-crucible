@@ -369,9 +369,11 @@ export class SprigSystem {
         let targetY = this.positionsY[i];
 
         if (distSq > leashRadius * leashRadius) {
-            // Force return
-            targetX = nestPos.x;
-            targetY = nestPos.y;
+            // Pull to a safe orbit (100px from center)
+            const angle = Math.atan2(dy, dx);
+            const returnDist = 100;
+            targetX = nestPos.x + Math.cos(angle) * returnDist;
+            targetY = nestPos.y + Math.sin(angle) * returnDist;
         } else {
             // Random Cloud Walk
             const angle = Math.random() * Math.PI * 2;
@@ -871,7 +873,7 @@ export class SprigSystem {
         // Nest Repulsion
         if (this.resourceSystem.getSinkType() === 'NEST') {
             const nestPos = this.resourceSystem.getCastlePosition();
-            const r = CONFIG.CASTLE_RADIUS + CONFIG.SPRIG_RADIUS; 
+            const r = CONFIG.CASTLE_RADIUS + CONFIG.SPRIG_RADIUS + 10; 
             const rSq = r * r;
             
             const dx = sprigX - nestPos.x;
