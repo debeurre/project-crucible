@@ -753,6 +753,25 @@ export class SprigSystem {
             sprigVelY += (sepY + aliY + cohY) * dt;
         }
         
+        // Nest Repulsion
+        if (this.resourceSystem.getSinkType() === 'NEST') {
+            const nestPos = this.resourceSystem.getCastlePosition();
+            const r = CONFIG.CASTLE_RADIUS + CONFIG.SPRIG_RADIUS; 
+            const rSq = r * r;
+            
+            const dx = sprigX - nestPos.x;
+            const dy = sprigY - nestPos.y;
+            const dSq = dx*dx + dy*dy;
+            
+            if (dSq < rSq && dSq > 0) {
+                const dist = Math.sqrt(dSq);
+                // Hard push
+                const pushStrength = 5.0; 
+                sprigVelX += (dx / dist) * pushStrength;
+                sprigVelY += (dy / dist) * pushStrength;
+            }
+        }
+        
         this.velocitiesX[idx] = sprigVelX;
         this.velocitiesY[idx] = sprigVelY;
     }
