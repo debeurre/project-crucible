@@ -2,15 +2,18 @@ import { LevelManifest, LevelData } from '../types/LevelTypes';
 import { MapSystem } from './MapSystem';
 import { ResourceSystem } from './ResourceSystem';
 import { MapShape } from '../types/MapTypes';
+import { InvaderSystem } from './InvaderSystem';
 
 export class LevelManager {
     private manifest: LevelManifest | null = null;
     private mapSystem: MapSystem;
     private resourceSystem: ResourceSystem;
+    private invaderSystem: InvaderSystem;
 
-    constructor(mapSystem: MapSystem, resourceSystem: ResourceSystem) {
+    constructor(mapSystem: MapSystem, resourceSystem: ResourceSystem, invaderSystem: InvaderSystem) {
         this.mapSystem = mapSystem;
         this.resourceSystem = resourceSystem;
+        this.invaderSystem = invaderSystem;
     }
 
     public async init() {
@@ -49,6 +52,7 @@ export class LevelManager {
 
             // 2. Load Structures
             this.resourceSystem.loadLevelData(data.structures);
+            this.invaderSystem.loadLevelData(data.structures);
 
         } catch (e) {
             console.error(`LevelManager: Failed to load level data for ${id}`, e);

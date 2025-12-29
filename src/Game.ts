@@ -18,6 +18,7 @@ import { ToolManager } from './tools/ToolManager';
 import { LevelManager } from './systems/LevelManager';
 import { MapShape } from './types/MapTypes';
 import { ItemSystem } from './systems/ItemSystem';
+import { InvaderSystem } from './systems/InvaderSystem';
 
 export class Game {
     private app: Application;
@@ -37,6 +38,7 @@ export class Game {
     private toolOverlaySystem: ToolOverlaySystem;
     private levelManager: LevelManager;
     private itemSystem: ItemSystem;
+    private invaderSystem: InvaderSystem;
     
     private toolManager: ToolManager;
     private inputState: InputState;
@@ -46,7 +48,6 @@ export class Game {
 
     // State
     private score = 0;
-    private invaderTimer = 0;
     
     // Animation State
     private tapAnimProgress = 1.0;
@@ -77,9 +78,11 @@ export class Game {
 
         // SprigSystem needs MovementPathSystem and ItemSystem
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem, this.resourceSystem, this.itemSystem);
+        
+        this.invaderSystem = new InvaderSystem(app, this.sprigSystem);
 
         // Level Manager
-        this.levelManager = new LevelManager(this.mapSystem, this.resourceSystem);
+        this.levelManager = new LevelManager(this.mapSystem, this.resourceSystem, this.invaderSystem);
         this.levelManager.init().then(() => {
             const defaultLevel = this.levelManager.getDefaultLevelId();
             console.log('Game: Loading default level:', defaultLevel);
@@ -94,6 +97,7 @@ export class Game {
         this.systemManager.addSystem(this.graphSystem);
         this.systemManager.addSystem(this.movementPathSystem);
         this.systemManager.addSystem(this.sprigSystem);
+        this.systemManager.addSystem(this.invaderSystem);
         this.systemManager.addSystem(this.visualEffects);
         this.systemManager.addSystem(this.floatingTextSystem);
         this.systemManager.addSystem(this.toolOverlaySystem);
@@ -198,14 +202,14 @@ export class Game {
         // Map (Bottom)
         this.worldContainer.addChild(this.mapSystem.container);
         
+        // Resources (Structures)
+        this.worldContainer.addChild(this.resourceSystem.container);
+
         // Items (Ground)
         this.worldContainer.addChild(this.itemSystem.container);
 
         // Sprigs
         this.worldContainer.addChild(this.sprigSystem.container);
-        
-        // Resources
-        this.worldContainer.addChild(this.resourceSystem.container);
         
         // Flow Field Visualization
         this.worldContainer.addChild(this.flowFieldSystem.container);
@@ -246,17 +250,6 @@ export class Game {
     private update(ticker: Ticker) {
         this.inputController.update(ticker);
         
-        // Invader Spawner
-        this.invaderTimer += ticker.deltaMS / 1000;
-        if (this.invaderTimer >= 15) {
-            this.invaderTimer = 0;
-            const angle = Math.random() * Math.PI * 2;
-            const dist = Math.max(this.app.screen.width, this.app.screen.height) * 0.6;
-            const gx = this.app.screen.width/2 + Math.cos(angle) * dist;
-            const gy = this.app.screen.height/2 + Math.sin(angle) * dist;
-            this.sprigSystem.spawnSprig(gx, gy, 1);
-        }
-
         this.updateGameLogic(ticker);
         this.renderVisuals(ticker);
         this.toolManager.update(ticker);

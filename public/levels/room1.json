@@ -4,6 +4,7 @@
   "structures": [
     { "type": "CASTLE", "x": 0.5, "y": 0.5, "relative": true, "energy": 100 },
     { "type": "BUSH", "x": 0.4, "y": 0.4, "relative": true },
-    { "type": "BUSH", "x": 0.6, "y": 0.6, "relative": true }
+    { "type": "BUSH", "x": 0.6, "y": 0.6, "relative": true },
+    { "type": "INVADER_SPAWNER", "x": 0, "y": 0 }
   ]
 }
