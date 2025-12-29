@@ -15,7 +15,7 @@ export class LevelManager {
 
     public async init() {
         try {
-            const response = await fetch('levels/manifest.json');
+            const response = await fetch(`levels/manifest.json?v=${Date.now()}`);
             this.manifest = await response.json();
             console.log('LevelManager: Manifest loaded', this.manifest);
         } catch (e) {

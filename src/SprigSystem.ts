@@ -8,6 +8,7 @@ import { GraphSystem } from './systems/GraphSystem';
 import { TaskIntent } from './types/GraphTypes';
 import { ResourceSystem } from './systems/ResourceSystem';
 import { ItemSystem } from './systems/ItemSystem';
+import { MapShape } from './types/MapTypes';
 
 enum SprigState {
     IDLE = 0,
@@ -41,6 +42,9 @@ export class SprigSystem {
     private jobAnchorsY: Float32Array; // Last valid Y
     private jobLeashTimers: Float32Array; // Time outside zone
     
+    // Eusocial State
+    private targetItemIds: Int32Array; // Dibs on crumb
+
     // Inference Engine State
     private states: Uint8Array;
     private workTimers: Float32Array;
@@ -103,6 +107,9 @@ export class SprigSystem {
         this.jobAnchorsX = new Float32Array(this.MAX_SPRIG_COUNT);
         this.jobAnchorsY = new Float32Array(this.MAX_SPRIG_COUNT);
         this.jobLeashTimers = new Float32Array(this.MAX_SPRIG_COUNT);
+        
+        this.targetItemIds = new Int32Array(this.MAX_SPRIG_COUNT);
+        this.targetItemIds.fill(-1);
 
         this.states = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.workTimers = new Float32Array(this.MAX_SPRIG_COUNT);
@@ -217,6 +224,8 @@ export class SprigSystem {
         this.jobAnchorsX[i] = x;
         this.jobAnchorsY[i] = y;
         this.jobLeashTimers[i] = 0;
+        
+        this.targetItemIds[i] = -1;
 
         this.states[i] = SprigState.IDLE;
         this.workTimers[i] = 0;
@@ -265,14 +274,104 @@ export class SprigSystem {
             }
 
             // 3. Inference Engine
-            this.checkContext(i, dt);
-            
-            // 4. State Execution
-            this.executeState(i, dt);
+            if (this.mapSystem.getMode() === MapShape.ANT_ROOM) {
+                this.updateEusocial(i, dt);
+            } else {
+                this.checkContext(i, dt);
+                
+                // 4. State Execution
+                this.executeState(i, dt);
+            }
             
             this.updatePosition(i, dt);
             this.updateVisuals(i);
         }
+    }
+
+    private updateEusocial(i: number, dt: number) {
+        // 1. Haul
+        if (this.cargos[i] === 1) {
+            this.states[i] = SprigState.HAULING;
+            const nestPos = this.resourceSystem.getNestPosition();
+            this.seek(i, nestPos.x, nestPos.y, 1.0);
+            
+            // Dropoff
+            const dx = nestPos.x - this.positionsX[i];
+            const dy = nestPos.y - this.positionsY[i];
+            if (dx*dx + dy*dy < 30*30) {
+                this.cargos[i] = 0;
+                this.resourceSystem.feedCastle(1);
+            }
+            return;
+        }
+
+        // 2. Scavenge
+        if (this.targetItemIds[i] === -1) {
+            // Look for item
+            const item = this.itemSystem.getNearestCrumb(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 10, true); 
+            if (item) {
+                if (this.itemSystem.claimCrumb(item.id, i)) {
+                    this.targetItemIds[i] = item.id;
+                }
+            }
+        }
+
+        if (this.targetItemIds[i] !== -1) {
+            this.states[i] = SprigState.RETRIEVING;
+            const item = this.itemSystem.getCrumb(this.targetItemIds[i]);
+            if (!item) {
+                this.targetItemIds[i] = -1; // Item gone
+            } else {
+                this.seek(i, item.x, item.y, 1.0);
+                const dx = item.x - this.positionsX[i];
+                const dy = item.y - this.positionsY[i];
+                if (dx*dx + dy*dy < 5*5) {
+                    if (this.itemSystem.removeCrumb(item.id)) {
+                        this.cargos[i] = 1;
+                        this.targetItemIds[i] = -1;
+                    } else {
+                        this.targetItemIds[i] = -1;
+                    }
+                }
+            }
+            return;
+        }
+
+        // 3. Harvest
+        if (this.resourceSystem.isNearSource(this.positionsX[i], this.positionsY[i], 20)) {
+             if (this.states[i] !== SprigState.HARVESTING) {
+                 this.states[i] = SprigState.HARVESTING;
+                 this.workTimers[i] = 1.0;
+             } else {
+                 this.velocitiesX[i] = 0;
+                 this.velocitiesY[i] = 0;
+                 this.workTimers[i] -= dt/60;
+                 if (this.workTimers[i] <= 0) {
+                     if (this.resourceSystem.damageStructure('COOKIE', this.positionsX[i], this.positionsY[i], 10)) {
+                         this.itemSystem.spawnCrumb(this.positionsX[i] + (Math.random()-0.5)*20, this.positionsY[i] + (Math.random()-0.5)*20);
+                     }
+                     this.states[i] = SprigState.IDLE;
+                 }
+             }
+             return;
+        }
+
+        // 4. Wander
+        this.states[i] = SprigState.IDLE;
+        const nestPos = this.resourceSystem.getNestPosition();
+        const dx = this.positionsX[i] - nestPos.x;
+        const dy = this.positionsY[i] - nestPos.y;
+        // Move away from nest
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist > 0) {
+            this.velocitiesX[i] += (dx/dist) * 0.5 * dt; 
+            this.velocitiesY[i] += (dy/dist) * 0.5 * dt;
+        }
+        
+        this.velocitiesX[i] += (Math.random()-0.5) * 0.5;
+        this.velocitiesY[i] += (Math.random()-0.5) * 0.5;
+        
+        this.applyBoids(i, dt);
     }
 
     private checkContext(i: number, dt: number) {
@@ -472,6 +571,8 @@ export class SprigSystem {
             this.jobAnchorsX[i] = this.jobAnchorsX[last];
             this.jobAnchorsY[i] = this.jobAnchorsY[last];
             this.jobLeashTimers[i] = this.jobLeashTimers[last];
+            
+            this.targetItemIds[i] = this.targetItemIds[last];
 
             this.states[i] = this.states[last];
             this.workTimers[i] = this.workTimers[last];

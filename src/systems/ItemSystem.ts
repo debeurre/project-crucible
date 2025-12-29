@@ -8,6 +8,7 @@ export interface Crumb {
     x: number;
     y: number;
     sprite: Sprite;
+    claimedBy: number;
 }
 
 export class ItemSystem implements ISystem {
@@ -36,7 +37,23 @@ export class ItemSystem implements ISystem {
         
         this.container.addChild(sprite);
         
-        this.items.push({ id, x: sx, y: sy, sprite });
+        this.items.push({ id, x: sx, y: sy, sprite, claimedBy: -1 });
+    }
+
+    public claimCrumb(id: number, sprigId: number): boolean {
+        const item = this.items.find(i => i.id === id);
+        if (item && item.claimedBy === -1) {
+            item.claimedBy = sprigId;
+            return true;
+        }
+        return false;
+    }
+
+    public releaseCrumb(id: number) {
+        const item = this.items.find(i => i.id === id);
+        if (item) {
+            item.claimedBy = -1;
+        }
     }
 
     public removeCrumb(id: number): boolean {
@@ -51,11 +68,13 @@ export class ItemSystem implements ISystem {
         return false;
     }
     
-    public getNearestCrumb(x: number, y: number, radius: number): Crumb | null {
+    public getNearestCrumb(x: number, y: number, radius: number, ignoreClaimed: boolean = false): Crumb | null {
         let bestDistSq = radius * radius;
         let bestItem: Crumb | null = null;
         
         for (const item of this.items) {
+            if (ignoreClaimed && item.claimedBy !== -1) continue;
+
             const dx = item.x - x;
             const dy = item.y - y;
             const dSq = dx * dx + dy * dy;

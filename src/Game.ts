@@ -82,6 +82,7 @@ export class Game {
         this.levelManager = new LevelManager(this.mapSystem, this.resourceSystem);
         this.levelManager.init().then(() => {
             const defaultLevel = this.levelManager.getDefaultLevelId();
+            console.log('Game: Loading default level:', defaultLevel);
             this.loadLevel(defaultLevel);
         });
 

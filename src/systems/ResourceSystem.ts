@@ -4,16 +4,23 @@ import { TextureFactory } from './TextureFactory';
 import { MapSystem } from './MapSystem';
 import { ISystem } from './ISystem';
 
+interface StructureData {
+    sprite: Sprite;
+    type: string;
+    health: number;
+    x: number;
+    y: number;
+}
+
 export class ResourceSystem implements ISystem {
     public container: Container; 
     public castleSprite: Sprite | null = null;    // The Castle (Sink)
     private castleContainer: Container | null = null; // Container for Sprite + UI
-    public sourceSprites: Sprite[] = [];         // Berry Bushes
+    private sources: StructureData[] = [];         // Resource Nodes
     
     private app: Application;
     
     private castlePosition: Point = new Point(0, 0); 
-    private sourcePositions: Point[] = [];
     
     private castleEnergy: number = 100;
     private readonly MAX_ENERGY: number = 100;
@@ -32,8 +39,7 @@ export class ResourceSystem implements ISystem {
         console.log('ResourceSystem loading structures:', structures);
         // Clear existing
         this.container.removeChildren();
-        this.sourceSprites = [];
-        this.sourcePositions = [];
+        this.sources = [];
         this.castleSprite = null;
         this.castleContainer = null;
         this.sinkType = 'NONE';
@@ -135,8 +141,13 @@ export class ResourceSystem implements ISystem {
                 sprite.y = y;
                 sprite.rotation = CONFIG.RESOURCE_NODE_ROTATION;
 
-                this.sourceSprites.push(sprite);
-                this.sourcePositions.push(new Point(x, y));
+                this.sources.push({
+                    sprite,
+                    type: struct.type,
+                    health: struct.health || 100,
+                    x,
+                    y
+                });
                 this.container.addChild(sprite);
             }
         });
@@ -181,6 +192,13 @@ export class ResourceSystem implements ISystem {
         return this.castlePosition;
     }
 
+    public getNestPosition(): Point {
+        if (this.sinkType === 'NEST' || this.sinkType === 'CASTLE') {
+            return this.castlePosition;
+        }
+        return new Point(this.app.screen.width / 2, this.app.screen.height / 2);
+    }
+
     public getSinkType(): 'CASTLE' | 'CRUCIBLE' | 'NEST' | 'NONE' {
         return this.sinkType;
     }
@@ -190,13 +208,34 @@ export class ResourceSystem implements ISystem {
     }
 
     public isNearSource(x: number, y: number, radius: number = 40): boolean {
-        // Check closest source
         const rSq = (CONFIG.RESOURCE_NODE_RADIUS + radius)**2;
         
-        for (const pos of this.sourcePositions) {
-            const dx = x - pos.x;
-            const dy = y - pos.y;
+        for (const s of this.sources) {
+            const dx = x - s.x;
+            const dy = y - s.y;
             if (dx*dx + dy*dy < rSq) return true;
+        }
+        return false;
+    }
+
+    public damageStructure(type: string, x: number, y: number, amount: number): boolean {
+        const rSq = (CONFIG.RESOURCE_NODE_RADIUS + 20)**2;
+        
+        for (const s of this.sources) {
+            if (s.type === type) {
+                const dx = s.x - x;
+                const dy = s.y - y;
+                if (dx*dx + dy*dy < rSq) {
+                    s.health -= amount;
+                    s.sprite.tint = 0xFFFFFF; 
+                    setTimeout(() => {
+                        if (s.type === 'COOKIE') s.sprite.tint = 0xD2B48C;
+                        else if (s.type === 'BUSH') s.sprite.tint = 0x006400;
+                        else s.sprite.tint = CONFIG.RESOURCE_NODE_COLOR;
+                    }, 50);
+                    return true;
+                }
+            }
         }
         return false;
     }
