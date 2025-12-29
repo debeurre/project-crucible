@@ -41,3 +41,11 @@
 - **Events:** `interactive = true` is deprecated. Use `eventMode = 'static'` (for background/stage) or `'dynamic'`.
 - **Hit Testing:** The Stage needs `app.stage.hitArea = app.screen` to detect clicks on empty space.
 - **Texture Generation (Robustness):** When creating simple shapes for tinting (e.g., Sprigs, Cargo), prefer using `new PIXI.Graphics().drawCircle().fill()` directly for each object rather than `app.renderer.generateTexture(graphics)` for a base texture. The latter can be prone to timing or rendering context issues with v8's `generateTexture` if not managed carefully, leading to invisible sprites. Using direct `Graphics` ensures immediate and reliable rendering.
+
+## 6. TOKEN & RATE LIMIT EFFICIENCY
+- **Diagnosis:** Rate limits are typically triggered by full-file rewrites (`write_file`) of large system files (e.g., `SprigSystem.ts`, 800+ lines) in rapid succession, especially as chat history grows.
+- **Prevention:**
+    - **Surgical Edits:** Use `replace` for small logic tweaks within large files to minimize output token bloat. 
+    - **Strategic Rewrites:** Only use the "Golden Rule" (`write_file`) for complex architectural changes where multiple method signatures or class-wide properties are shifting.
+    - **Batching:** Perform related file edits in a single turn when possible.
+    - **Context Awareness:** Avoid redundant `read_file` calls if you already have the file content in your immediate context.
