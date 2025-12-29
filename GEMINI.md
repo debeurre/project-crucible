@@ -20,8 +20,6 @@
 - **Shell Safety:** Do NOT chain shell commands with `&&` (e.g., `git add . && git commit`). Run them as separate tool calls to avoid safety filter rejections.
 - **Holistic Cleanup (CRITICAL):** 
     When encountering `TS6133` (unused variable), err on the side of **deleting** the offending variable/parameter/import rather than using workarounds like `_` underscores or `// @ts-ignore`. Think holistically about why the code exists rather than just narrowing in on killing the warning.
-- **Golden Rule for Refactoring:** 
-    If you are changing logic in a System file (e.g., SprigSystem, ResourceSystem), DO NOT use search_and_replace. Instead, read the file once, rewrite the entire class in your memory, and use write_file to overwrite the whole file. This guarantees that imports, interfaces, and methods remain consistent.
 
 ## 4. ARCHITECTURE & PERFORMANCE
 - **Simulation vs. Render:** Keep the math (logic) separate from the PixiJS (view).
