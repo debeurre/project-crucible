@@ -20,7 +20,7 @@ export class ResourceSystem implements ISystem {
     private readonly DRAIN_RATE: number = 1; 
     
     private energyBar: Graphics;
-    private sinkType: 'CASTLE' | 'CRUCIBLE' | 'NONE' = 'NONE';
+    private sinkType: 'CASTLE' | 'CRUCIBLE' | 'NEST' | 'NONE' = 'NONE';
 
     constructor(app: Application, _mapSystem: MapSystem) {
         this.app = app;
@@ -94,7 +94,7 @@ export class ResourceSystem implements ISystem {
                 this.container.addChild(this.castleContainer);
 
             } else if (struct.type === 'NEST') {
-                this.sinkType = 'CASTLE';
+                this.sinkType = 'NEST';
                 const nestTex = TextureFactory.getNestTexture(this.app.renderer);
                 this.castleSprite = new Sprite(nestTex);
                 this.castleSprite.anchor.set(0.5);
@@ -181,7 +181,7 @@ export class ResourceSystem implements ISystem {
         return this.castlePosition;
     }
 
-    public getSinkType(): 'CASTLE' | 'CRUCIBLE' | 'NONE' {
+    public getSinkType(): 'CASTLE' | 'CRUCIBLE' | 'NEST' | 'NONE' {
         return this.sinkType;
     }
 
