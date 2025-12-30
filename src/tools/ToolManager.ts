@@ -4,11 +4,13 @@ import { PenTool } from './PenTool';
 import { EraserTool } from './EraserTool';
 import { OmniPencilTool } from './OmniPencilTool';
 import { CommandBrushTool } from './CommandBrushTool';
+import { FoodTraceTool } from './FoodTraceTool';
 import { GraphSystem } from '../systems/GraphSystem';
 import { FlowFieldSystem } from '../systems/FlowFieldSystem';
 import { SprigSystem } from '../SprigSystem';
 import { MovementPathSystem } from '../systems/MovementPathSystem';
 import { ToolOverlaySystem } from '../systems/ToolOverlaySystem';
+import { TraceSystem } from '../systems/TraceSystem';
 import { Graphics, Ticker } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
 
@@ -25,6 +27,7 @@ export class ToolManager {
         sprigSystem: SprigSystem,
         movementPathSystem: MovementPathSystem,
         _toolOverlaySystem: ToolOverlaySystem,
+        traceSystem: TraceSystem,
         toolbar: Toolbar
     ) {
         this.toolbar = toolbar;
@@ -33,11 +36,12 @@ export class ToolManager {
             'PENCIL': new OmniPencilTool(sprigSystem, movementPathSystem),
             'PEN': new PenTool(graphSystem, toolbar, this),
             'ERASER': new EraserTool(flowFieldSystem, graphSystem, sprigSystem),
-            'COMMAND_BRUSH': new CommandBrushTool(sprigSystem, movementPathSystem)
+            'COMMAND_BRUSH': new CommandBrushTool(sprigSystem, movementPathSystem),
+            'FOOD_TRACE': new FoodTraceTool(traceSystem)
         };
         
-        this.activeTool = this.tools['COMMAND_BRUSH'];
-        this.activeToolMode = 'COMMAND_BRUSH';
+        this.activeToolMode = 'FOOD_TRACE';
+        this.activeTool = this.tools['FOOD_TRACE'];
         this.toolbar.setTool(this.activeToolMode);
     }
 

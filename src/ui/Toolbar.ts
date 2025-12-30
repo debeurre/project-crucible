@@ -3,7 +3,7 @@ import { TaskIntent } from '../types/GraphTypes';
 import { CONFIG } from '../config';
 import { MapShape } from '../types/MapTypes';
 
-export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER' | 'COMMAND_BRUSH';
+export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER' | 'COMMAND_BRUSH' | 'FOOD_TRACE';
 
 export class Toolbar extends Container {
     private bg: Graphics;
@@ -11,6 +11,7 @@ export class Toolbar extends Container {
     private penBtn: Container;
     private eraserBtn: Container;
     private brushBtn: Container; 
+    private foodTraceBtn: Container; 
     
     // Intent Swatches
     private swatchContainer: Container;
@@ -51,11 +52,13 @@ export class Toolbar extends Container {
         this.penBtn = this.createButton('PEN');
         this.brushBtn = this.createButton('COMMAND_BRUSH');
         this.eraserBtn = this.createButton('ERASER');
+        this.foodTraceBtn = this.createButton('FOOD_TRACE');
 
         this.addChild(this.pencilBtn);
         this.addChild(this.penBtn);
         this.addChild(this.brushBtn);
         this.addChild(this.eraserBtn);
+        this.addChild(this.foodTraceBtn);
         
         // Swatches
         this.swatchContainer = new Container();
@@ -207,10 +210,23 @@ export class Toolbar extends Container {
             this.updatePenIcon();
         }
         else if (mode === 'COMMAND_BRUSH') this.drawBrushIcon(icon);
+        else if (mode === 'FOOD_TRACE') this.drawTraceIcon(icon);
         else this.drawEraserIcon(icon);
         
         btn.addChild(icon);
         return btn;
+    }
+
+    private drawTraceIcon(g: Graphics) {
+        g.clear();
+        // Circle with dots/pulse lines
+        g.circle(0, 0, 6).stroke({ width: 2, color: 0xFFFFFF });
+        for (let i = 0; i < 4; i++) {
+            const angle = (Math.PI / 2) * i;
+            g.moveTo(Math.cos(angle) * 8, Math.sin(angle) * 8);
+            g.lineTo(Math.cos(angle) * 12, Math.sin(angle) * 12);
+        }
+        g.stroke({ width: 1, color: 0xFFFFFF });
     }
 
     private createSwatches() {
@@ -318,8 +334,8 @@ export class Toolbar extends Container {
         const swatchGap = 10;
         const mapBtnW = 80;
         
-        // Tools: 4 buttons
-        const numTools = 4;
+        // Tools: 5 buttons
+        const numTools = 5;
         const toolsWidth = numTools * btnW + (numTools - 1) * gap;
 
         // Swatches: Dynamic count
@@ -346,6 +362,7 @@ export class Toolbar extends Container {
         this.penBtn.x = startX + btnW + gap;
         this.brushBtn.x = startX + (btnW + gap) * 2;
         this.eraserBtn.x = startX + (btnW + gap) * 3;
+        this.foodTraceBtn.x = startX + (btnW + gap) * 4;
         
         // Position Swatches
         const swatchStartX = startX + (btnW + gap) * (numTools - 1) + btnW / 2 + separator + swatchW / 2;
@@ -374,6 +391,7 @@ export class Toolbar extends Container {
         else if (this.activeTool === 'PEN') highlightX = this.penBtn.x;
         else if (this.activeTool === 'COMMAND_BRUSH') highlightX = this.brushBtn.x;
         else if (this.activeTool === 'ERASER') highlightX = this.eraserBtn.x;
+        else if (this.activeTool === 'FOOD_TRACE') highlightX = this.foodTraceBtn.x;
 
         this.bg.circle(highlightX, 0, 22).fill({ color: 0xFFFFFF, alpha: 0.1 });
         
@@ -403,6 +421,7 @@ export class Toolbar extends Container {
         this.penBtn.alpha = this.activeTool === 'PEN' ? 1.0 : 0.5;
         this.brushBtn.alpha = this.activeTool === 'COMMAND_BRUSH' ? 1.0 : 0.5;
         this.eraserBtn.alpha = this.activeTool === 'ERASER' ? 1.0 : 0.5;
+        this.foodTraceBtn.alpha = this.activeTool === 'FOOD_TRACE' ? 1.0 : 0.5;
         
         if (this.penIcon) this.updatePenIcon();
     }

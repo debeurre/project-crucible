@@ -9,6 +9,7 @@ import { TaskIntent } from './types/GraphTypes';
 import { ResourceSystem } from './systems/ResourceSystem';
 import { ItemSystem } from './systems/ItemSystem';
 import { MapShape } from './types/MapTypes';
+import { TraceSystem, TraceType } from './systems/TraceSystem';
 
 enum SprigState {
     IDLE = 0,
@@ -73,13 +74,14 @@ export class SprigSystem {
     private movementPathSystem: MovementPathSystem; 
     private graphSystem: GraphSystem; 
     private resourceSystem: ResourceSystem; 
-    private itemSystem: ItemSystem; // New dependency
+    private itemSystem: ItemSystem;
+    private traceSystem: TraceSystem; 
     public container: Container; 
 
     private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; 
     public activeSprigCount: number = 0; 
 
-    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem, graphSystem: GraphSystem, resourceSystem: ResourceSystem, itemSystem: ItemSystem) {
+    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem, graphSystem: GraphSystem, resourceSystem: ResourceSystem, itemSystem: ItemSystem, traceSystem: TraceSystem) {
         this.app = app;
         this.mapSystem = mapSystem;
         this.flowFieldSystem = flowFieldSystem; 
@@ -87,6 +89,7 @@ export class SprigSystem {
         this.graphSystem = graphSystem;
         this.resourceSystem = resourceSystem;
         this.itemSystem = itemSystem;
+        this.traceSystem = traceSystem;
         this.container = new Container();
 
         // Initialize typed arrays
@@ -356,29 +359,28 @@ export class SprigSystem {
              return;
         }
 
-        // 4. Wander (Stateful Random Walk)
+        // 4. Trace Following (New Priority)
+        if (this.cargos[i] === 0) {
+            const strongestFood = this.traceSystem.getStrongestTrace(this.positionsX[i], this.positionsY[i], TraceType.FOOD);
+            if (strongestFood) {
+                this.states[i] = SprigState.IDLE;
+                this.seek(i, strongestFood.x, strongestFood.y, 1.0);
+                return;
+            }
+        }
+
+        // 5. Wander (Stateful Random Walk)
         this.states[i] = SprigState.IDLE;
-        
-        // Use workTimers as "Time until next random decision"
         this.workTimers[i] -= dt/60;
-        
-        // If timer expired OR first run (timer=0), pick a new target
         if (this.workTimers[i] <= 0) {
             const nestPos = this.resourceSystem.getNestPosition();
             const angle = Math.random() * Math.PI * 2;
-            const r = Math.random() * 800; // Large cloud radius (encapsulates Cookie)
-            
-            // Reuse jobAnchors as "Wander Target" since IDLE state doesn't use them
+            const r = Math.random() * 800; 
             this.jobAnchorsX[i] = nestPos.x + Math.cos(angle) * r;
             this.jobAnchorsY[i] = nestPos.y + Math.sin(angle) * r;
-            
-            // Set duration for this leg of the journey (1-3 seconds)
             this.workTimers[i] = 1.0 + Math.random() * 2.0; 
         }
-        
-        // Seek the target
-        this.seek(i, this.jobAnchorsX[i], this.jobAnchorsY[i], 0.5); // Slower wander
-        
+        this.seek(i, this.jobAnchorsX[i], this.jobAnchorsY[i], 0.5); 
         this.applyBoids(i, dt);
     }
 
@@ -674,6 +676,35 @@ export class SprigSystem {
             this.gridNext[i] = this.gridHead[cellIndex];
             this.gridHead[cellIndex] = i;
         }
+    }
+
+    public getSprigsAt(x: number, y: number, radius: number): number[] {
+        const rSq = radius * radius;
+        const indices: number[] = [];
+
+        const startX = Math.max(0, Math.floor((x - radius) / this.cellSize));
+        const endX = Math.min(this.gridCols - 1, Math.floor((x + radius) / this.cellSize));
+        const startY = Math.max(0, Math.floor((y - radius) / this.cellSize));
+        const endY = Math.min(this.gridRows - 1, Math.floor((y + radius) / this.cellSize));
+
+        for (let cy = startY; cy <= endY; cy++) {
+            for (let cx = startX; cx <= endX; cx++) {
+                const cellIndex = cy * this.gridCols + cx;
+                let i = this.gridHead[cellIndex];
+
+                while (i !== -1) {
+                    const dx = this.positionsX[i] - x;
+                    const dy = this.positionsY[i] - y;
+                    const dSq = dx * dx + dy * dy;
+
+                    if (dSq < rSq) {
+                        indices.push(i);
+                    }
+                    i = this.gridNext[i];
+                }
+            }
+        }
+        return indices;
     }
 
     private applyStickyRoadMovement(idx: number): boolean {
@@ -1066,35 +1097,6 @@ export class SprigSystem {
             }
         }
         return bestIdx;
-    }
-
-    public getSprigsAt(x: number, y: number, radius: number): number[] {
-        const rSq = radius * radius;
-        const indices: number[] = [];
-
-        const startX = Math.max(0, Math.floor((x - radius) / this.cellSize));
-        const endX = Math.min(this.gridCols - 1, Math.floor((x + radius) / this.cellSize));
-        const startY = Math.max(0, Math.floor((y - radius) / this.cellSize));
-        const endY = Math.min(this.gridRows - 1, Math.floor((y + radius) / this.cellSize));
-
-        for (let cy = startY; cy <= endY; cy++) {
-            for (let cx = startX; cx <= endX; cx++) {
-                const cellIndex = cy * this.gridCols + cx;
-                let i = this.gridHead[cellIndex];
-
-                while (i !== -1) {
-                    const dx = this.positionsX[i] - x;
-                    const dy = this.positionsY[i] - y;
-                    const dSq = dx * dx + dy * dy;
-
-                    if (dSq < rSq) {
-                        indices.push(i);
-                    }
-                    i = this.gridNext[i];
-                }
-            }
-        }
-        return indices;
     }
 
     public removeSprigsAt(x: number, y: number, radius: number) {

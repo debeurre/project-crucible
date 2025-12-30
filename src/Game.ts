@@ -20,6 +20,7 @@ import { MapShape } from './types/MapTypes';
 import { ItemSystem } from './systems/ItemSystem';
 import { InvaderSystem } from './systems/InvaderSystem';
 import { ResourceRenderer } from './systems/ResourceRenderer';
+import { TraceSystem } from './systems/TraceSystem';
 
 export class Game {
     private app: Application;
@@ -41,6 +42,7 @@ export class Game {
     private levelManager: LevelManager;
     private itemSystem: ItemSystem;
     private invaderSystem: InvaderSystem;
+    private traceSystem: TraceSystem;
     
     private toolManager: ToolManager;
     private inputState: InputState;
@@ -71,16 +73,19 @@ export class Game {
         this.visualEffects = new VisualEffects();
         this.flowFieldSystem = new FlowFieldSystem(app);
         this.floatingTextSystem = new FloatingTextSystem();
+        
         this.resourceSystem = new ResourceSystem();
         this.resourceRenderer = new ResourceRenderer(app, this.resourceSystem);
+        
         this.graphSystem = new GraphSystem(this.flowFieldSystem);
         this.movementPathSystem = new MovementPathSystem();
         this.toolOverlaySystem = new ToolOverlaySystem();
         this.toolOverlaySystem.container.eventMode = 'none';
         this.itemSystem = new ItemSystem(app);
+        this.traceSystem = new TraceSystem();
 
-        // SprigSystem needs MovementPathSystem and ItemSystem
-        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem, this.resourceSystem, this.itemSystem);
+        // SprigSystem needs MovementPathSystem, ItemSystem, and TraceSystem
+        this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem, this.resourceSystem, this.itemSystem, this.traceSystem);
         
         this.invaderSystem = new InvaderSystem(app, this.sprigSystem);
 
@@ -98,6 +103,7 @@ export class Game {
         this.systemManager.addSystem(this.resourceSystem);
         this.systemManager.addSystem(this.resourceRenderer);
         this.systemManager.addSystem(this.itemSystem);
+        this.systemManager.addSystem(this.traceSystem);
         this.systemManager.addSystem(this.graphSystem);
         this.systemManager.addSystem(this.movementPathSystem);
         this.systemManager.addSystem(this.sprigSystem);
@@ -129,8 +135,9 @@ export class Game {
             this.graphSystem,
             this.flowFieldSystem,
             this.sprigSystem,
-            this.movementPathSystem, // Added
+            this.movementPathSystem, 
             this.toolOverlaySystem,
+            this.traceSystem,
             this.toolbar
         );
 
@@ -184,6 +191,7 @@ export class Game {
         this.flowFieldSystem.clearAll();
         this.graphSystem.clearAll();
         this.itemSystem.clearAll();
+        this.traceSystem.clearAll();
         this.invaderSystem.setActive(levelId === 'room1');
         this.toolbar.setMapMode(this.mapSystem.getMode());
         this.updateUI();
@@ -208,7 +216,10 @@ export class Game {
         // Map (Bottom)
         this.worldContainer.addChild(this.mapSystem.container);
         
-        // Resources (Structures) - Rendered by ResourceRenderer now
+        // Traces (Pheromones) - Below Items/Sprigs
+        this.worldContainer.addChild(this.traceSystem.container);
+
+        // Resources (Structures)
         this.worldContainer.addChild(this.resourceRenderer.container);
 
         // Items (Ground)
@@ -227,7 +238,7 @@ export class Game {
         this.worldContainer.addChild(this.movementPathSystem.container);
 
         // 4. Crucible (On top of map/sprigs)
-        // Handled by ResourceSystem (Logic) & ResourceRenderer (View)
+        // Handled by ResourceSystem
 
         // 5. Floating Text (Always on top)
         this.worldContainer.addChild(this.floatingTextSystem.container);
@@ -245,11 +256,6 @@ export class Game {
         this.background.rect(0, 0, this.app.screen.width, this.app.screen.height).fill(CONFIG.BG_COLOR);
         
         this.systemManager.resize(this.app.screen.width, this.app.screen.height);
-        
-        // const heartPos = this.resourceSystem.getCastlePosition();
-        // this.inputController.updateCruciblePosition(heartPos.x, heartPos.y);
-        // InputController now queries ResourceSystem directly
-        
         this.toolbar.resize(this.app.screen.width, this.app.screen.height);
     }
 
@@ -284,11 +290,6 @@ export class Game {
 
             const sprigBounds = this.sprigSystem.getSprigBounds(i);
 
-            // Pickup (DISABLED for Eusocial Update Phase 1)
-            // if (!this.sprigSystem.isCarrying(i) && this.resourceSystem.isInside(sprigBounds.x, sprigBounds.y)) {
-            //     this.sprigSystem.setCargo(i, 1); 
-            // }
-
             // Dropoff
             if (this.sprigSystem.isCarrying(i) && this.resourceSystem.isInsideCastle(sprigBounds.x, sprigBounds.y)) {
                 this.sprigSystem.setCargo(i, 0);
@@ -314,8 +315,6 @@ export class Game {
         this.updateCrucibleAnimation(ticker);
         
         // Render Cursor
-        // Only draw if within bounds? Pixi handles off-screen.
-        // Get mouse pos
         const mx = this.inputState.mousePosition.x;
         const my = this.inputState.mousePosition.y;
         this.toolManager.renderCursor(this.toolOverlaySystem.graphics, mx, my);
