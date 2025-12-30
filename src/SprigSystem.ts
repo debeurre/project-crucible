@@ -1026,7 +1026,7 @@ export class SprigSystem {
         if (this.cargos[idx] !== 0) { 
             cargoSprite.visible = true;
             if (this.cargos[idx] === 1) { 
-                cargoSprite.tint = 0x8B4513; 
+                cargoSprite.tint = CONFIG.ITEMS.CRUMB_COLOR; 
             }
             cargoSprite.y = CONFIG.SPRIG_CARGO_OFFSET_Y;
 

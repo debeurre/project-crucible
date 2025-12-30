@@ -64,11 +64,23 @@ export class TextureFactory {
         
         const rc = rough.canvas(canvas);
         
-        // Draw rough square
-        rc.rectangle(padding, padding, s, s, {
+        // Draw rough triangle (matching crumb shape but sized for cargo)
+        const cx = size / 2;
+        const cy = size / 2;
+        // Use s/2 as radius equivalent to fit in the same bounding box as the previous square
+        const r = s / 1.5; 
+
+        const points: [number, number][] = [];
+        for(let i=0; i<3; i++) {
+            const angle = -Math.PI/2 + (Math.PI * 2 / 3) * i;
+            points.push([cx + r*Math.cos(angle), cy + r*Math.sin(angle)]);
+        }
+        
+        rc.polygon(points, {
             fill: '#ffffff',
-            stroke: '#ffffff',
-            ...CONFIG.ROUGHJS.CARGO,
+            stroke: 'none',
+            fillStyle: 'solid',
+            roughness: 0.5
         });
 
         this.cargoTexture = Texture.from(canvas);
