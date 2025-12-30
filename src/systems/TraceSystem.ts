@@ -96,6 +96,16 @@ export class TraceSystem implements ISystem {
             
             this.graphics.circle(trace.x, trace.y, trace.radius).fill({ color, alpha: alpha * 0.3 });
             this.graphics.circle(trace.x, trace.y, trace.radius).stroke({ width: 2, color, alpha: alpha });
+
+            if (trace.type === TraceType.FOOD) {
+                // Draw Berry Icon
+                const cx = trace.x;
+                const cy = trace.y;
+                
+                this.graphics.circle(cx, cy - 4, 4).fill({ color, alpha });
+                this.graphics.circle(cx - 4, cy + 3, 4).fill({ color, alpha });
+                this.graphics.circle(cx + 4, cy + 3, 4).fill({ color, alpha });
+            }
         }
     }
     
