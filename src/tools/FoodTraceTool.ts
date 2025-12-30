@@ -14,7 +14,7 @@ export class FoodTraceTool implements ITool {
     public onDeactivate() {}
 
     public onDown(x: number, y: number) {
-        this.traceSystem.addTrace(x, y, TraceType.FOOD, 300, 30.0);
+        this.traceSystem.addTrace(x, y, TraceType.FOOD, CONFIG.TOOLS.FOOD_TRACE.RADIUS, CONFIG.TOOLS.FOOD_TRACE.DURATION);
     }
 
     public onHold(_x: number, _y: number, _ticker: Ticker) {}
@@ -22,7 +22,7 @@ export class FoodTraceTool implements ITool {
     public update(_ticker: Ticker) {}
 
     public renderCursor(g: Graphics, x: number, y: number) {
-        const radius = 300;
+        const radius = CONFIG.TOOLS.FOOD_TRACE.RADIUS;
         const segments = 32;
         const step = (Math.PI * 2) / segments;
         const color = CONFIG.TRACE_COLORS[TraceType.FOOD];

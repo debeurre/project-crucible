@@ -129,6 +129,14 @@ export const CONFIG = {
       2: 0x0000FF  // HOME
   } as Record<number, number>,
 
+  // Tool Settings
+  TOOLS: {
+      FOOD_TRACE: {
+          RADIUS: 150,
+          DURATION: 30.0
+      }
+  },
+
   // Omni-Pencil Visuals
   PENCIL_VISUALS: {
       COLOR: 0x000000, // Black
@@ -153,7 +161,7 @@ export const CONFIG = {
       fillStyle: 'solid'
     },
     CRUMB: {
-      roughness: 1.5,
+      roughness: 0.5,
       strokeWidth: 0.5,
       fillStyle: 'solid'
     },
