@@ -1,6 +1,5 @@
 import { ITool } from './ITool';
 import { ToolMode, Toolbar } from '../ui/Toolbar';
-import { PenTool } from './PenTool';
 import { EraserTool } from './EraserTool';
 import { OmniPencilTool } from './OmniPencilTool';
 import { CommandBrushTool } from './CommandBrushTool';
@@ -34,7 +33,6 @@ export class ToolManager {
         
         this.tools = {
             'PENCIL': new OmniPencilTool(sprigSystem, movementPathSystem),
-            'PEN': new PenTool(graphSystem, toolbar, this),
             'ERASER': new EraserTool(flowFieldSystem, graphSystem, sprigSystem),
             'COMMAND_BRUSH': new CommandBrushTool(sprigSystem, movementPathSystem),
             'FOOD_TRACE': new FoodTraceTool(traceSystem)
@@ -56,9 +54,6 @@ export class ToolManager {
 
     public setTool(mode: ToolMode) {
         if (this.activeToolMode === mode) {
-             if (mode === 'PEN') {
-                this.getPenTool().commit();
-            }
             return;
         }
 
@@ -72,10 +67,6 @@ export class ToolManager {
 
     public getActiveToolMode(): ToolMode {
         return this.activeToolMode;
-    }
-
-    public getPenTool(): PenTool {
-        return this.tools['PEN'] as PenTool;
     }
 
     // Input Delegation

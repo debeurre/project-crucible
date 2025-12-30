@@ -78,26 +78,6 @@ export class InputController {
 
             case 'G': this.flowFieldSystem.toggleGrid(); break;
             case 'D': this.debugOverlay.toggle(); break;
-            case 'T': 
-                const currentMode = this.toolManager.getActiveToolMode();
-                const nextTool = currentMode === 'PENCIL' ? 'PEN' : 'PENCIL'; 
-                this.toolManager.setTool(nextTool);
-                break;
-
-            case 'ESCAPE':
-            case 'BACKSPACE':
-            case 'DELETE':
-                if (this.toolManager.getActiveToolMode() === 'PEN') {
-                    this.toolManager.getPenTool().abort();
-                }
-                break;
-
-            case 'ENTER':
-            case 'SPACE':
-                if (this.toolManager.getActiveToolMode() === 'PEN') {
-                    this.toolManager.getPenTool().commit();
-                }
-                break;
 
             case 'F': 
                 this.flowFieldSystem.clearAll();
@@ -121,13 +101,6 @@ export class InputController {
 
         if (isDown) {
             this.maxTouches = Math.max(this.maxTouches, this.inputState.touchCount);
-        }
-
-        // 0. Right Click
-        if (this.inputState.isRightDown) {
-             if (this.toolManager.getActiveToolMode() === 'PEN') {
-                this.toolManager.getPenTool().commit();
-            }
         }
 
         // 1. Just Pressed
@@ -174,9 +147,6 @@ export class InputController {
         // 3. Just Released
         if (!isDown && this.wasDown) {
             if (this.maxTouches >= 2) {
-                if (this.toolManager.getActiveToolMode() === 'PEN') {
-                    this.toolManager.getPenTool().abort();
-                }
                 this.resetState();
                 return;
             }

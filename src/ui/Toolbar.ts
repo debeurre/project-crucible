@@ -1,70 +1,50 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
-import { CONFIG } from '../config';
 import { MapShape } from '../types/MapTypes';
 
-export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER' | 'COMMAND_BRUSH' | 'FOOD_TRACE';
+export type ToolMode = 'PENCIL' | 'ERASER' | 'COMMAND_BRUSH' | 'FOOD_TRACE';
 
 export class Toolbar extends Container {
     private bg: Graphics;
     private pencilBtn: Container;
-    private penBtn: Container;
     private eraserBtn: Container;
     private brushBtn: Container; 
     private foodTraceBtn: Container; 
     
-    // Intent Swatches
-    private swatchContainer: Container;
-    private swatches: Container[] = [];
-
     // Map Selector
     private mapBtn!: Container;
     private mapLabel!: Text;
-    private mapMenuContainer!: Container; // Also this one since it's inited later
-    private isMapMenuOpen: boolean = false; // New
+    private mapMenuContainer!: Container; 
+    private isMapMenuOpen: boolean = false; 
 
-    // Icon Graphics References
-    private penIcon?: Graphics;
-
-    private activeTool: ToolMode = 'PENCIL';
-    private activeIntent: TaskIntent = TaskIntent.GREEN_HARVEST;
-    private isChaining: boolean = false; 
+    private activeTool: ToolMode = 'COMMAND_BRUSH';
     
     private onToolSelected: (tool: ToolMode) => void;
-    private onIntentSelected: (intent: TaskIntent) => void;
-    private onMapSelected: (mode: MapShape) => void; // Changed from Cycle
+    private onMapSelected: (mode: MapShape) => void; 
     
     constructor(
         onToolSelected: (tool: ToolMode) => void, 
-        onIntentSelected: (intent: TaskIntent) => void,
-        onMapSelected: (mode: MapShape) => void // Changed
+        _onIntentSelected: (intent: TaskIntent) => void, // Kept for signature compatibility but unused
+        onMapSelected: (mode: MapShape) => void 
     ) {
         super();
         this.onToolSelected = onToolSelected;
-        this.onIntentSelected = onIntentSelected;
         this.onMapSelected = onMapSelected;
 
         this.bg = new Graphics();
         this.addChild(this.bg);
 
-        // Tools
-        this.pencilBtn = this.createButton('PENCIL');
-        this.penBtn = this.createButton('PEN');
+        // Tools (Ordered: COMMAND_BRUSH, PENCIL, ERASER, FOOD_TRACE)
         this.brushBtn = this.createButton('COMMAND_BRUSH');
+        this.pencilBtn = this.createButton('PENCIL');
         this.eraserBtn = this.createButton('ERASER');
         this.foodTraceBtn = this.createButton('FOOD_TRACE');
 
-        this.addChild(this.pencilBtn);
-        this.addChild(this.penBtn);
         this.addChild(this.brushBtn);
+        this.addChild(this.pencilBtn);
         this.addChild(this.eraserBtn);
         this.addChild(this.foodTraceBtn);
         
-        // Swatches
-        this.swatchContainer = new Container();
-        this.addChild(this.swatchContainer);
-        this.createSwatches();
-
         // Map Button
         this.mapBtn = this.createMapButton();
         this.addChild(this.mapBtn);
@@ -77,8 +57,8 @@ export class Toolbar extends Container {
 
         this.draw();
         
-        // Initial state
-        this.setTool('PENCIL');
+        // Initial state matches ToolManager default
+        this.setTool('COMMAND_BRUSH');
     }
 
     private getMapLabel(mode: MapShape): string {
@@ -125,8 +105,6 @@ export class Toolbar extends Container {
         this.isMapMenuOpen = !this.isMapMenuOpen;
         this.mapMenuContainer.visible = this.isMapMenuOpen;
         if (this.isMapMenuOpen) {
-            // Re-draw or position menu?
-            // Position is set in draw(), but we might need to bring to top
             this.setChildIndex(this.mapMenuContainer, this.children.length - 1);
         }
     }
@@ -145,7 +123,6 @@ export class Toolbar extends Container {
 
         modes.forEach((mode, i) => {
             const btn = new Container();
-            // Stack upwards, centering the button in its slot
             btn.y = -((i * itemHeight) + (itemHeight / 2) + 5); 
             btn.x = 0; 
 
@@ -155,10 +132,9 @@ export class Toolbar extends Container {
                 fill: 0xFFFFFF,
                 align: 'center'
             }});
-            label.anchor.set(0.5, 0.5); // Ensure vertical center
+            label.anchor.set(0.5, 0.5); 
             btn.addChild(label);
             
-            // Hit area
             const hit = new Graphics();
             hit.rect(-width/2 + 5, -15, width - 10, 30).fill({ color: 0xFFFFFF, alpha: 0.001 });
             btn.addChild(hit);
@@ -166,14 +142,13 @@ export class Toolbar extends Container {
             btn.eventMode = 'static';
             btn.cursor = 'pointer';
             
-            // Hover effect
             btn.on('pointerover', () => label.style.fill = 0x00FF00);
             btn.on('pointerout', () => label.style.fill = 0xFFFFFF);
             
             btn.on('pointerdown', (e) => {
                 e.stopPropagation();
                 this.onMapSelected(mode);
-                this.toggleMapMenu(); // Close on select
+                this.toggleMapMenu(); 
             });
 
             this.mapMenuContainer.addChild(btn);
@@ -183,8 +158,6 @@ export class Toolbar extends Container {
     public setMapMode(mode: MapShape) {
         this.mapLabel.text = this.getMapLabel(mode);
     }
-    
-    // ... rest of createButton, createSwatches, icon drawers ...
 
     private createButton(mode: ToolMode): Container {
         const btn = new Container();
@@ -205,12 +178,12 @@ export class Toolbar extends Container {
         // Icon
         const icon = new Graphics();
         if (mode === 'PENCIL') this.drawPencilIcon(icon);
-        else if (mode === 'PEN') {
-            this.penIcon = icon;
-            this.updatePenIcon();
-        }
         else if (mode === 'COMMAND_BRUSH') this.drawBrushIcon(icon);
-        else if (mode === 'FOOD_TRACE') this.drawTraceIcon(icon);
+        else if (mode === 'FOOD_TRACE') {
+            this.drawTraceIcon(icon);
+            // Green tint is handled by drawing in green directly or tinting?
+            // drawTraceIcon will handle color.
+        }
         else this.drawEraserIcon(icon);
         
         btn.addChild(icon);
@@ -219,46 +192,17 @@ export class Toolbar extends Container {
 
     private drawTraceIcon(g: Graphics) {
         g.clear();
-        // Circle with dots/pulse lines
-        g.circle(0, 0, 6).stroke({ width: 2, color: 0xFFFFFF });
-        for (let i = 0; i < 4; i++) {
-            const angle = (Math.PI / 2) * i;
-            g.moveTo(Math.cos(angle) * 8, Math.sin(angle) * 8);
-            g.lineTo(Math.cos(angle) * 12, Math.sin(angle) * 12);
-        }
-        g.stroke({ width: 1, color: 0xFFFFFF });
+        const color = 0x00FF00; // Green
+        
+        // Berry Bunch (Triangle of 3 circles)
+        // Top
+        g.circle(0, -4, 4).fill(color);
+        // Bottom Left
+        g.circle(-4, 3, 4).fill(color);
+        // Bottom Right
+        g.circle(4, 3, 4).fill(color);
     }
 
-    private createSwatches() {
-        const intents = [
-            TaskIntent.GREEN_HARVEST,
-            TaskIntent.RED_ATTACK,
-            TaskIntent.BLUE_SCOUT,
-            TaskIntent.YELLOW_ASSIST
-        ];
-
-        intents.forEach(intent => {
-            const btn = new Container();
-            const g = new Graphics();
-            g.circle(0, 0, 10).fill({ color: CONFIG.INTENT_COLORS[intent] });
-            g.stroke({ width: 2, color: 0xFFFFFF, alpha: 0.5 }); // Border
-            btn.addChild(g);
-            
-            btn.eventMode = 'static';
-            btn.cursor = 'pointer';
-            btn.on('pointerdown', (e) => {
-                e.stopPropagation();
-                this.onIntentSelected(intent);
-            });
-            
-            // Store intent for reference if needed?
-            // Just attach to swatches array
-            this.swatches.push(btn);
-            this.swatchContainer.addChild(btn);
-        });
-    }
-
-    // ... Icon Drawers ...
     private drawPencilIcon(g: Graphics) {
         g.clear();
         g.moveTo(-8, 8);
@@ -266,23 +210,6 @@ export class Toolbar extends Container {
         g.stroke({ width: 2, color: 0xFFFFFF });
     }
     
-    private drawPenIcon(g: Graphics) {
-        g.clear();
-        g.circle(-6, 6, 3).fill(0xFFFFFF);
-        g.circle(6, -6, 3).fill(0xFFFFFF);
-        g.moveTo(-6, 6);
-        g.lineTo(6, -6);
-        g.stroke({ width: 2, color: 0xFFFFFF });
-    }
-
-    private drawCheckIcon(g: Graphics) {
-        g.clear();
-        g.moveTo(-8, 0);
-        g.lineTo(-2, 6);
-        g.lineTo(8, -6);
-        g.stroke({ width: 3, color: 0x00FF00 }); 
-    }
-
     private drawEraserIcon(g: Graphics) {
         g.clear();
         g.rect(-8, -6, 16, 12).stroke({ width: 2, color: 0xFFFFFF });
@@ -301,52 +228,30 @@ export class Toolbar extends Container {
         g.stroke({ width: 2, color: 0xFFFFFF });
     }
 
-    private updatePenIcon() {
-        if (!this.penIcon) return;
-        
-        if (this.isChaining) {
-            this.drawCheckIcon(this.penIcon);
-        } else {
-            this.drawPenIcon(this.penIcon);
-        }
-    }
-
     public setTool(tool: ToolMode) {
         this.activeTool = tool;
         this.draw();
     }
-
-    public setPenState(isChaining: boolean) {
-        this.isChaining = isChaining;
-        this.draw();
-    }
     
-    public setActiveIntent(intent: TaskIntent) {
-        this.activeIntent = intent;
-        this.draw();
+    public setActiveIntent(_intent: TaskIntent) {
+        // No-op, intent swatches removed
     }
 
     private draw() {
         // Layout Config
         const btnW = 50;
         const gap = 10;
-        const swatchW = 30;
-        const swatchGap = 10;
         const mapBtnW = 80;
         
-        // Tools: 5 buttons
-        const numTools = 5;
+        // Tools: 4 buttons
+        const numTools = 4;
         const toolsWidth = numTools * btnW + (numTools - 1) * gap;
-
-        // Swatches: Dynamic count
-        const numSwatches = this.swatches.length;
-        const swatchesWidth = numSwatches * swatchW + (numSwatches > 0 ? (numSwatches - 1) * swatchGap : 0);
 
         const mapWidth = mapBtnW;
         const separator = 20;
         const padding = 20;
         
-        const totalWidth = toolsWidth + separator + swatchesWidth + separator + mapWidth + padding * 2;
+        const totalWidth = toolsWidth + separator + mapWidth + padding * 2;
         const height = 60;
         
         // Background
@@ -358,72 +263,34 @@ export class Toolbar extends Container {
         // Position Tools
         let startX = -totalWidth / 2 + padding + btnW / 2;
         
-        this.pencilBtn.x = startX;
-        this.penBtn.x = startX + btnW + gap;
-        this.brushBtn.x = startX + (btnW + gap) * 2;
-        this.eraserBtn.x = startX + (btnW + gap) * 3;
-        this.foodTraceBtn.x = startX + (btnW + gap) * 4;
+        // Order: COMMAND_BRUSH, PENCIL, ERASER, FOOD_TRACE
+        this.brushBtn.x = startX;
+        this.pencilBtn.x = startX + btnW + gap;
+        this.eraserBtn.x = startX + (btnW + gap) * 2;
+        this.foodTraceBtn.x = startX + (btnW + gap) * 3;
         
-        // Position Swatches
-        const swatchStartX = startX + (btnW + gap) * (numTools - 1) + btnW / 2 + separator + swatchW / 2;
-        this.swatches.forEach((swatch, i) => {
-            swatch.x = swatchStartX + i * (swatchW + swatchGap);
-            swatch.y = 0;
-        });
-
         // Position Map Button
-        // Calculate based on the position of the last swatch to ensure no overlap
-        const lastSwatchX = swatchStartX + (numSwatches > 0 ? (numSwatches - 1) * (swatchW + swatchGap) : 0);
-        const mapStartX = numSwatches > 0 
-            ? lastSwatchX + swatchW / 2 + separator + mapBtnW / 2 
-            : swatchStartX + mapBtnW / 2; // Fallback if no swatches (unlikely)
-            
+        const mapStartX = startX + (btnW + gap) * (numTools - 1) + btnW / 2 + separator + mapBtnW / 2;
         this.mapBtn.x = mapStartX;
-        this.mapBtn.y = 0; // Center vertically
+        this.mapBtn.y = 0; 
         
-        // Position Menu above Button
         this.mapMenuContainer.x = mapStartX;
-        this.mapMenuContainer.y = -20; // Start above button
+        this.mapMenuContainer.y = -20; 
 
         // Highlight Active Tool
         let highlightX = 0;
-        if (this.activeTool === 'PENCIL') highlightX = this.pencilBtn.x;
-        else if (this.activeTool === 'PEN') highlightX = this.penBtn.x;
-        else if (this.activeTool === 'COMMAND_BRUSH') highlightX = this.brushBtn.x;
+        if (this.activeTool === 'COMMAND_BRUSH') highlightX = this.brushBtn.x;
+        else if (this.activeTool === 'PENCIL') highlightX = this.pencilBtn.x;
         else if (this.activeTool === 'ERASER') highlightX = this.eraserBtn.x;
         else if (this.activeTool === 'FOOD_TRACE') highlightX = this.foodTraceBtn.x;
 
         this.bg.circle(highlightX, 0, 22).fill({ color: 0xFFFFFF, alpha: 0.1 });
         
-        // Highlight Active Intent (Border)
-        this.swatches.forEach((swatch, i) => {
-            const g = swatch.getChildAt(0) as Graphics;
-            // Hacky way to find intent: we know the order
-            const intents = [
-                TaskIntent.GREEN_HARVEST,
-                TaskIntent.RED_ATTACK,
-                TaskIntent.BLUE_SCOUT,
-                TaskIntent.YELLOW_ASSIST
-            ];
-            const isActive = intents[i] === this.activeIntent;
-            
-            g.clear();
-            g.circle(0, 0, 10).fill({ color: CONFIG.INTENT_COLORS[intents[i]] });
-            if (isActive) {
-                g.stroke({ width: 3, color: 0xFFFFFF }); // Active thick border
-            } else {
-                g.stroke({ width: 1, color: 0xAAAAAA }); // Inactive thin border
-            }
-        });
-
         // Update Opacity
-        this.pencilBtn.alpha = this.activeTool === 'PENCIL' ? 1.0 : 0.5;
-        this.penBtn.alpha = this.activeTool === 'PEN' ? 1.0 : 0.5;
         this.brushBtn.alpha = this.activeTool === 'COMMAND_BRUSH' ? 1.0 : 0.5;
+        this.pencilBtn.alpha = this.activeTool === 'PENCIL' ? 1.0 : 0.5;
         this.eraserBtn.alpha = this.activeTool === 'ERASER' ? 1.0 : 0.5;
         this.foodTraceBtn.alpha = this.activeTool === 'FOOD_TRACE' ? 1.0 : 0.5;
-        
-        if (this.penIcon) this.updatePenIcon();
     }
 
     public resize(screenWidth: number, screenHeight: number) {
