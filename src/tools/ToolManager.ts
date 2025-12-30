@@ -2,8 +2,8 @@ import { ITool } from './ITool';
 import { ToolMode, Toolbar } from '../ui/Toolbar';
 import { PenTool } from './PenTool';
 import { EraserTool } from './EraserTool';
-import { BrushTool } from './BrushTool';
 import { OmniPencilTool } from './OmniPencilTool';
+import { CommandBrushTool } from './CommandBrushTool';
 import { GraphSystem } from '../systems/GraphSystem';
 import { FlowFieldSystem } from '../systems/FlowFieldSystem';
 import { SprigSystem } from '../SprigSystem';
@@ -33,10 +33,11 @@ export class ToolManager {
             'PENCIL': new OmniPencilTool(sprigSystem, movementPathSystem),
             'PEN': new PenTool(graphSystem, toolbar, this),
             'ERASER': new EraserTool(flowFieldSystem, graphSystem, sprigSystem),
-            'BRUSH': new BrushTool(flowFieldSystem, this)
+            'COMMAND_BRUSH': new CommandBrushTool(sprigSystem, movementPathSystem)
         };
         
-        this.activeTool = this.tools['PENCIL'];
+        this.activeTool = this.tools['COMMAND_BRUSH'];
+        this.activeToolMode = 'COMMAND_BRUSH';
     }
 
     public setActiveIntent(intent: TaskIntent) {

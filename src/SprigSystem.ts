@@ -1068,6 +1068,35 @@ export class SprigSystem {
         return bestIdx;
     }
 
+    public getSprigsAt(x: number, y: number, radius: number): number[] {
+        const rSq = radius * radius;
+        const indices: number[] = [];
+
+        const startX = Math.max(0, Math.floor((x - radius) / this.cellSize));
+        const endX = Math.min(this.gridCols - 1, Math.floor((x + radius) / this.cellSize));
+        const startY = Math.max(0, Math.floor((y - radius) / this.cellSize));
+        const endY = Math.min(this.gridRows - 1, Math.floor((y + radius) / this.cellSize));
+
+        for (let cy = startY; cy <= endY; cy++) {
+            for (let cx = startX; cx <= endX; cx++) {
+                const cellIndex = cy * this.gridCols + cx;
+                let i = this.gridHead[cellIndex];
+
+                while (i !== -1) {
+                    const dx = this.positionsX[i] - x;
+                    const dy = this.positionsY[i] - y;
+                    const dSq = dx * dx + dy * dy;
+
+                    if (dSq < rSq) {
+                        indices.push(i);
+                    }
+                    i = this.gridNext[i];
+                }
+            }
+        }
+        return indices;
+    }
+
     public removeSprigsAt(x: number, y: number, radius: number) {
         const rSq = radius * radius;
         const toRemove: number[] = [];

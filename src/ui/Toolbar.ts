@@ -3,7 +3,7 @@ import { TaskIntent } from '../types/GraphTypes';
 import { CONFIG } from '../config';
 import { MapShape } from '../types/MapTypes';
 
-export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER' | 'BRUSH';
+export type ToolMode = 'PENCIL' | 'PEN' | 'ERASER' | 'COMMAND_BRUSH';
 
 export class Toolbar extends Container {
     private bg: Graphics;
@@ -49,7 +49,7 @@ export class Toolbar extends Container {
         // Tools
         this.pencilBtn = this.createButton('PENCIL');
         this.penBtn = this.createButton('PEN');
-        this.brushBtn = this.createButton('BRUSH');
+        this.brushBtn = this.createButton('COMMAND_BRUSH');
         this.eraserBtn = this.createButton('ERASER');
 
         this.addChild(this.pencilBtn);
@@ -206,7 +206,7 @@ export class Toolbar extends Container {
             this.penIcon = icon;
             this.updatePenIcon();
         }
-        else if (mode === 'BRUSH') this.drawBrushIcon(icon);
+        else if (mode === 'COMMAND_BRUSH') this.drawBrushIcon(icon);
         else this.drawEraserIcon(icon);
         
         btn.addChild(icon);
@@ -372,7 +372,7 @@ export class Toolbar extends Container {
         let highlightX = 0;
         if (this.activeTool === 'PENCIL') highlightX = this.pencilBtn.x;
         else if (this.activeTool === 'PEN') highlightX = this.penBtn.x;
-        else if (this.activeTool === 'BRUSH') highlightX = this.brushBtn.x;
+        else if (this.activeTool === 'COMMAND_BRUSH') highlightX = this.brushBtn.x;
         else if (this.activeTool === 'ERASER') highlightX = this.eraserBtn.x;
 
         this.bg.circle(highlightX, 0, 22).fill({ color: 0xFFFFFF, alpha: 0.1 });
@@ -401,7 +401,7 @@ export class Toolbar extends Container {
         // Update Opacity
         this.pencilBtn.alpha = this.activeTool === 'PENCIL' ? 1.0 : 0.5;
         this.penBtn.alpha = this.activeTool === 'PEN' ? 1.0 : 0.5;
-        this.brushBtn.alpha = this.activeTool === 'BRUSH' ? 1.0 : 0.5;
+        this.brushBtn.alpha = this.activeTool === 'COMMAND_BRUSH' ? 1.0 : 0.5;
         this.eraserBtn.alpha = this.activeTool === 'ERASER' ? 1.0 : 0.5;
         
         if (this.penIcon) this.updatePenIcon();
