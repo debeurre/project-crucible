@@ -12,6 +12,7 @@ import { ToolOverlaySystem } from '../systems/ToolOverlaySystem';
 import { TraceSystem } from '../systems/TraceSystem';
 import { Graphics, Ticker } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
+import { ItemSystem } from '../systems/ItemSystem';
 
 export class ToolManager {
     private tools: Record<ToolMode, ITool>;
@@ -27,13 +28,14 @@ export class ToolManager {
         movementPathSystem: MovementPathSystem,
         _toolOverlaySystem: ToolOverlaySystem,
         traceSystem: TraceSystem,
+        itemSystem: ItemSystem,
         toolbar: Toolbar
     ) {
         this.toolbar = toolbar;
         
         this.tools = {
             'PENCIL': new OmniPencilTool(sprigSystem, movementPathSystem),
-            'ERASER': new EraserTool(flowFieldSystem, graphSystem, sprigSystem),
+            'ERASER': new EraserTool(flowFieldSystem, graphSystem, sprigSystem, traceSystem, itemSystem),
             'COMMAND_BRUSH': new CommandBrushTool(sprigSystem, movementPathSystem),
             'FOOD_TRACE': new FoodTraceTool(traceSystem)
         };

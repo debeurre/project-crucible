@@ -138,6 +138,7 @@ export class Game {
             this.movementPathSystem, 
             this.toolOverlaySystem,
             this.traceSystem,
+            this.itemSystem,
             this.toolbar
         );
 

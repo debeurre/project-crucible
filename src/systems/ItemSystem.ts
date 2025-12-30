@@ -102,6 +102,20 @@ export class ItemSystem implements ISystem {
         return this.items.find(item => item.id === id);
     }
 
+    public removeCrumbsAt(x: number, y: number, radius: number) {
+        const rSq = radius * radius;
+        for (let i = this.items.length - 1; i >= 0; i--) {
+            const item = this.items[i];
+            const dx = item.x - x;
+            const dy = item.y - y;
+            if (dx*dx + dy*dy < rSq) {
+                this.container.removeChild(item.sprite);
+                item.sprite.destroy();
+                this.items.splice(i, 1);
+            }
+        }
+    }
+
     public update(_ticker: Ticker) {
         // Items are static for now
     }

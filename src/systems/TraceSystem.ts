@@ -63,6 +63,18 @@ export class TraceSystem implements ISystem {
         return bestTrace;
     }
 
+    public removeTracesAt(x: number, y: number, radius: number) {
+        const rSq = radius * radius;
+        for (let i = this.traces.length - 1; i >= 0; i--) {
+            const trace = this.traces[i];
+            const dx = trace.x - x;
+            const dy = trace.y - y;
+            if (dx*dx + dy*dy < rSq) {
+                this.traces.splice(i, 1);
+            }
+        }
+    }
+
     public update(ticker: Ticker) {
         const dt = ticker.deltaTime / 60; // Seconds
 
