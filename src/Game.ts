@@ -185,6 +185,7 @@ export class Game {
         this.graphSystem.clearAll();
         this.itemSystem.clearAll();
         this.invaderSystem.setActive(levelId === 'room1');
+        this.toolbar.setMapMode(this.mapSystem.getMode());
         this.updateUI();
         
         // Spawn initial sprigs for room1

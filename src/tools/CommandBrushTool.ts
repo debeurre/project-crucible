@@ -61,6 +61,12 @@ export class CommandBrushTool implements ITool {
                     this.sprigSystem.setPath(i, pathId);
                     this.sprigSystem.setSelected(i, false); // Deselect after assigning
                 }
+            } else {
+                // Tap on empty space: Deselect All
+                const selected = this.sprigSystem.getSelectedIndices();
+                for (const i of selected) {
+                    this.sprigSystem.setSelected(i, false);
+                }
             }
         } else if (this.mode === 'BRUSH_SELECT') {
             // Keep selection
@@ -74,7 +80,7 @@ export class CommandBrushTool implements ITool {
 
     public renderCursor(g: Graphics, x: number, y: number) {
         // Cursor
-        g.circle(x, y, this.brushRadius).stroke({ width: 2, color: 0xFFFFFF });
+        g.circle(x, y, this.brushRadius).stroke({ width: 2, color: 0x000000 });
         
         // Path Preview
         if (this.mode === 'CREATE_PATH' && this.pathPoints.length > 0) {

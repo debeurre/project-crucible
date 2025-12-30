@@ -38,6 +38,7 @@ export class ToolManager {
         
         this.activeTool = this.tools['COMMAND_BRUSH'];
         this.activeToolMode = 'COMMAND_BRUSH';
+        this.toolbar.setTool(this.activeToolMode);
     }
 
     public setActiveIntent(intent: TaskIntent) {
