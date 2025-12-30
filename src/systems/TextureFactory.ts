@@ -5,7 +5,6 @@ import { CONFIG } from '../config';
 export class TextureFactory {
     // Cache for generated textures
     private static sprigTextures: Texture[] = [];
-    private static cargoTexture: Texture | null = null;
     private static bushTexture: Texture | null = null;
     private static trapezoidTexture: Texture | null = null;
     private static castleTexture: Texture | null = null;
@@ -51,37 +50,8 @@ export class TextureFactory {
     /**
      * Generates a cargo texture.
      */
-    public static getCargoTexture(_renderer: Renderer): Texture {
-        if (this.cargoTexture) return this.cargoTexture;
-
-        const radius = CONFIG.ITEMS.CRUMB_RADIUS;
-        const size = radius * 3 + 4; 
-
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        
-        const rc = rough.canvas(canvas);
-        
-        // Draw rough triangle (matching crumb shape)
-        const cx = size / 2;
-        const cy = size / 2;
-        const r = radius * 1.5; 
-
-        const points: [number, number][] = [];
-        for(let i=0; i<3; i++) {
-            const angle = -Math.PI/2 + (Math.PI * 2 / 3) * i;
-            points.push([cx + r*Math.cos(angle), cy + r*Math.sin(angle)]);
-        }
-        
-        rc.polygon(points, {
-            fill: '#ffffff',
-            stroke: '#000000',
-            ...CONFIG.ROUGHJS.CARGO,
-        });
-
-        this.cargoTexture = Texture.from(canvas);
-        return this.cargoTexture;
+    public static getCargoTexture(renderer: Renderer): Texture {
+        return this.getCrumbTexture(renderer);
     }
 
     public static getBushTexture(_renderer: Renderer): Texture {
