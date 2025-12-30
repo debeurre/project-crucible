@@ -161,8 +161,8 @@ export const CONFIG = {
       fillStyle: 'solid'
     },
     CRUMB: {
-      roughness: 0.5,
-      strokeWidth: 0.5,
+      roughness: 1.5,
+      strokeWidth: 1,
       fillStyle: 'solid'
     },
     RESOURCE_NODE: {
