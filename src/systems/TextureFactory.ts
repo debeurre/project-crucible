@@ -54,9 +54,8 @@ export class TextureFactory {
     public static getCargoTexture(_renderer: Renderer): Texture {
         if (this.cargoTexture) return this.cargoTexture;
 
-        const s = CONFIG.SPRIG_RADIUS * 2;
-        const padding = 4;
-        const size = s + padding * 2;
+        const radius = CONFIG.ITEMS.CRUMB_RADIUS;
+        const size = radius * 3 + 4; 
 
         const canvas = document.createElement('canvas');
         canvas.width = size;
@@ -64,11 +63,10 @@ export class TextureFactory {
         
         const rc = rough.canvas(canvas);
         
-        // Draw rough triangle (matching crumb shape but sized for cargo)
+        // Draw rough triangle (matching crumb shape)
         const cx = size / 2;
         const cy = size / 2;
-        // Use s/2 as radius equivalent to fit in the same bounding box as the previous square
-        const r = s / 1.5; 
+        const r = radius * 1.5; 
 
         const points: [number, number][] = [];
         for(let i=0; i<3; i++) {
