@@ -148,10 +148,14 @@ export const CONFIG = {
       fillStyle: 'solid'
     },
     CARGO: {
-      roughness: 2.0,
-      strokeWidth: 2,
-      fillStyle: 'zigzag',
-      hachureGap: 3
+      roughness: 0.5,
+      strokeWidth: 0.5,
+      fillStyle: 'solid'
+    },
+    CRUMB: {
+      roughness: 0.5,
+      strokeWidth: 0.5,
+      fillStyle: 'solid'
     },
     RESOURCE_NODE: {
       roughness: 2.0,
