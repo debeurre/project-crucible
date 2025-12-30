@@ -311,9 +311,9 @@ export class SprigSystem {
         // 2. Scavenge
         if (this.targetItemIds[i] === -1) {
             // Look for item
-            const item = this.itemSystem.getNearestCrumb(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 10, true); 
+            const item = this.itemSystem.getNearestItem(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 10, true); 
             if (item) {
-                if (this.itemSystem.claimCrumb(item.id, i)) {
+                if (this.itemSystem.claimItem(item.id, i)) {
                     this.targetItemIds[i] = item.id;
                 }
             }
@@ -321,7 +321,7 @@ export class SprigSystem {
 
         if (this.targetItemIds[i] !== -1) {
             this.states[i] = SprigState.RETRIEVING;
-            const item = this.itemSystem.getCrumb(this.targetItemIds[i]);
+            const item = this.itemSystem.getItem(this.targetItemIds[i]);
             if (!item) {
                 this.targetItemIds[i] = -1; // Item gone
             } else {
@@ -329,7 +329,7 @@ export class SprigSystem {
                 const dx = item.x - this.positionsX[i];
                 const dy = item.y - this.positionsY[i];
                 if (dx*dx + dy*dy < 5*5) {
-                    if (this.itemSystem.removeCrumb(item.id)) {
+                    if (this.itemSystem.removeItem(item.id)) {
                         this.cargos[i] = 1;
                         this.targetItemIds[i] = -1;
                     } else {
@@ -394,7 +394,7 @@ export class SprigSystem {
         // Porter Logic
         if (this.states[i] === SprigState.IDLE) {
              // Look for crumbs
-             const item = this.itemSystem.getNearestCrumb(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 3);
+             const item = this.itemSystem.getNearestItem(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 3);
              if (item) {
                  this.states[i] = SprigState.RETRIEVING;
                  this.targets[i] = item.id;
@@ -473,7 +473,7 @@ export class SprigSystem {
                 break;
             case SprigState.RETRIEVING:
                 const itemId = this.targets[i];
-                const item = this.itemSystem.getCrumb(itemId);
+                const item = this.itemSystem.getItem(itemId);
                 if (!item) {
                      this.states[i] = SprigState.IDLE;
                 } else {
@@ -482,7 +482,7 @@ export class SprigSystem {
                      const dx = item.x - this.positionsX[i];
                      const dy = item.y - this.positionsY[i];
                      if (dx*dx + dy*dy < 25) { // 5px radius squared
-                         if (this.itemSystem.removeCrumb(itemId)) {
+                         if (this.itemSystem.removeItem(itemId)) {
                              this.cargos[i] = 1;
                              this.states[i] = SprigState.HAULING;
                              this.roadEdgeIds[i] = -1;

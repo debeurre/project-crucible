@@ -52,6 +52,6 @@ export class EraserTool implements ITool {
         this.graphSystem.removeElementsAt(x, y, this.RADIUS);
         this.sprigSystem.removeSprigsAt(x, y, this.RADIUS);
         this.traceSystem.removeTracesAt(x, y, this.RADIUS);
-        this.itemSystem.removeCrumbsAt(x, y, this.RADIUS);
+        this.itemSystem.removeItemsAt(x, y, this.RADIUS);
     }
 }

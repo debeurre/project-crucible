@@ -3,7 +3,7 @@ import { ISystem } from './ISystem';
 import { CONFIG } from '../config';
 import { TextureFactory } from './TextureFactory';
 
-export interface Crumb {
+export interface Item {
     id: number;
     x: number;
     y: number;
@@ -13,7 +13,7 @@ export interface Crumb {
 
 export class ItemSystem implements ISystem {
     public container: Container;
-    private items: Crumb[] = [];
+    private items: Item[] = [];
     private nextId: number = 0;
     private crumbTexture: Texture;
 
@@ -50,7 +50,7 @@ export class ItemSystem implements ISystem {
         this.items.push({ id, x: sx, y: sy, sprite, claimedBy: -1 });
     }
 
-    public claimCrumb(id: number, sprigId: number): boolean {
+    public claimItem(id: number, sprigId: number): boolean {
         const item = this.items.find(i => i.id === id);
         if (item && item.claimedBy === -1) {
             item.claimedBy = sprigId;
@@ -59,14 +59,14 @@ export class ItemSystem implements ISystem {
         return false;
     }
 
-    public releaseCrumb(id: number) {
+    public releaseItem(id: number) {
         const item = this.items.find(i => i.id === id);
         if (item) {
             item.claimedBy = -1;
         }
     }
 
-    public removeCrumb(id: number): boolean {
+    public removeItem(id: number): boolean {
         const index = this.items.findIndex(item => item.id === id);
         if (index !== -1) {
             const item = this.items[index];
@@ -78,9 +78,9 @@ export class ItemSystem implements ISystem {
         return false;
     }
     
-    public getNearestCrumb(x: number, y: number, radius: number, ignoreClaimed: boolean = false): Crumb | null {
+    public getNearestItem(x: number, y: number, radius: number, ignoreClaimed: boolean = false): Item | null {
         let bestDistSq = radius * radius;
-        let bestItem: Crumb | null = null;
+        let bestItem: Item | null = null;
         
         for (const item of this.items) {
             if (ignoreClaimed && item.claimedBy !== -1) continue;
@@ -98,11 +98,11 @@ export class ItemSystem implements ISystem {
         return bestItem;
     }
 
-    public getCrumb(id: number): Crumb | undefined {
+    public getItem(id: number): Item | undefined {
         return this.items.find(item => item.id === id);
     }
 
-    public removeCrumbsAt(x: number, y: number, radius: number) {
+    public removeItemsAt(x: number, y: number, radius: number) {
         const rSq = radius * radius;
         for (let i = this.items.length - 1; i >= 0; i--) {
             const item = this.items[i];
