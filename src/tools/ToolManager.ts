@@ -40,8 +40,8 @@ export class ToolManager {
             'FOOD_TRACE': new FoodTraceTool(traceSystem)
         };
         
-        this.activeToolMode = 'FOOD_TRACE';
-        this.activeTool = this.tools['FOOD_TRACE'];
+        this.activeToolMode = 'COMMAND_BRUSH';
+        this.activeTool = this.tools['COMMAND_BRUSH'];
         this.toolbar.setTool(this.activeToolMode);
     }
 
