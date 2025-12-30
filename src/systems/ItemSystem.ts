@@ -22,6 +22,16 @@ export class ItemSystem implements ISystem {
         this.crumbTexture = TextureFactory.getCrumbTexture(app.renderer);
     }
 
+    public spawnRandomCrumbs(count: number, centerX: number, centerY: number, radius: number) {
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.sqrt(Math.random()) * radius; // Uniform distribution
+            const x = centerX + Math.cos(angle) * r;
+            const y = centerY + Math.sin(angle) * r;
+            this.spawnCrumb(x, y);
+        }
+    }
+
     public spawnCrumb(x: number, y: number) {
         const id = this.nextId++;
         const sprite = new Sprite(this.crumbTexture);

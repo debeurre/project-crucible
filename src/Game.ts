@@ -180,6 +180,10 @@ export class Game {
                 console.log('Key 2 pressed, loading room2');
                 this.loadLevel('room2');
             }
+            if (e.key.toLowerCase() === 'c') {
+                console.log('Key C pressed, spawning random crumbs');
+                this.itemSystem.spawnRandomCrumbs(20, 800, 400, 200);
+            }
         });
     }
 
