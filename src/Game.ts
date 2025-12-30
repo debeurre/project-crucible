@@ -19,6 +19,7 @@ import { LevelManager } from './systems/LevelManager';
 import { MapShape } from './types/MapTypes';
 import { ItemSystem } from './systems/ItemSystem';
 import { InvaderSystem } from './systems/InvaderSystem';
+import { ResourceRenderer } from './systems/ResourceRenderer';
 
 export class Game {
     private app: Application;
@@ -32,6 +33,7 @@ export class Game {
     private visualEffects: VisualEffects;
     private flowFieldSystem: FlowFieldSystem;
     private resourceSystem: ResourceSystem;
+    private resourceRenderer: ResourceRenderer;
     private floatingTextSystem: FloatingTextSystem;
     private graphSystem: GraphSystem;
     private movementPathSystem: MovementPathSystem;
@@ -69,7 +71,8 @@ export class Game {
         this.visualEffects = new VisualEffects();
         this.flowFieldSystem = new FlowFieldSystem(app);
         this.floatingTextSystem = new FloatingTextSystem();
-        this.resourceSystem = new ResourceSystem(app, this.mapSystem);
+        this.resourceSystem = new ResourceSystem();
+        this.resourceRenderer = new ResourceRenderer(app, this.resourceSystem);
         this.graphSystem = new GraphSystem(this.flowFieldSystem);
         this.movementPathSystem = new MovementPathSystem();
         this.toolOverlaySystem = new ToolOverlaySystem();
@@ -93,6 +96,7 @@ export class Game {
         this.systemManager.addSystem(this.mapSystem);
         this.systemManager.addSystem(this.flowFieldSystem);
         this.systemManager.addSystem(this.resourceSystem);
+        this.systemManager.addSystem(this.resourceRenderer);
         this.systemManager.addSystem(this.itemSystem);
         this.systemManager.addSystem(this.graphSystem);
         this.systemManager.addSystem(this.movementPathSystem);
@@ -180,6 +184,7 @@ export class Game {
         this.flowFieldSystem.clearAll();
         this.graphSystem.clearAll();
         this.itemSystem.clearAll();
+        this.invaderSystem.setActive(levelId === 'room1');
         this.updateUI();
         
         // Spawn initial sprigs for room1
@@ -202,8 +207,8 @@ export class Game {
         // Map (Bottom)
         this.worldContainer.addChild(this.mapSystem.container);
         
-        // Resources (Structures)
-        this.worldContainer.addChild(this.resourceSystem.container);
+        // Resources (Structures) - Rendered by ResourceRenderer now
+        this.worldContainer.addChild(this.resourceRenderer.container);
 
         // Items (Ground)
         this.worldContainer.addChild(this.itemSystem.container);
@@ -221,7 +226,7 @@ export class Game {
         this.worldContainer.addChild(this.movementPathSystem.container);
 
         // 4. Crucible (On top of map/sprigs)
-        // Handled by ResourceSystem
+        // Handled by ResourceSystem (Logic) & ResourceRenderer (View)
 
         // 5. Floating Text (Always on top)
         this.worldContainer.addChild(this.floatingTextSystem.container);
@@ -316,31 +321,21 @@ export class Game {
     }
 
     private updateCrucibleAnimation(ticker: Ticker) {
-        let scaleX = 1.0;
-
         // 1. Tap Animation (Priority)
         if (this.tapAnimProgress < 1.0) {
             this.tapAnimProgress += ticker.deltaMS / CONFIG.CASTLE_ANIMATION.TAP_DURATION_MS;
             if (this.tapAnimProgress > 1.0) this.tapAnimProgress = 1.0;
-            const t = Math.sin(this.tapAnimProgress * Math.PI); 
-            scaleX = 1.0 - (t * CONFIG.CASTLE_ANIMATION.TAP_SQUEEZE_FACTOR); 
         } 
         // 2. Hold Animation (Rhythmic)
         else if (this.inputController.isCrucibleMode && (performance.now() - this.inputController.lastInputDownTime) >= CONFIG.TAP_THRESHOLD_MS) {
             const phaseInc = (ticker.deltaMS / CONFIG.CASTLE_ANIMATION.HOLD_CYCLE_DURATION_MS) * 2 * Math.PI;
             this.holdAnimPhase += phaseInc;
-            const t = (Math.sin(this.holdAnimPhase) + 1) / 2;
-            scaleX = 1.0 - (t * CONFIG.CASTLE_ANIMATION.HOLD_SQUEEZE_FACTOR);
         }
         else {
              this.holdAnimPhase = 0;
         }
         
-        const scaleY = 1.0 / Math.max(0.1, scaleX); 
-        const sinkType = this.resourceSystem.getSinkType();
-        if (this.resourceSystem.castleSprite && (sinkType === 'CRUCIBLE' || sinkType === 'NEST')) {
-            this.resourceSystem.castleSprite.scale.set(scaleX, scaleY);
-        }
+        this.resourceRenderer.setAnimationState(this.tapAnimProgress, this.holdAnimPhase);
     }
 
     private updateUI() {

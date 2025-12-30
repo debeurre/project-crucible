@@ -1,257 +1,167 @@
-import { Application, Sprite, Point, Container, Graphics, Ticker } from 'pixi.js';
-import { CONFIG } from '../config';
-import { TextureFactory } from './TextureFactory';
-import { MapSystem } from './MapSystem';
+import { Ticker } from 'pixi.js';
 import { ISystem } from './ISystem';
-
-interface StructureData {
-    sprite: Sprite;
-    type: string;
-    health: number;
-    x: number;
-    y: number;
-}
+import { StructureType, StructureData } from '../types/StructureTypes';
+import { CONFIG } from '../config';
 
 export class ResourceSystem implements ISystem {
-    public container: Container; 
-    public castleSprite: Sprite | null = null;    // The Castle (Sink)
-    private castleContainer: Container | null = null; // Container for Sprite + UI
-    private sources: StructureData[] = [];         // Resource Nodes
-    
-    private app: Application;
-    
-    private castlePosition: Point = new Point(0, 0); 
-    
-    private castleEnergy: number = 100;
-    private readonly MAX_ENERGY: number = 100;
-    private readonly DRAIN_RATE: number = 1; 
-    
-    private energyBar: Graphics;
-    private sinkType: 'CASTLE' | 'CRUCIBLE' | 'NEST' | 'NONE' = 'NONE';
+    private structures: StructureData[] = [];
+    private appWidth: number = 0;
+    private appHeight: number = 0;
+    private nextId: number = 0;
 
-    constructor(app: Application, _mapSystem: MapSystem) {
-        this.app = app;
-        this.container = new Container();
-        this.energyBar = new Graphics();
+    constructor() {}
+
+    public resize(width: number, height: number) {
+        this.appWidth = width;
+        this.appHeight = height;
     }
 
-    public loadLevelData(structures: any[]) {
-        console.log('ResourceSystem loading structures:', structures);
-        // Clear existing
-        this.container.removeChildren();
-        this.sources = [];
-        this.castleSprite = null;
-        this.castleContainer = null;
-        this.sinkType = 'NONE';
-        
-        const { width, height } = this.app.screen;
+    public loadLevelData(data: any[]) {
+        console.log('ResourceSystem (Logic) loading data');
+        this.structures = [];
+        this.nextId = 0;
 
-        structures.forEach(struct => {
-            let x = struct.x;
-            let y = struct.y;
-            
-            if (struct.relative) {
-                x *= width;
-                y *= height;
+        const w = this.appWidth || 1600;
+        const h = this.appHeight || 800;
+
+        data.forEach(d => {
+            let x = d.x;
+            let y = d.y;
+            if (d.relative) {
+                x *= w;
+                y *= h;
             }
 
-            if (struct.type === 'CASTLE') {
-                this.sinkType = 'CASTLE';
-                const castleTex = TextureFactory.getCastleTexture(this.app.renderer);
-                this.castleSprite = new Sprite(castleTex);
-                this.castleSprite.anchor.set(0.5);
-                this.castleSprite.tint = CONFIG.CASTLE_COLOR; // Brown
-                this.castleSprite.x = 0;
-                this.castleSprite.y = 0;
-                
-                this.castleContainer = new Container();
-                this.castleContainer.x = x;
-                this.castleContainer.y = y;
-                
-                this.castlePosition.set(x, y);
-                
-                // Add Bar to Container (sibling to sprite)
-                this.energyBar.clear();
-                this.castleContainer.addChild(this.castleSprite);
-                this.castleContainer.addChild(this.energyBar);
-                
-                this.container.addChild(this.castleContainer);
-            
-            } else if (struct.type === 'CRUCIBLE') {
-                this.sinkType = 'CRUCIBLE';
-                const crucibleTex = TextureFactory.getCrucibleTexture(this.app.renderer);
-                this.castleSprite = new Sprite(crucibleTex);
-                this.castleSprite.anchor.set(0.5);
-                this.castleSprite.tint = CONFIG.CRUCIBLE_COLOR; // Gold
-                this.castleSprite.x = 0;
-                this.castleSprite.y = 0;
-                
-                this.castleContainer = new Container();
-                this.castleContainer.x = x;
-                this.castleContainer.y = y;
-                
-                this.castlePosition.set(x, y);
-                
-                // Add Bar to Container (sibling to sprite)
-                this.energyBar.clear();
-                this.castleContainer.addChild(this.castleSprite);
-                this.castleContainer.addChild(this.energyBar);
-                
-                this.container.addChild(this.castleContainer);
+            let type = StructureType.RESOURCE_NODE;
+            if (d.type === 'NEST') type = StructureType.NEST;
+            else if (d.type === 'COOKIE') type = StructureType.COOKIE;
+            else if (d.type === 'CASTLE') type = StructureType.CASTLE;
+            else if (d.type === 'CRUCIBLE') type = StructureType.LEGACY_CRUCIBLE;
+            else if (d.type === 'BUSH') type = StructureType.BUSH;
 
-            } else if (struct.type === 'NEST') {
-                this.sinkType = 'NEST';
-                const nestTex = TextureFactory.getNestTexture(this.app.renderer);
-                this.castleSprite = new Sprite(nestTex);
-                this.castleSprite.anchor.set(0.5);
-                this.castleSprite.tint = 0xFFD700; // Gold
-                this.castleSprite.x = 0;
-                this.castleSprite.y = 0;
-                
-                this.castleContainer = new Container();
-                this.castleContainer.x = x;
-                this.castleContainer.y = y;
-                
-                this.castlePosition.set(x, y);
-                
-                this.energyBar.clear();
-                this.castleContainer.addChild(this.castleSprite);
-                this.castleContainer.addChild(this.energyBar);
-                
-                this.container.addChild(this.castleContainer);
+            const radius = (type === StructureType.CASTLE || type === StructureType.NEST || type === StructureType.LEGACY_CRUCIBLE) 
+                ? CONFIG.CASTLE_RADIUS 
+                : CONFIG.RESOURCE_NODE_RADIUS;
 
-            } else if (struct.type === 'RESOURCE_NODE' || struct.type === 'BUSH' || struct.type === 'GENERIC' || struct.type === 'COOKIE') {
-                let tex;
-                let tint = CONFIG.RESOURCE_NODE_COLOR;
+            const hp = d.health || d.energy || 100;
 
-                if (struct.type === 'BUSH') {
-                    tex = TextureFactory.getBushTexture(this.app.renderer);
-                    tint = 0x006400;
-                } else if (struct.type === 'COOKIE') {
-                    tex = TextureFactory.getCookieTexture(this.app.renderer);
-                    tint = 0xD2B48C; // Tan
-                } else {
-                    tex = TextureFactory.getTrapezoidTexture(this.app.renderer);
-                }
-                
-                const sprite = new Sprite(tex);
-                sprite.anchor.set(0.5);
-                sprite.tint = tint;
-                sprite.x = x;
-                sprite.y = y;
-                sprite.rotation = CONFIG.RESOURCE_NODE_ROTATION;
-
-                this.sources.push({
-                    sprite,
-                    type: struct.type,
-                    health: struct.health || 100,
-                    x,
-                    y
-                });
-                this.container.addChild(sprite);
-            }
+            this.structures.push({
+                id: this.nextId++,
+                type,
+                x,
+                y,
+                radius,
+                hp,
+                maxHp: hp,
+                energy: hp, 
+                maxEnergy: 100,
+                flashTimer: 0
+            });
         });
+    }
+
+    public update(ticker: Ticker) {
+        const dt = ticker.deltaTime;
+        const seconds = dt / 60;
         
-        this.castleEnergy = this.MAX_ENERGY; // Reset energy
+        for (const s of this.structures) {
+            if (s.flashTimer > 0) {
+                s.flashTimer -= dt;
+                if (s.flashTimer < 0) s.flashTimer = 0;
+            }
+
+            if (s.type === StructureType.CASTLE || s.type === StructureType.LEGACY_CRUCIBLE || s.type === StructureType.NEST) {
+                if (s.energy > 0) {
+                    s.energy -= seconds;
+                    if (s.energy < 0) s.energy = 0;
+                }
+            }
+        }
+    }
+
+    public getStructures(): StructureData[] {
+        return this.structures;
+    }
+
+    public getNestPosition(): {x: number, y: number} {
+        const nest = this.structures.find(s => s.type === StructureType.NEST || s.type === StructureType.CASTLE || s.type === StructureType.LEGACY_CRUCIBLE);
+        if (nest) {
+            return { x: nest.x, y: nest.y };
+        }
+        return { x: this.appWidth / 2, y: this.appHeight / 2 };
     }
     
-    public update(ticker: Ticker) {
-        const dt = ticker.deltaTime / 60; 
-        
-        if (this.castleSprite) {
-            // Drain Energy
-            if (this.castleEnergy > 0) {
-                this.castleEnergy -= this.DRAIN_RATE * dt;
-                if (this.castleEnergy < 0) this.castleEnergy = 0;
+    public getCastlePosition(): {x: number, y: number} {
+        return this.getNestPosition();
+    }
+
+    public damageStructure(typeOrId: string | number, xOrAmount: number, y?: number, amount?: number): boolean {
+        if (typeof typeOrId === 'number') {
+            const id = typeOrId;
+            const amt = xOrAmount;
+            const s = this.structures.find(st => st.id === id);
+            if (s && s.hp > 0) {
+                s.hp -= amt;
+                if (s.hp < 0) s.hp = 0;
+                s.flashTimer = 5;
+                return true;
             }
-            this.drawEnergyBar();
+            return false;
+        } else {
+            const type = typeOrId;
+            const x = xOrAmount;
+            const radius = 40; 
+            const dmg = amount || 0;
+            
+            for (const s of this.structures) {
+                if (s.type === type) { 
+                    const dx = s.x - x;
+                    const dy = s.y - (y || 0);
+                    if (dx*dx + dy*dy < (s.radius + radius)**2) {
+                        s.hp -= dmg;
+                        s.flashTimer = 5;
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
-    }
-
-    public feedCastle(amount: number = 10) {
-        this.castleEnergy += amount;
-        if (this.castleEnergy > this.MAX_ENERGY) this.castleEnergy = this.MAX_ENERGY;
-    }
-
-    private drawEnergyBar() {
-        if (!this.castleSprite) return;
-        this.energyBar.clear();
-        const width = 40;
-        const height = 6;
-        const pct = this.castleEnergy / this.MAX_ENERGY;
-        
-        // Background
-        this.energyBar.rect(-width/2, -40, width, height).fill(0x000000);
-        
-        // Foreground
-        const color = pct > 0.5 ? 0x00FF00 : (pct > 0.2 ? 0xFFFF00 : 0xFF0000);
-        this.energyBar.rect(-width/2 + 1, -39, (width - 2) * pct, height - 2).fill(color);
-    }
-
-    public getCastlePosition(): Point {
-        return this.castlePosition;
-    }
-
-    public getNestPosition(): Point {
-        if (this.sinkType === 'NEST' || this.sinkType === 'CASTLE') {
-            return this.castlePosition;
-        }
-        return new Point(this.app.screen.width / 2, this.app.screen.height / 2);
-    }
-
-    public getSinkType(): 'CASTLE' | 'CRUCIBLE' | 'NEST' | 'NONE' {
-        return this.sinkType;
-    }
-
-    public isInside(x: number, y: number): boolean {
-        return this.isNearSource(x, y);
     }
 
     public isNearSource(x: number, y: number, radius: number = 40): boolean {
-        const rSq = (CONFIG.RESOURCE_NODE_RADIUS + radius)**2;
-        
-        for (const s of this.sources) {
-            const dx = x - s.x;
-            const dy = y - s.y;
-            if (dx*dx + dy*dy < rSq) return true;
-        }
-        return false;
-    }
-
-    public damageStructure(type: string, x: number, y: number, amount: number): boolean {
-        const rSq = (CONFIG.RESOURCE_NODE_RADIUS + 20)**2;
-        
-        for (const s of this.sources) {
-            if (s.type === type) {
-                const dx = s.x - x;
-                const dy = s.y - y;
-                if (dx*dx + dy*dy < rSq) {
-                    s.health -= amount;
-                    s.sprite.tint = 0xFFFFFF; 
-                    setTimeout(() => {
-                        if (s.type === 'COOKIE') s.sprite.tint = 0xD2B48C;
-                        else if (s.type === 'BUSH') s.sprite.tint = 0x006400;
-                        else s.sprite.tint = CONFIG.RESOURCE_NODE_COLOR;
-                    }, 50);
-                    return true;
-                }
+        for (const s of this.structures) {
+            if (s.type === StructureType.BUSH || s.type === StructureType.COOKIE || s.type === StructureType.RESOURCE_NODE) {
+                const rSq = (s.radius + radius)**2;
+                const dx = x - s.x;
+                const dy = y - s.y;
+                if (dx*dx + dy*dy < rSq) return true;
             }
         }
         return false;
     }
 
-    public harvestSource(x: number, y: number): boolean {
-        return this.isNearSource(x, y);
-    }
-
     public isInsideCastle(x: number, y: number): boolean {
-        if (!this.castleSprite) return false;
-        const dx = x - this.castlePosition.x;
-        const dy = y - this.castlePosition.y;
-        return (dx * dx + dy * dy) < CONFIG.CASTLE_RADIUS**2;
+        const nest = this.structures.find(s => s.type === StructureType.NEST || s.type === StructureType.CASTLE || s.type === StructureType.LEGACY_CRUCIBLE);
+        if (!nest) return false;
+        
+        const dx = x - nest.x;
+        const dy = y - nest.y;
+        return (dx*dx + dy*dy) < nest.radius**2;
     }
 
-    public resize() {
-        // Structure positions are currently absolute/relative on load and don't dynamically scale yet.
+    public feedCastle(amount: number) {
+        const nest = this.structures.find(s => s.type === StructureType.NEST || s.type === StructureType.CASTLE || s.type === StructureType.LEGACY_CRUCIBLE);
+        if (nest) {
+            nest.energy += amount;
+            if (nest.energy > nest.maxEnergy) nest.energy = nest.maxEnergy;
+        }
+    }
+    
+    public getSinkType(): 'CASTLE' | 'CRUCIBLE' | 'NEST' | 'NONE' {
+        const nest = this.structures.find(s => s.type === StructureType.NEST || s.type === StructureType.CASTLE || s.type === StructureType.LEGACY_CRUCIBLE);
+        if (!nest) return 'NONE';
+        if (nest.type === StructureType.NEST) return 'NEST';
+        if (nest.type === StructureType.LEGACY_CRUCIBLE) return 'CRUCIBLE';
+        return 'CASTLE';
     }
 }
