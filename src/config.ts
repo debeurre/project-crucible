@@ -122,6 +122,13 @@ export const CONFIG = {
     3: 0.5  // YELLOW_ASSIST
   } as Record<number, number>,
 
+  // Trace System Colors
+  TRACE_COLORS: {
+      0: 0x00FF00, // FOOD
+      1: 0xFF0000, // DANGER
+      2: 0x0000FF  // HOME
+  } as Record<number, number>,
+
   // Omni-Pencil Visuals
   PENCIL_VISUALS: {
       COLOR: 0x000000, // Black

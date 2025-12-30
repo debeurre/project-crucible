@@ -1,5 +1,6 @@
 import { Container, Graphics, Ticker } from 'pixi.js';
 import { ISystem } from './ISystem';
+import { CONFIG } from '../config';
 
 export enum TraceType {
     FOOD = 0,
@@ -77,12 +78,7 @@ export class TraceSystem implements ISystem {
         // Render
         this.graphics.clear();
         for (const trace of this.traces) {
-            let color = 0xFFFFFF;
-            switch (trace.type) {
-                case TraceType.FOOD: color = 0x00FF00; break;
-                case TraceType.DANGER: color = 0xFF0000; break;
-                case TraceType.HOME: color = 0x0000FF; break;
-            }
+            const color = CONFIG.TRACE_COLORS[trace.type] || 0xFFFFFF;
 
             const alpha = Math.max(0, trace.duration / trace.maxDuration);
             
