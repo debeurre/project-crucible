@@ -78,7 +78,8 @@ export class TextureFactory {
         
         rc.polygon(points, {
             fill: '#ffffff',
-            stroke: 'none',
+            stroke: '#000000',
+            strokeWidth: 0.5,
             fillStyle: 'solid',
             roughness: 0.5
         });
@@ -359,7 +360,8 @@ export class TextureFactory {
         
         rc.polygon(points, {
             fill: '#ffffff',
-            stroke: 'none',
+            stroke: '#000000',
+            strokeWidth: 0.5,
             fillStyle: 'solid',
             roughness: 0.5
         });
