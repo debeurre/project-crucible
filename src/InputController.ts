@@ -3,7 +3,6 @@ import { InputState } from './InputManager';
 import { ToolManager } from './tools/ToolManager';
 import { SprigSystem } from './SprigSystem';
 import { MapSystem } from './systems/MapSystem';
-import { VisualEffects } from './systems/VisualEffects';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { GraphSystem } from './systems/GraphSystem';
 import { DebugOverlay } from './ui/DebugOverlay';
@@ -15,7 +14,6 @@ export class InputController {
     private inputState: InputState;
     private toolManager: ToolManager;
     private sprigSystem: SprigSystem;
-    private visualEffects: VisualEffects;
     private flowFieldSystem: FlowFieldSystem;
     private graphSystem: GraphSystem;
     private debugOverlay: DebugOverlay;
@@ -40,7 +38,6 @@ export class InputController {
         toolManager: ToolManager,
         sprigSystem: SprigSystem,
         _mapSystem: MapSystem,
-        visualEffects: VisualEffects,
         flowFieldSystem: FlowFieldSystem,
         graphSystem: GraphSystem,
         debugOverlay: DebugOverlay,
@@ -49,7 +46,6 @@ export class InputController {
         this.inputState = inputState;
         this.toolManager = toolManager;
         this.sprigSystem = sprigSystem;
-        this.visualEffects = visualEffects;
         this.flowFieldSystem = flowFieldSystem;
         this.graphSystem = graphSystem;
         this.debugOverlay = debugOverlay;
@@ -70,11 +66,6 @@ export class InputController {
             case '2': this.toolManager.setActiveIntent(TaskIntent.RED_ATTACK); break;
             case '3': this.toolManager.setActiveIntent(TaskIntent.BLUE_SCOUT); break;
             case '4': this.toolManager.setActiveIntent(TaskIntent.YELLOW_ASSIST); break;
-
-            case 'Q': this.visualEffects.toggleBlur(); break;
-            case 'W': this.visualEffects.toggleThreshold(); break;
-            case 'E': this.visualEffects.toggleDisplacement(); break;
-            case 'R': this.visualEffects.toggleNoise(); break;
 
             case 'G': this.flowFieldSystem.toggleGrid(); break;
             case 'D': this.debugOverlay.toggle(); break;

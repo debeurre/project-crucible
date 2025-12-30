@@ -30,16 +30,6 @@ export const CONFIG = {
   MAP_WIDTH: 1600,
   MAP_HEIGHT: 800,
 
-  // Visual Effects
-  VISUALS: {
-      WIGGLE_STRENGTH: 0.5,       // Master scale for displacement
-      DISPLACEMENT_SCALE: 30,     // How much the lines distort
-      DISPLACEMENT_SPEED: 5,    // How fast the noise scrolls
-      BLUR_STRENGTH: 1,           // High blur for liquid blend
-      NOISE_STRENGTH: 0.1,        // Paper grain amount
-      CONTRAST_AMOUNT: 5,         // High contrast to sharpen blur into blobs
-  },
-
   // Castle (Sink)
   CASTLE_RADIUS: 30,
   CASTLE_COLOR: 0x8B4513, // Brown

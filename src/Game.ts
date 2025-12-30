@@ -3,7 +3,6 @@ import { SprigSystem } from './SprigSystem';
 import { createInputManager, InputState } from './InputManager';
 import { CONFIG } from './config';
 import { MapSystem } from './systems/MapSystem';
-import { VisualEffects } from './systems/VisualEffects';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { ResourceSystem } from './systems/ResourceSystem';
 import { FloatingTextSystem } from './systems/FloatingTextSystem';
@@ -31,7 +30,6 @@ export class Game {
     private systemManager: SystemManager;
     private mapSystem: MapSystem;
     private sprigSystem: SprigSystem;
-    private visualEffects: VisualEffects;
     private flowFieldSystem: FlowFieldSystem;
     private resourceSystem: ResourceSystem;
     private resourceRenderer: ResourceRenderer;
@@ -70,7 +68,6 @@ export class Game {
         this.systemManager = new SystemManager();
 
         this.mapSystem = new MapSystem(app);
-        this.visualEffects = new VisualEffects();
         this.flowFieldSystem = new FlowFieldSystem(app);
         this.floatingTextSystem = new FloatingTextSystem();
         
@@ -108,7 +105,6 @@ export class Game {
         this.systemManager.addSystem(this.movementPathSystem);
         this.systemManager.addSystem(this.sprigSystem);
         this.systemManager.addSystem(this.invaderSystem);
-        this.systemManager.addSystem(this.visualEffects);
         this.systemManager.addSystem(this.floatingTextSystem);
         this.systemManager.addSystem(this.toolOverlaySystem);
 
@@ -147,7 +143,6 @@ export class Game {
             this.toolManager,
             this.sprigSystem,
             this.mapSystem,
-            this.visualEffects,
             this.flowFieldSystem,
             this.graphSystem,
             this.debugOverlay,
@@ -251,9 +246,6 @@ export class Game {
         // 6. UI (Overlay)
         this.app.stage.addChild(this.toolbar);
         this.app.stage.addChild(this.toolOverlaySystem.container);
-        
-        // 7. Apply Effects
-        this.visualEffects.applyTo(this.worldContainer);
     }
 
     private onResize() {
