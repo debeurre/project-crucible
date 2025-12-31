@@ -264,8 +264,7 @@ export class Game {
                 this.resourceSystem.feedCastle(10);
                 delivered = true;
                 
-                // Floating text disabled for performance testing
-                /*
+                // Spawn Floating Text (+1 Pop)
                 const heartPos = this.resourceSystem.getCastlePosition();
                 this.floatingTextSystem.spawn(
                     heartPos.x, 
@@ -273,7 +272,6 @@ export class Game {
                     CONFIG.FLOATING_TEXT.TEXT, 
                     CONFIG.RESOURCE_NODE_COLOR 
                 );
-                */
             }
         }
 
