@@ -21,6 +21,10 @@ export const CONFIG = {
   FRICTION: 0.95,
   GRAVITY: 0.0, // No gravity for now
 
+  // Detection and Interaction
+  DETECTION_RADIUS: 200,
+  HARVEST_RADIUS: 30,
+
   // Map System
   LAND_COLOR: 0xD2B48C, // Medium Tan - The play area
   BG_COLOR: 0xA9A9A9,   // Dark Gray - The void
