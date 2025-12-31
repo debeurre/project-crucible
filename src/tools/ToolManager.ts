@@ -47,7 +47,7 @@ export class ToolManager {
 
     public setActiveIntent(intent: TaskIntent) {
         this.activeIntent = intent;
-        this.toolbar.setActiveIntent(intent); // Sync UI
+        this.toolbar.setActiveIntent(intent); 
     }
 
     public getActiveIntent(): TaskIntent {

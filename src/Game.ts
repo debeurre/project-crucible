@@ -81,7 +81,7 @@ export class Game {
         this.itemSystem = new ItemSystem(app);
         this.traceSystem = new TraceSystem();
 
-        // SprigSystem needs MovementPathSystem, ItemSystem, and TraceSystem
+        // SprigSystem needs TraceSystem
         this.sprigSystem = new SprigSystem(app, this.mapSystem, this.flowFieldSystem, this.movementPathSystem, this.graphSystem, this.resourceSystem, this.itemSystem, this.traceSystem);
         
         this.invaderSystem = new InvaderSystem(app, this.sprigSystem);
@@ -90,17 +90,15 @@ export class Game {
         this.levelManager = new LevelManager(this.mapSystem, this.resourceSystem, this.invaderSystem);
         this.levelManager.init().then(() => {
             const defaultLevel = this.levelManager.getDefaultLevelId();
-            console.log('Game: Loading default level:', defaultLevel);
             this.loadLevel(defaultLevel);
         });
 
-        // Register Systems
+        // Register Systems (TraceSystem updated explicitly in loop per instruction)
         this.systemManager.addSystem(this.mapSystem);
         this.systemManager.addSystem(this.flowFieldSystem);
         this.systemManager.addSystem(this.resourceSystem);
         this.systemManager.addSystem(this.resourceRenderer);
         this.systemManager.addSystem(this.itemSystem);
-        this.systemManager.addSystem(this.traceSystem);
         this.systemManager.addSystem(this.graphSystem);
         this.systemManager.addSystem(this.movementPathSystem);
         this.systemManager.addSystem(this.sprigSystem);
@@ -160,24 +158,19 @@ export class Game {
 
         this.setupWorld();
         
-        // Setup Resize Handler
         this.app.renderer.on('resize', this.onResize.bind(this));
-        this.onResize(); // Initial sizing
+        this.onResize(); 
 
-        // Start Game Loop
         this.app.ticker.add(this.update.bind(this));
         
-        // Initial UI Update
         this.updateUI();
 
         // Temporary Keybinds
         window.addEventListener('keydown', (e) => {
             if (e.key === '2') {
-                console.log('Key 2 pressed, loading room2');
                 this.loadLevel('room2');
             }
             if (e.key.toLowerCase() === 'c') {
-                console.log('Key C pressed, spawning random crumbs');
                 this.itemSystem.spawnRandomCrumbs(20, 800, 400, 200);
             }
         });
@@ -196,7 +189,6 @@ export class Game {
         this.toolbar.setMapMode(this.mapSystem.getMode());
         this.updateUI();
         
-        // Spawn initial sprigs for room1
         if (levelId === 'room1') {
             const castlePos = this.resourceSystem.getCastlePosition();
             for(let i=0; i<6; i++) {
@@ -206,44 +198,20 @@ export class Game {
     }
 
     private setupWorld() {
-        // 1. Background (Separate layer)
         this.app.stage.addChild(this.background);
-        
-        // 2. World Container
         this.app.stage.addChild(this.worldContainer);
         
-        // 3. Layers in World (Order Matters!)
-        // Map (Bottom)
+        // Layers
         this.worldContainer.addChild(this.mapSystem.container);
-        
-        // Traces (Pheromones) - Below Items/Sprigs
-        this.worldContainer.addChild(this.traceSystem.container);
-
-        // Resources (Structures)
+        this.worldContainer.addChild(this.traceSystem.container); // Below Sprigs
         this.worldContainer.addChild(this.resourceRenderer.container);
-
-        // Items (Ground)
         this.worldContainer.addChild(this.itemSystem.container);
-
-        // Sprigs
         this.worldContainer.addChild(this.sprigSystem.container);
-        
-        // Flow Field Visualization
         this.worldContainer.addChild(this.flowFieldSystem.container);
-        
-        // Graph (Nodes/Edges)
         this.worldContainer.addChild(this.graphSystem.container);
-        
-        // Movement Paths (Over graph, under UI)
         this.worldContainer.addChild(this.movementPathSystem.container);
-
-        // 4. Crucible (On top of map/sprigs)
-        // Handled by ResourceSystem
-
-        // 5. Floating Text (Always on top)
         this.worldContainer.addChild(this.floatingTextSystem.container);
         
-        // 6. UI (Overlay)
         this.app.stage.addChild(this.toolbar);
         this.app.stage.addChild(this.toolOverlaySystem.container);
     }
@@ -259,11 +227,11 @@ export class Game {
     private update(ticker: Ticker) {
         this.inputController.update(ticker);
         
+        this.traceSystem.update(ticker); // Explicit update per instruction
         this.updateGameLogic(ticker);
         this.renderVisuals(ticker);
         this.toolManager.update(ticker);
         
-        // Garbage collect unused paths
         this.cleanupPaths();
     }
 
@@ -273,28 +241,24 @@ export class Game {
         
         for (const id of allPathIds) {
             if (!activePathIds.has(id)) {
-                // Path is empty of units -> destroy it
                 this.movementPathSystem.removePath(id);
             }
         }
     }
 
     private updateGameLogic(ticker: Ticker) {
-        // Check Sprig Interactions
         for (let i = 0; i < this.sprigSystem.activeSprigCount; i++) {
             if (!this.sprigSystem.isSprigActive(i)) continue;
-            if (!this.sprigSystem.isPlayer(i)) continue; // Skip invaders
+            if (!this.sprigSystem.isPlayer(i)) continue;
 
             const sprigBounds = this.sprigSystem.getSprigBounds(i);
 
-            // Dropoff
             if (this.sprigSystem.isCarrying(i) && this.resourceSystem.isInsideCastle(sprigBounds.x, sprigBounds.y)) {
                 this.sprigSystem.setCargo(i, 0);
                 this.score++;
                 this.resourceSystem.feedCastle(10);
                 this.updateUI();
                 
-                // Spawn Floating Text (+1 Pop)
                 const heartPos = this.resourceSystem.getCastlePosition();
                 this.floatingTextSystem.spawn(
                     heartPos.x, 
@@ -311,19 +275,16 @@ export class Game {
     private renderVisuals(ticker: Ticker) {
         this.updateCrucibleAnimation(ticker);
         
-        // Render Cursor
         const mx = this.inputState.mousePosition.x;
         const my = this.inputState.mousePosition.y;
         this.toolManager.renderCursor(this.toolOverlaySystem.graphics, mx, my);
     }
 
     private updateCrucibleAnimation(ticker: Ticker) {
-        // 1. Tap Animation (Priority)
         if (this.tapAnimProgress < 1.0) {
             this.tapAnimProgress += ticker.deltaMS / CONFIG.CASTLE_ANIMATION.TAP_DURATION_MS;
             if (this.tapAnimProgress > 1.0) this.tapAnimProgress = 1.0;
         } 
-        // 2. Hold Animation (Rhythmic)
         else if (this.inputController.isCrucibleMode && (performance.now() - this.inputController.lastInputDownTime) >= CONFIG.TAP_THRESHOLD_MS) {
             const phaseInc = (ticker.deltaMS / CONFIG.CASTLE_ANIMATION.HOLD_CYCLE_DURATION_MS) * 2 * Math.PI;
             this.holdAnimPhase += phaseInc;
