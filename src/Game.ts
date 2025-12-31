@@ -251,6 +251,7 @@ export class Game {
     }
 
     private updateGameLogic(ticker: Ticker) {
+        let delivered = false;
         for (let i = 0; i < this.sprigSystem.activeSprigCount; i++) {
             if (!this.sprigSystem.isSprigActive(i)) continue;
             if (!this.sprigSystem.isPlayer(i)) continue;
@@ -261,8 +262,10 @@ export class Game {
                 this.sprigSystem.setCargo(i, 0);
                 this.score++;
                 this.resourceSystem.feedCastle(10);
-                this.updateUI();
+                delivered = true;
                 
+                // Floating text disabled for performance testing
+                /*
                 const heartPos = this.resourceSystem.getCastlePosition();
                 this.floatingTextSystem.spawn(
                     heartPos.x, 
@@ -270,7 +273,12 @@ export class Game {
                     CONFIG.FLOATING_TEXT.TEXT, 
                     CONFIG.RESOURCE_NODE_COLOR 
                 );
+                */
             }
+        }
+
+        if (delivered) {
+            this.updateUI();
         }
 
         this.systemManager.update(ticker);
