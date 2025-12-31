@@ -90,7 +90,9 @@ export class Game {
         this.levelManager = new LevelManager(this.mapSystem, this.resourceSystem, this.invaderSystem);
         this.levelManager.init().then(() => {
             const defaultLevel = this.levelManager.getDefaultLevelId();
-            this.loadLevel(defaultLevel);
+            this.loadLevel(defaultLevel).then(() => {
+                this.updateUI();
+            });
         });
 
         // Register Systems (TraceSystem updated explicitly in loop per instruction)
