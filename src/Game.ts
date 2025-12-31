@@ -301,7 +301,8 @@ export class Game {
     private updateUI() {
         this.debugOverlay.update(
             this.score,
-            this.sprigSystem.activeSprigCount
+            this.sprigSystem.activeSprigCount,
+            this.app.ticker.FPS
         );
     }
 }

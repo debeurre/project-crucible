@@ -2,6 +2,7 @@ export class DebugOverlay {
     private container: HTMLDivElement;
     private scoreElement: HTMLDivElement;
     private sprigCountElement: HTMLDivElement;
+    private fpsElement: HTMLDivElement;
     private isVisible: boolean = true;
 
     constructor() {
@@ -14,9 +15,13 @@ export class DebugOverlay {
 
         this.sprigCountElement = document.createElement('div');
         this.sprigCountElement.textContent = 'SPRIGS: 0';
+
+        this.fpsElement = document.createElement('div');
+        this.fpsElement.textContent = 'FPS: 0';
         
         this.container.appendChild(this.scoreElement);
         this.container.appendChild(this.sprigCountElement);
+        this.container.appendChild(this.fpsElement);
     }
 
     private applyContainerStyles() {
@@ -39,9 +44,10 @@ export class DebugOverlay {
 
     // Removed initElements() as it populated the deleted lists
 
-    public update(score: number, sprigCount: number) {
+    public update(score: number, sprigCount: number, fps: number) {
         this.scoreElement.textContent = `SCORE: ${score}`;
         this.sprigCountElement.textContent = `SPRIGS: ${sprigCount}`;
+        this.fpsElement.textContent = `FPS: ${Math.round(fps)}`;
     }
 
     public toggle() {
