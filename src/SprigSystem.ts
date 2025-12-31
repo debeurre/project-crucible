@@ -20,8 +20,6 @@ enum SprigState {
     RETRIEVING = 5
 }
 
-// No more Sprig interface in DOD
-
 export class SprigSystem {
     // Data-Oriented Storage
     private positionsX: Float32Array;
@@ -34,7 +32,7 @@ export class SprigSystem {
     private selected: Uint8Array; // 0 = False, 1 = True
     private pathIds: Int32Array; // -1 = None
     private roadEdgeIds: Int32Array; // -1 = None (For Sticky Roads)
-    private pathNodeIndices: Int32Array; // Index of the next target node in the path (Shared for both)
+    private pathNodeIndices: Int32Array; // Index of the next target node in the path
     private animOffsets: Uint8Array; // Animation Frame Offset
     
     // Job Anchor System
@@ -45,6 +43,7 @@ export class SprigSystem {
     
     // Eusocial State
     private targetItemIds: Int32Array; // Dibs on crumb
+    private traceTimers: Float32Array; // Timer for dropping traces
 
     // Inference Engine State
     private states: Uint8Array;
@@ -81,7 +80,16 @@ export class SprigSystem {
     private readonly MAX_SPRIG_COUNT: number = CONFIG.MAX_SPRIG_COUNT; 
     public activeSprigCount: number = 0; 
 
-    constructor(app: Application, mapSystem: MapSystem, flowFieldSystem: FlowFieldSystem, movementPathSystem: MovementPathSystem, graphSystem: GraphSystem, resourceSystem: ResourceSystem, itemSystem: ItemSystem, traceSystem: TraceSystem) {
+    constructor(
+        app: Application, 
+        mapSystem: MapSystem, 
+        flowFieldSystem: FlowFieldSystem, 
+        movementPathSystem: MovementPathSystem, 
+        graphSystem: GraphSystem, 
+        resourceSystem: ResourceSystem, 
+        itemSystem: ItemSystem, 
+        traceSystem: TraceSystem
+    ) {
         this.app = app;
         this.mapSystem = mapSystem;
         this.flowFieldSystem = flowFieldSystem; 
@@ -113,15 +121,15 @@ export class SprigSystem {
         
         this.targetItemIds = new Int32Array(this.MAX_SPRIG_COUNT);
         this.targetItemIds.fill(-1);
+        this.traceTimers = new Float32Array(this.MAX_SPRIG_COUNT);
 
         this.states = new Uint8Array(this.MAX_SPRIG_COUNT);
         this.workTimers = new Float32Array(this.MAX_SPRIG_COUNT);
         this.targets = new Int32Array(this.MAX_SPRIG_COUNT);
         this.teams = new Uint8Array(this.MAX_SPRIG_COUNT);
 
-        // Initialize Spatial Hash Arrays (sized for max potential usage, resized in resize())
+        // Initialize Spatial Hash Arrays
         this.gridNext = new Int32Array(this.MAX_SPRIG_COUNT);
-        // Initial dummy size for gridHead, will be properly sized in resize()
         this.gridHead = new Int32Array(0);
 
         this.sprigContainers = [];
@@ -133,37 +141,30 @@ export class SprigSystem {
 
         this.initTextures();
         this.initPool(); 
-        this.resize(); // Setup grid based on initial screen size
+        this.resize(); 
     }
 
     public resize() {
-        // Calculate grid dimensions
         this.gridCols = Math.ceil(this.app.screen.width / this.cellSize);
         this.gridRows = Math.ceil(this.app.screen.height / this.cellSize);
         
         const cellCount = this.gridCols * this.gridRows;
         
-        // Reallocate gridHead if necessary
         if (this.gridHead.length < cellCount) {
             this.gridHead = new Int32Array(cellCount);
         }
     }
 
     private initTextures() {
-        // Sprig Textures (Frames 1-3)
         this.sprigTextures = TextureFactory.getSprigTextures(this.app.renderer);
-
-        // Cargo Texture
         this.cargoTexture = TextureFactory.getCargoTexture(this.app.renderer);
     }
-
 
     private initPool() { 
         for (let i = 0; i < this.MAX_SPRIG_COUNT; i++) {
             const container = new Container();
             container.visible = false;
 
-            // Start with Frame 0
             const bodySprite = new Sprite(this.sprigTextures[0]);
             bodySprite.tint = CONFIG.SPRIG_COLOR; 
             bodySprite.anchor.set(0.5); 
@@ -174,12 +175,11 @@ export class SprigSystem {
             cargoSprite.visible = false; 
             cargoSprite.y = -12; 
 
-            // Selection Ring
             const selectionRing = new Graphics();
             selectionRing.circle(0, 0, CONFIG.SPRIG_RADIUS + 4).stroke({ width: 2, color: CONFIG.PENCIL_VISUALS.HIGHLIGHT_COLOR, alpha: CONFIG.PENCIL_VISUALS.HIGHLIGHT_ALPHA });
             selectionRing.visible = false;
 
-            container.addChild(selectionRing); // Add first (bottom) or last (top)? Top is better visibility.
+            container.addChild(selectionRing);
             container.addChild(bodySprite);
             container.addChild(cargoSprite);
 
@@ -199,28 +199,22 @@ export class SprigSystem {
 
         const i = this.activeSprigCount; 
 
-        // Spawn at random angle around the crucible with padding (only if player?)
-        // If Invader (team 1), maybe spawn at x,y directly?
-        // Logic: spawnSprig(x,y) spawns AT x,y but maybe with scatter?
-        // Existing logic used scatter around crucible.
-        // I'll keep scatter logic but center on x,y.
         const angle = Math.random() * Math.PI * 2;
-        const dist = 5; // Small scatter
+        const dist = 5; 
         
         this.positionsX[i] = x + Math.cos(angle) * dist;
         this.positionsY[i] = y + Math.sin(angle) * dist;
 
-        // Zero initial velocity (idling)
         this.velocitiesX[i] = 0;
         this.velocitiesY[i] = 0;
         
         this.flashTimers[i] = 0;
         this.cargos[i] = 0; 
-        this.intents[i] = -1; // Default intent
+        this.intents[i] = -1; 
         this.selected[i] = 0;
         this.pathIds[i] = -1;
         this.roadEdgeIds[i] = -1;
-        this.pathNodeIndices[i] = 0; // Start at beginning of path
+        this.pathNodeIndices[i] = 0; 
         this.animOffsets[i] = Math.floor(Math.random() * CONFIG.ROUGHJS.WIGGLE_FRAMES);
         
         this.jobIntents[i] = -1;
@@ -229,6 +223,7 @@ export class SprigSystem {
         this.jobLeashTimers[i] = 0;
         
         this.targetItemIds[i] = -1;
+        this.traceTimers[i] = 0;
 
         this.states[i] = SprigState.IDLE;
         this.workTimers[i] = 0;
@@ -240,7 +235,7 @@ export class SprigSystem {
         this.sprigContainers[i].visible = true;
         
         if (team === 1) {
-            this.sprigBodySprites[i].tint = 0x808080; // Grey for Invaders
+            this.sprigBodySprites[i].tint = 0x808080;
         } else {
             this.sprigBodySprites[i].tint = CONFIG.SPRIG_COLOR;
         }
@@ -270,7 +265,7 @@ export class SprigSystem {
             // 2. Invader Logic
             if (this.teams[i] === 1) {
                 this.applyInvaderLogic(i);
-                if (i >= this.activeSprigCount) { i--; continue; } // Sprig removed
+                if (i >= this.activeSprigCount) { i--; continue; } 
                 this.updatePosition(i, dt);
                 this.updateVisuals(i);
                 continue;
@@ -292,12 +287,25 @@ export class SprigSystem {
     }
 
     private updateEusocial(i: number, dt: number) {
-        // 1. Haul
+        // Priority 1: Haul & Trace Drop
         if (this.cargos[i] === 1) {
             this.states[i] = SprigState.HAULING;
             const nestPos = this.resourceSystem.getNestPosition();
             this.seek(i, nestPos.x, nestPos.y, 1.0);
             
+            // Trace Dropping Logic
+            this.traceTimers[i] -= dt / 60;
+            if (this.traceTimers[i] <= 0) {
+                this.traceSystem.addTrace(
+                    this.positionsX[i], 
+                    this.positionsY[i], 
+                    TraceType.FOOD, 
+                    100, // Radius
+                    5.0  // Duration (seconds)
+                );
+                this.traceTimers[i] = 0.5; // Reset timer
+            }
+
             // Dropoff
             const dx = nestPos.x - this.positionsX[i];
             const dy = nestPos.y - this.positionsY[i];
@@ -308,9 +316,8 @@ export class SprigSystem {
             return;
         }
 
-        // 2. Scavenge
+        // Priority 2: Scavenge
         if (this.targetItemIds[i] === -1) {
-            // Look for item
             const item = this.itemSystem.getNearestItem(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 10, true); 
             if (item) {
                 if (this.itemSystem.claimItem(item.id, i)) {
@@ -340,7 +347,7 @@ export class SprigSystem {
             return;
         }
 
-        // 3. Harvest
+        // Priority 3: Harvest
         if (this.resourceSystem.isNearSource(this.positionsX[i], this.positionsY[i], 20)) {
              if (this.states[i] !== SprigState.HARVESTING) {
                  this.states[i] = SprigState.HARVESTING;
@@ -359,7 +366,7 @@ export class SprigSystem {
              return;
         }
 
-        // 4. Trace Following (New Priority)
+        // Priority 4: Trace Following
         if (this.cargos[i] === 0) {
             const strongestFood = this.traceSystem.getStrongestTrace(this.positionsX[i], this.positionsY[i], TraceType.FOOD);
             if (strongestFood) {
@@ -369,7 +376,7 @@ export class SprigSystem {
             }
         }
 
-        // 5. Wander (Stateful Random Walk)
+        // Priority 5: Wander (Leashed)
         this.states[i] = SprigState.IDLE;
         this.workTimers[i] -= dt/60;
         if (this.workTimers[i] <= 0) {
@@ -393,7 +400,6 @@ export class SprigSystem {
 
         // Porter Logic
         if (this.states[i] === SprigState.IDLE) {
-             // Look for crumbs
              const item = this.itemSystem.getNearestItem(this.positionsX[i], this.positionsY[i], CONFIG.PERCEPTION_RADIUS * 3);
              if (item) {
                  this.states[i] = SprigState.RETRIEVING;
@@ -414,13 +420,12 @@ export class SprigSystem {
             this.jobAnchorsY[i] = y;
             this.jobLeashTimers[i] = 0;
         } else if (this.jobIntents[i] !== -1) {
-            // Outside Zone: Leash
             this.jobLeashTimers[i] += dt / 60;
             if (this.jobLeashTimers[i] > 5.0) {
                  this.jobIntents[i] = -1; // Fired
             } else {
                  this.states[i] = SprigState.RETURNING;
-                 this.intents[i] = this.jobIntents[i]; // Keep visual color
+                 this.intents[i] = this.jobIntents[i]; 
                  return;
             }
         }
@@ -429,9 +434,8 @@ export class SprigSystem {
 
         // B. Harvester
         if (this.cargos[i] === 0 && intent === TaskIntent.GREEN_HARVEST) {
-            // Check for cooldown (if we just harvested)
             if (this.states[i] === SprigState.IDLE && this.workTimers[i] > 0) {
-                 return; // Cooldown active, stay IDLE (and wander)
+                 return; 
             }
 
             if (this.states[i] === SprigState.HARVESTING) return;
@@ -456,7 +460,6 @@ export class SprigSystem {
     private executeState(i: number, dt: number) {
         switch(this.states[i]) {
             case SprigState.IDLE:
-                // Decrement Cooldown
                 if (this.workTimers[i] > 0) {
                     this.workTimers[i] -= dt / 60;
                 }
@@ -464,7 +467,6 @@ export class SprigSystem {
                 this.applyBoids(i, dt);
                 this.applyFlowField(i, dt);
                 
-                // Random Wander if Green Intent (to avoid clumping)
                 if (this.intents[i] === TaskIntent.GREEN_HARVEST) {
                     const wanderStrength = 0.5;
                     this.velocitiesX[i] += (Math.random() - 0.5) * wanderStrength;
@@ -481,7 +483,7 @@ export class SprigSystem {
                      
                      const dx = item.x - this.positionsX[i];
                      const dy = item.y - this.positionsY[i];
-                     if (dx*dx + dy*dy < 25) { // 5px radius squared
+                     if (dx*dx + dy*dy < 25) { 
                          if (this.itemSystem.removeItem(itemId)) {
                              this.cargos[i] = 1;
                              this.states[i] = SprigState.HAULING;
@@ -501,7 +503,7 @@ export class SprigSystem {
                     
                     const hx = heart.x - this.positionsX[i];
                     const hy = heart.y - this.positionsY[i];
-                    if (hx*hx + hy*hy < 900) { // 30px radius squared
+                    if (hx*hx + hy*hy < 900) { 
                         this.cargos[i] = 0;
                         this.states[i] = SprigState.IDLE;
                         this.resourceSystem.feedCastle(10);
@@ -513,15 +515,9 @@ export class SprigSystem {
                 this.velocitiesY[i] = 0;
                 this.workTimers[i] -= dt / 60;
                 if (this.workTimers[i] <= 0) {
-                    // Harvest Complete
-                    // Spawn Crumb
                     this.itemSystem.spawnCrumb(this.positionsX[i], this.positionsY[i]);
-                    
-                    // Reset to Idle with Cooldown
                     this.states[i] = SprigState.IDLE;
-                    this.workTimers[i] = 1.0; // 1s Cooldown
-                    
-                    // Wander nudge
+                    this.workTimers[i] = 1.0; 
                     const speed = CONFIG.MAX_SPEED;
                     this.velocitiesX[i] = (Math.random() - 0.5) * speed;
                     this.velocitiesY[i] = (Math.random() - 0.5) * speed;
@@ -583,18 +579,12 @@ export class SprigSystem {
             this.jobLeashTimers[i] = this.jobLeashTimers[last];
             
             this.targetItemIds[i] = this.targetItemIds[last];
+            this.traceTimers[i] = this.traceTimers[last]; // Swap timer
 
             this.states[i] = this.states[last];
             this.workTimers[i] = this.workTimers[last];
             this.targets[i] = this.targets[last];
             this.teams[i] = this.teams[last];
-            
-            // Visuals are pooled, but tint might need reset if swapping germ/player?
-            // updateVisuals handles tint based on team/intent.
-            // But if I swap a Germ (Grey) into a Player slot, updateVisuals needs to know.
-            // updateVisuals uses this.intents[i] for color.
-            // Does it use teams?
-            // I need to update updateVisuals to handle teams.
         }
         
         this.sprigContainers[last].visible = false;
@@ -604,14 +594,12 @@ export class SprigSystem {
     private applyPathMovement(idx: number, pathId: number): boolean {
         const path = this.movementPathSystem.getPath(pathId);
         if (!path) {
-            // Path destroyed or invalid
             this.pathIds[idx] = -1;
             return false;
         }
 
         const targetIndex = this.pathNodeIndices[idx];
         if (targetIndex >= path.points.length) {
-            // End of path reached
             this.pathIds[idx] = -1;
             return false;
         }
@@ -625,35 +613,23 @@ export class SprigSystem {
         const distSq = dx * dx + dy * dy;
         const dist = Math.sqrt(distSq);
 
-        const speed = CONFIG.MAX_SPEED * 1.5; // Slightly faster on paths? Or normal speed.
-        // Let's use normal max speed for now, maybe customizable.
+        const speed = CONFIG.MAX_SPEED * 1.5; 
         
-        // Move towards target
         if (dist > 0) {
-            // Steering behavior: Seek
-            // We want to override velocity completely or steer?
-            // "Units traverse the path nodes strictly" -> Override is clearer.
-            // Direct velocity set.
             const vx = (dx / dist) * speed;
             const vy = (dy / dist) * speed;
-            
             this.velocitiesX[idx] = vx;
             this.velocitiesY[idx] = vy;
         }
 
-        // Check arrival
-        const arrivalThreshold = 10; // 10px radius
-        if (dist < arrivalThreshold) {
-            this.pathNodeIndices[idx]++; // Next point
+        if (dist < 10) {
+            this.pathNodeIndices[idx]++; 
         }
 
         return true;
     }
 
     private updateSpatialHash() {
-        // Reset grid heads for the active cells
-        // Note: Filling the entire array might be slow if the world is huge, 
-        // but for screen-sized grids (e.g. 80x40 = 3200 cells) it's fast.
         const activeCells = this.gridCols * this.gridRows;
         this.gridHead.fill(-1, 0, activeCells);
 
@@ -661,7 +637,6 @@ export class SprigSystem {
             const x = this.positionsX[i];
             const y = this.positionsY[i];
 
-            // Clamp to grid bounds
             let cx = Math.floor(x / this.cellSize);
             let cy = Math.floor(y / this.cellSize);
 
@@ -672,39 +647,9 @@ export class SprigSystem {
 
             const cellIndex = cy * this.gridCols + cx;
 
-            // Insert into linked list
             this.gridNext[i] = this.gridHead[cellIndex];
             this.gridHead[cellIndex] = i;
         }
-    }
-
-    public getSprigsAt(x: number, y: number, radius: number): number[] {
-        const rSq = radius * radius;
-        const indices: number[] = [];
-
-        const startX = Math.max(0, Math.floor((x - radius) / this.cellSize));
-        const endX = Math.min(this.gridCols - 1, Math.floor((x + radius) / this.cellSize));
-        const startY = Math.max(0, Math.floor((y - radius) / this.cellSize));
-        const endY = Math.min(this.gridRows - 1, Math.floor((y + radius) / this.cellSize));
-
-        for (let cy = startY; cy <= endY; cy++) {
-            for (let cx = startX; cx <= endX; cx++) {
-                const cellIndex = cy * this.gridCols + cx;
-                let i = this.gridHead[cellIndex];
-
-                while (i !== -1) {
-                    const dx = this.positionsX[i] - x;
-                    const dy = this.positionsY[i] - y;
-                    const dSq = dx * dx + dy * dy;
-
-                    if (dSq < rSq) {
-                        indices.push(i);
-                    }
-                    i = this.gridNext[i];
-                }
-            }
-        }
-        return indices;
     }
 
     private applyStickyRoadMovement(idx: number): boolean {
@@ -790,8 +735,6 @@ export class SprigSystem {
             this.intents[idx] = intent;
         }
     }
-    
-    // ... applyBoids, updatePosition (unchanged)
 
     private applyBoids(idx: number, dt: number) {
         let sepX = 0, sepY = 0;
@@ -804,11 +747,9 @@ export class SprigSystem {
         let sprigVelX = this.velocitiesX[idx]; 
         let sprigVelY = this.velocitiesY[idx]; 
 
-        // Calculate own grid position
         let cx = Math.floor(sprigX / this.cellSize);
         let cy = Math.floor(sprigY / this.cellSize);
         
-        // Clamp (though should match updateSpatialHash)
         if (cx < 0) cx = 0;
         if (cx >= this.gridCols) cx = this.gridCols - 1;
         if (cy < 0) cy = 0;
@@ -816,7 +757,6 @@ export class SprigSystem {
 
         const radiusSq = CONFIG.PERCEPTION_RADIUS * CONFIG.PERCEPTION_RADIUS;
 
-        // Check 3x3 Neighbor Cells
         const startX = Math.max(0, cx - 1);
         const endX = Math.min(this.gridCols - 1, cx + 1);
         const startY = Math.max(0, cy - 1);
@@ -839,15 +779,12 @@ export class SprigSystem {
                         if (distSq > 0 && distSq < radiusSq) {
                             const distance = Math.sqrt(distSq);
 
-                            // Separation
                             sepX += (dx / distance) / distance;
                             sepY += (dy / distance) / distance;
 
-                            // Alignment
                             aliX += this.velocitiesX[otherIdx];
                             aliY += this.velocitiesY[otherIdx];
 
-                            // Cohesion
                             cohX += otherX;
                             cohY += otherY;
 
@@ -860,8 +797,6 @@ export class SprigSystem {
         }
 
         if (neighborCount > 0) {
-            // Normalize and Apply Forces
-            // 1. Alignment
             aliX /= neighborCount;
             aliY /= neighborCount;
             const aliLen = Math.sqrt(aliX * aliX + aliY * aliY);
@@ -870,7 +805,6 @@ export class SprigSystem {
                 aliY = (aliY / aliLen) * CONFIG.ALIGNMENT_FORCE;
             }
 
-            // 2. Cohesion
             cohX /= neighborCount;
             cohY /= neighborCount;
             cohX -= sprigX;
@@ -881,19 +815,16 @@ export class SprigSystem {
                 cohY = (cohY / cohLen) * CONFIG.COHESION_FORCE;
             }
 
-            // 3. Separation
             const sepLen = Math.sqrt(sepX * sepX + sepY * sepY);
             if (sepLen > 0) {
                 sepX = (sepX / sepLen) * CONFIG.SEPARATION_FORCE;
                 sepY = (sepY / sepLen) * CONFIG.SEPARATION_FORCE;
             }
 
-            // Apply Forces scaled by DeltaTime
             sprigVelX += (sepX + aliX + cohX) * dt;
             sprigVelY += (sepY + aliY + cohY) * dt;
         }
         
-        // Nest Repulsion
         if (this.resourceSystem.getSinkType() === 'NEST') {
             const nestPos = this.resourceSystem.getCastlePosition();
             const r = CONFIG.CASTLE_RADIUS + CONFIG.SPRIG_RADIUS + 10; 
@@ -905,7 +836,6 @@ export class SprigSystem {
             
             if (dSq < rSq && dSq > 0) {
                 const dist = Math.sqrt(dSq);
-                // Hard push
                 const pushStrength = 5.0; 
                 sprigVelX += (dx / dist) * pushStrength;
                 sprigVelY += (dy / dist) * pushStrength;
@@ -920,17 +850,14 @@ export class SprigSystem {
         let velX = this.velocitiesX[idx];
         let velY = this.velocitiesY[idx];
 
-        // Apply cargo slowdown (Scale movement, don't reduce stored velocity permanently)
         let effectiveSpeedScale = 1.0;
         if (this.isCarrying(idx)) {
             effectiveSpeedScale = CONFIG.SPRIG_CARGO_SLOWDOWN_FACTOR;
         }
 
-        // Calculate speed squared
         const speedSq = velX * velX + velY * velY;
         const maxSq = CONFIG.MAX_SPEED * CONFIG.MAX_SPEED;
 
-        // Clamp speed
         if (speedSq > maxSq) {
             const speed = Math.sqrt(speedSq);
             const scale = CONFIG.MAX_SPEED / speed;
@@ -938,19 +865,16 @@ export class SprigSystem {
             velY *= scale;
         }
         
-        // Update stored velocity (with damping/friction)
         const frictionFactor = Math.pow(CONFIG.FRICTION, dt);
         this.velocitiesX[idx] = velX * frictionFactor; 
         this.velocitiesY[idx] = velY * frictionFactor;
 
-        // Move scaled by dt using the effective (slowed) velocity
         const moveVelX = velX * effectiveSpeedScale;
         const moveVelY = velY * effectiveSpeedScale;
 
         this.positionsX[idx] += moveVelX * dt;
         this.positionsY[idx] += moveVelY * dt;
 
-        // Delegate boundary checks to MapSystem
         const tempPosition = {x: this.positionsX[idx], y: this.positionsY[idx]};
         const tempVelocity = {x: this.velocitiesX[idx], y: this.velocitiesY[idx]};
         this.mapSystem.constrain(tempPosition, tempVelocity, CONFIG.SPRIG_RADIUS);
@@ -966,7 +890,7 @@ export class SprigSystem {
 
     public setPath(idx: number, pathId: number) {
         this.pathIds[idx] = pathId;
-        this.pathNodeIndices[idx] = 0; // Reset progress
+        this.pathNodeIndices[idx] = 0; 
     }
 
     public getActivePathIds(): Set<number> {
@@ -1000,21 +924,18 @@ export class SprigSystem {
         container.x = this.positionsX[idx];
         container.y = this.positionsY[idx];
 
-        // Animation Loop
         const frame = Math.floor(this.globalTime * CONFIG.ROUGHJS.WIGGLE_FPS);
         const texIdx = (frame + this.animOffsets[idx]) % CONFIG.ROUGHJS.WIGGLE_FRAMES;
         bodySprite.texture = this.sprigTextures[texIdx];
 
-        // Selection Visuals
         selectionRing.visible = this.selected[idx] === 1;
 
         if (flashTimer > 0) {
             bodySprite.tint = CONFIG.SPRIG_FLASH_COLOR;
             this.flashTimers[idx]--;
         } else if (this.teams[idx] === 1) {
-            bodySprite.tint = 0x808080; // Invader Grey
+            bodySprite.tint = 0x808080; 
         } else {
-            // Use Intent Color if present, else Default
             const intentId = this.intents[idx];
             if (intentId !== -1) {
                 bodySprite.tint = CONFIG.INTENT_COLORS[intentId];
@@ -1030,19 +951,15 @@ export class SprigSystem {
             }
             cargoSprite.y = CONFIG.SPRIG_CARGO_OFFSET_Y;
 
-            // Apply Cargo Squash (Volume Preserved)
             const sy = CONFIG.SPRIG_SQUASH_Y_WITH_CARGO;
             const sx = 1.0 / sy;
             bodySprite.scale.set(sx, sy);
 
         } else {
             cargoSprite.visible = false;
-            // Reset Scale
             bodySprite.scale.set(1.0, 1.0);
         }
     }
-    
-    // ... other methods (isSprigActive, isCarrying, setCargo, getSprigBounds, clearAll)
     
     public isSprigActive(idx: number): boolean {
         return idx < this.activeSprigCount;
@@ -1066,6 +983,35 @@ export class SprigSystem {
             y: this.positionsY[idx],
             radius: CONFIG.SPRIG_RADIUS
         };
+    }
+
+    public getSprigsAt(x: number, y: number, radius: number): number[] {
+        const rSq = radius * radius;
+        const indices: number[] = [];
+
+        const startX = Math.max(0, Math.floor((x - radius) / this.cellSize));
+        const endX = Math.min(this.gridCols - 1, Math.floor((x + radius) / this.cellSize));
+        const startY = Math.max(0, Math.floor((y - radius) / this.cellSize));
+        const endY = Math.min(this.gridRows - 1, Math.floor((y + radius) / this.cellSize));
+
+        for (let cy = startY; cy <= endY; cy++) {
+            for (let cx = startX; cx <= endX; cx++) {
+                const cellIndex = cy * this.gridCols + cx;
+                let i = this.gridHead[cellIndex];
+
+                while (i !== -1) {
+                    const dx = this.positionsX[i] - x;
+                    const dy = this.positionsY[i] - y;
+                    const dSq = dx * dx + dy * dy;
+
+                    if (dSq < rSq) {
+                        indices.push(i);
+                    }
+                    i = this.gridNext[i];
+                }
+            }
+        }
+        return indices;
     }
 
     public getSprigAt(x: number, y: number, radius: number = CONFIG.SPRIG_RADIUS): number {
@@ -1128,33 +1074,11 @@ export class SprigSystem {
 
         if (toRemove.length === 0) return;
 
-        // Sort descending to handle swap-remove safely
         toRemove.sort((a, b) => b - a);
 
         for (const idx of toRemove) {
             if (idx >= this.activeSprigCount) continue;
-
-            const last = this.activeSprigCount - 1;
-            if (idx !== last) {
-                this.positionsX[idx] = this.positionsX[last];
-                this.positionsY[idx] = this.positionsY[last];
-                this.velocitiesX[idx] = this.velocitiesX[last];
-                this.velocitiesY[idx] = this.velocitiesY[last];
-                this.flashTimers[idx] = this.flashTimers[last];
-                this.cargos[idx] = this.cargos[last];
-                this.intents[idx] = this.intents[last];
-                this.selected[idx] = this.selected[last];
-                this.pathIds[idx] = this.pathIds[last];
-                this.pathNodeIndices[idx] = this.pathNodeIndices[last];
-                
-                this.jobIntents[idx] = this.jobIntents[last];
-                this.jobAnchorsX[idx] = this.jobAnchorsX[last];
-                this.jobAnchorsY[idx] = this.jobAnchorsY[last];
-                this.jobLeashTimers[idx] = this.jobLeashTimers[last];
-            }
-            
-            this.sprigContainers[last].visible = false;
-            this.activeSprigCount--;
+            this.removeSprig(idx);
         }
     }
 
