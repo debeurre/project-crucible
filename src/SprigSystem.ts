@@ -293,17 +293,17 @@ export class SprigSystem {
             const nestPos = this.resourceSystem.getNestPosition();
             this.seek(i, nestPos.x, nestPos.y, 1.0);
             
-            // Trace Dropping Logic
+            // Drop Logic
             this.traceTimers[i] -= dt / 60;
             if (this.traceTimers[i] <= 0) {
                 this.traceSystem.addTrace(
                     this.positionsX[i], 
                     this.positionsY[i], 
-                    this.velocitiesX[i],
-                    this.velocitiesY[i],
                     TraceType.FOOD, 
                     100, // Radius
-                    5.0  // Duration (seconds)
+                    5.0, // Duration (seconds)
+                    this.velocitiesX[i],
+                    this.velocitiesY[i]
                 );
                 this.traceTimers[i] = 0.5; // Reset timer
             }
@@ -368,13 +368,43 @@ export class SprigSystem {
              return;
         }
 
-        // Priority 4: Trace Following
+        // Priority 4: Trace Following (Reverse Flow)
         if (this.cargos[i] === 0) {
-            const strongestFood = this.traceSystem.getStrongestTrace(this.positionsX[i], this.positionsY[i], TraceType.FOOD);
-            if (strongestFood) {
-                this.states[i] = SprigState.IDLE;
-                this.seek(i, strongestFood.x, strongestFood.y, 1.0);
-                return;
+            const sensorRadius = 60; 
+            const nearbyTraces = this.traceSystem.getNearbyTraces(this.positionsX[i], this.positionsY[i], TraceType.FOOD, sensorRadius);
+            
+            if (nearbyTraces.length > 0) {
+                let sumVx = 0;
+                let sumVy = 0;
+                
+                for (let j = 0; j < nearbyTraces.length; j++) {
+                    sumVx += nearbyTraces[j].vx;
+                    sumVy += nearbyTraces[j].vy;
+                }
+                
+                const avgVx = sumVx / nearbyTraces.length;
+                const avgVy = sumVy / nearbyTraces.length;
+                const flowLenSq = avgVx * avgVx + avgVy * avgVy;
+                
+                if (flowLenSq > 0.01) { // len > 0.1
+                    const flowLen = Math.sqrt(flowLenSq);
+                    // Reverse Flow: Move opposite to hauler direction
+                    const speed = CONFIG.MAX_SPEED;
+                    this.velocitiesX[i] = (-avgVx / flowLen) * speed;
+                    this.velocitiesY[i] = (-avgVy / flowLen) * speed;
+                    this.states[i] = SprigState.IDLE;
+                    return;
+                } else {
+                    // Pool/Tool: Stationary flow
+                    const first = nearbyTraces[0];
+                    // Random offset within radius to prevent clumping
+                    const r = first.radius * 0.5;
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = Math.random() * r;
+                    this.seek(i, first.x + Math.cos(angle) * dist, first.y + Math.sin(angle) * dist, 0.5);
+                    this.states[i] = SprigState.IDLE;
+                    return;
+                }
             }
         }
 
@@ -581,7 +611,7 @@ export class SprigSystem {
             this.jobLeashTimers[i] = this.jobLeashTimers[last];
             
             this.targetItemIds[i] = this.targetItemIds[last];
-            this.traceTimers[i] = this.traceTimers[last]; // Swap timer
+            this.traceTimers[i] = this.traceTimers[last]; 
 
             this.states[i] = this.states[last];
             this.workTimers[i] = this.workTimers[last];

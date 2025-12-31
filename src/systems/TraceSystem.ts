@@ -32,7 +32,7 @@ export class TraceSystem implements ISystem {
         this.container.addChild(this.graphics);
     }
 
-    public addTrace(x: number, y: number, vx: number, vy: number, type: TraceType, radius: number, duration: number) {
+    public addTrace(x: number, y: number, type: TraceType, radius: number, duration: number, vx: number, vy: number) {
         this.traces.push({
             id: this.nextId++,
             x,

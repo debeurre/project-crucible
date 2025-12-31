@@ -14,7 +14,7 @@ export class FoodTraceTool implements ITool {
     public onDeactivate() {}
 
     public onDown(x: number, y: number) {
-        this.traceSystem.addTrace(x, y, 0, 0, TraceType.FOOD, CONFIG.TOOLS.FOOD_TRACE.RADIUS, CONFIG.TOOLS.FOOD_TRACE.DURATION);
+        this.traceSystem.addTrace(x, y, TraceType.FOOD, CONFIG.TOOLS.FOOD_TRACE.RADIUS, CONFIG.TOOLS.FOOD_TRACE.DURATION, 0, 0);
     }
 
     public onHold(_x: number, _y: number, _ticker: Ticker) {}
