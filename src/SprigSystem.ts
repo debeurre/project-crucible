@@ -301,7 +301,7 @@ export class SprigSystem {
                     this.positionsY[i], 
                     TraceType.FOOD, 
                     100, // Radius
-                    5.0, // Duration (seconds)
+                    15.0, // Duration (seconds)
                     this.velocitiesX[i],
                     this.velocitiesY[i]
                 );
