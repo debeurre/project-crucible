@@ -189,9 +189,11 @@ export class Game {
         this.toolbar.setMapMode(this.mapSystem.getMode());
         this.updateUI();
         
-        if (levelId === 'room1') {
+        // Spawn initial sprigs
+        if (levelId === 'room1' || levelId === 'room2') {
             const castlePos = this.resourceSystem.getCastlePosition();
-            for(let i=0; i<6; i++) {
+            const count = levelId === 'room2' ? 10 : 6;
+            for(let i=0; i<count; i++) {
                 this.sprigSystem.spawnSprig(castlePos.x, castlePos.y, 0);
             }
         }

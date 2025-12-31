@@ -375,10 +375,9 @@ export class SprigSystem {
         }
 
         // 4. Scavenging (Goal: Find Item)
-        const nearestItem = this.itemSystem.getNearestItem(px, py, CONFIG.DETECTION_RADIUS, true); 
+        const nearestItem = this.itemSystem.getNearestItem(px, py, detectionRadius, true); 
         if (nearestItem) {
             if (this.itemSystem.claimItem(nearestItem.id, i)) {
-                if (i === 0) console.log('Sprig 0 claimed item:', nearestItem.id);
                 this.targetItemIds[i] = nearestItem.id;
                 this.states[i] = SprigState.RETRIEVING;
                 return;
@@ -386,21 +385,15 @@ export class SprigSystem {
         }
 
         // 5. Scouting (Goal: Find Resource)
-        const nearestSource = this.resourceSystem.getNearestSource(px, py, CONFIG.DETECTION_RADIUS);
+        const nearestSource = this.resourceSystem.getNearestSource(px, py, detectionRadius);
         if (nearestSource) {
-            if (i === 0) console.log('Sprig 0 spotted source:', nearestSource.type);
-            const dx = nearestSource.x - px;
-            const dy = nearestSource.y - py;
-            const distSq = dx*dx + dy*dy;
-            
-            if (distSq < CONFIG.HARVEST_RADIUS**2) {
-                // Within harvest range
+            const dx = nearestSource.x - px, dy = nearestSource.y - py, dSq = dx*dx + dy*dy;
+            if (dSq < CONFIG.HARVEST_RADIUS**2) {
                 this.states[i] = SprigState.HARVESTING;
                 this.workTimers[i] = 1.0;
                 this.velocitiesX[i] = 0;
                 this.velocitiesY[i] = 0;
             } else {
-                // Seek source
                 this.seek(i, nearestSource.x, nearestSource.y, 1.0);
                 this.states[i] = SprigState.IDLE;
             }
