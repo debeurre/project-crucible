@@ -128,6 +128,26 @@ export class ResourceSystem implements ISystem {
         }
     }
 
+    public getNearestSource(x: number, y: number, radius: number): StructureData | null {
+        let bestDistSq = radius * radius;
+        let bestSource: StructureData | null = null;
+        
+        for (const s of this.structures) {
+            if (s.type === StructureType.BUSH || s.type === StructureType.COOKIE || s.type === StructureType.RESOURCE_NODE) {
+                const dx = s.x - x;
+                const dy = s.y - y;
+                const dSq = dx * dx + dy * dy;
+                
+                if (dSq < bestDistSq) {
+                    bestDistSq = dSq;
+                    bestSource = s;
+                }
+            }
+        }
+        
+        return bestSource;
+    }
+
     public isNearSource(x: number, y: number, radius: number = 40): boolean {
         for (const s of this.structures) {
             if (s.type === StructureType.BUSH || s.type === StructureType.COOKIE || s.type === StructureType.RESOURCE_NODE) {
