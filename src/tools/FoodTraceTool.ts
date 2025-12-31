@@ -2,18 +2,31 @@ import { ITool } from './ITool';
 import { TraceSystem, TraceType } from '../systems/TraceSystem';
 import { Graphics, Ticker } from 'pixi.js';
 import { CONFIG } from '../config';
+import { SprigSystem } from '../SprigSystem';
 
 export class FoodTraceTool implements ITool {
     private traceSystem: TraceSystem;
+    private sprigSystem: SprigSystem;
 
-    constructor(traceSystem: TraceSystem) {
+    constructor(traceSystem: TraceSystem, sprigSystem: SprigSystem) {
         this.traceSystem = traceSystem;
+        this.sprigSystem = sprigSystem;
     }
 
     public onActivate() {}
     public onDeactivate() {}
 
     public onDown(x: number, y: number) {
+        // Apply immediate buff to sprigs in range
+        this.sprigSystem.applyDetectionBuff(
+            x, 
+            y, 
+            CONFIG.TOOLS.FOOD_TRACE.RADIUS, 
+            CONFIG.TOOLS.FOOD_TRACE.DURATION, 
+            CONFIG.TOOLS.FOOD_TRACE.RADIUS // Buff amount = radius
+        );
+        
+        // Also drop stationary trace for visual/nav aid (optional, but requested earlier)
         this.traceSystem.addTrace(x, y, TraceType.FOOD, CONFIG.TOOLS.FOOD_TRACE.RADIUS, CONFIG.TOOLS.FOOD_TRACE.DURATION, 0, 0);
     }
 

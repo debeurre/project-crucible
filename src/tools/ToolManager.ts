@@ -37,7 +37,7 @@ export class ToolManager {
             'PENCIL': new OmniPencilTool(sprigSystem, movementPathSystem),
             'ERASER': new EraserTool(flowFieldSystem, graphSystem, sprigSystem, traceSystem, itemSystem),
             'COMMAND_BRUSH': new CommandBrushTool(sprigSystem, movementPathSystem),
-            'FOOD_TRACE': new FoodTraceTool(traceSystem)
+            'FOOD_TRACE': new FoodTraceTool(traceSystem, sprigSystem)
         };
         
         this.activeToolMode = 'COMMAND_BRUSH';
