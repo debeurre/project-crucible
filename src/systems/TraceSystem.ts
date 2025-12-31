@@ -12,6 +12,8 @@ interface Trace {
     id: number;
     x: number;
     y: number;
+    vx: number;
+    vy: number;
     type: TraceType;
     radius: number;
     duration: number;
@@ -30,11 +32,13 @@ export class TraceSystem implements ISystem {
         this.container.addChild(this.graphics);
     }
 
-    public addTrace(x: number, y: number, type: TraceType, radius: number, duration: number) {
+    public addTrace(x: number, y: number, vx: number, vy: number, type: TraceType, radius: number, duration: number) {
         this.traces.push({
             id: this.nextId++,
             x,
             y,
+            vx,
+            vy,
             type,
             radius,
             duration,
@@ -61,6 +65,20 @@ export class TraceSystem implements ISystem {
             }
         }
         return bestTrace;
+    }
+
+    public getNearbyTraces(x: number, y: number, type: TraceType, radius: number): Trace[] {
+        const results: Trace[] = [];
+        const rSq = radius * radius;
+        for (const trace of this.traces) {
+            if (trace.type !== type) continue;
+            const dx = trace.x - x;
+            const dy = trace.y - y;
+            if (dx*dx + dy*dy < rSq) {
+                results.push(trace);
+            }
+        }
+        return results;
     }
 
     public removeTracesAt(x: number, y: number, radius: number) {

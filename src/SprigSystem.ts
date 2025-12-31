@@ -299,6 +299,8 @@ export class SprigSystem {
                 this.traceSystem.addTrace(
                     this.positionsX[i], 
                     this.positionsY[i], 
+                    this.velocitiesX[i],
+                    this.velocitiesY[i],
                     TraceType.FOOD, 
                     100, // Radius
                     5.0  // Duration (seconds)
