@@ -18,7 +18,7 @@ export class FoodTraceTool implements ITool {
 
     public onDown(x: number, y: number) {
         // Apply immediate buff to sprigs in range
-        this.sprigSystem.applyDetectionBuff(
+        (this.sprigSystem as any).applyDetectionBuff(
             x, 
             y, 
             CONFIG.TOOLS.FOOD_TRACE.RADIUS, 

@@ -38,6 +38,10 @@ export class ResourceSystem implements ISystem {
             else if (d.type === 'CASTLE') type = StructureType.CASTLE;
             else if (d.type === 'CRUCIBLE') type = StructureType.LEGACY_CRUCIBLE;
             else if (d.type === 'BUSH') type = StructureType.BUSH;
+            else if (d.type === 'ROCK') {
+                this.createRock(x, y, d.radius || 40);
+                return; // createRock handles pushing
+            }
 
             const radius = (type === StructureType.CASTLE || type === StructureType.NEST || type === StructureType.LEGACY_CRUCIBLE) 
                 ? CONFIG.CASTLE_RADIUS 
