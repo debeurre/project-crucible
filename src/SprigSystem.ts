@@ -10,7 +10,7 @@ import { ResourceSystem } from './systems/ResourceSystem';
 import { ItemSystem } from './systems/ItemSystem';
 import { MapShape } from './types/MapTypes';
 import { TraceSystem, TraceType } from './systems/TraceSystem';
-import { StructureType } from './types/StructureTypes';
+import { StructureType, StructureData } from './types/StructureTypes';
 
 enum SprigState {
     IDLE = 0,
@@ -258,6 +258,8 @@ export class SprigSystem {
         this.globalTime += dt / 60; 
         
         this.updateSpatialHash();
+        
+        const obstacles = this.resourceSystem.getObstacles();
 
         for (let i = 0; i < this.activeSprigCount; i++) { 
             // Update Buff Timer
@@ -272,6 +274,10 @@ export class SprigSystem {
             const pathId = this.pathIds[i];
             if (pathId !== -1) {
                 this.applyPathMovement(i, pathId);
+                // Obstacles applied even on path for physical realism?
+                // The instruction implies adding it generally. 
+                // Let's apply it.
+                this.applyObstacles(i, dt, obstacles);
                 this.updatePosition(i, dt);
                 this.updateVisuals(i);
                 continue;
@@ -281,6 +287,7 @@ export class SprigSystem {
             if (this.teams[i] === 1) {
                 this.applyInvaderLogic(i);
                 if (i >= this.activeSprigCount) { i--; continue; } 
+                this.applyObstacles(i, dt, obstacles);
                 this.updatePosition(i, dt);
                 this.updateVisuals(i);
                 continue;
@@ -296,8 +303,54 @@ export class SprigSystem {
                 this.executeState(i, dt);
             }
             
+            this.applyObstacles(i, dt, obstacles);
             this.updatePosition(i, dt);
             this.updateVisuals(i);
+        }
+    }
+
+    private applyObstacles(i: number, dt: number, obstacles: StructureData[]) {
+        const sx = this.positionsX[i];
+        const sy = this.positionsY[i];
+        
+        for (const rock of obstacles) {
+            const dx = sx - rock.x;
+            const dy = sy - rock.y;
+            const distSq = dx * dx + dy * dy;
+            
+            const minDist = rock.radius + CONFIG.SPRIG_RADIUS + 20; // 20px buffer
+            const minDistSq = minDist * minDist;
+            
+            if (distSq < minDistSq) {
+                const dist = Math.sqrt(distSq);
+                // Prevent division by zero
+                if (dist > 0.001) {
+                    const force = (minDist - dist) / minDist; // Linear falloff
+                    
+                    // Push
+                    const pushStrength = 500 * dt; // Arbitrary strong force scale? 
+                    // Wait, dt is usually ~1.0 for 60fps in Pixi Ticker? 
+                    // Ticker.deltaTime is 1 at 60FPS. 
+                    // Instructions say: vx += (dx/dist) * force * 500 * dt.
+                    // This assumes dt is in seconds? Or normalized? 
+                    // Pixi ticker.deltaTime is frame-scaled. ticker.deltaMS / 1000 is seconds.
+                    // "500 * dt" usually implies dt is seconds (e.g. 0.016).
+                    // If dt is 1.0, 500 is HUGE.
+                    // But maybe "Strong push" is intended.
+                    // I'll assume dt is `ticker.deltaTime / 60` (seconds) passed from Game.ts?
+                    // In Game.ts: `this.sprigSystem.update(ticker)`.
+                    // In update here: `const dt = ticker.deltaTime`. (This is ~1.0).
+                    // So if I use `dt`, 500 is massive velocity.
+                    // I will convert dt to seconds for physics calc if the prompt implies standard physics.
+                    // "vx += (dx/dist) * force * 500 * dt"
+                    // If 500 is pixels/sec, then dt should be seconds.
+                    
+                    const dtSeconds = dt / 60;
+                    
+                    this.velocitiesX[i] += (dx / dist) * force * 500 * dtSeconds;
+                    this.velocitiesY[i] += (dy / dist) * force * 500 * dtSeconds;
+                }
+            }
         }
     }
 
@@ -346,8 +399,8 @@ export class SprigSystem {
                 this.targetItemIds[i] = -1; // Item gone
             } else {
                 this.seek(i, item.x, item.y, 1.0);
-                const dx = item.x - this.positionsX[i];
-                const dy = item.y - this.positionsY[i];
+                const dx = item.x - px;
+                const dy = item.y - py;
                 if (dx*dx + dy*dy < CONFIG.HARVEST_RADIUS**2) {
                     if (this.itemSystem.removeItem(item.id)) {
                         this.cargos[i] = 1;
@@ -374,7 +427,9 @@ export class SprigSystem {
             return;
         }
 
-        // 4. Scavenging (Goal: Find Item)
+        // Priority 4: Search for Items or Resources
+        
+        // A. Search for nearest item
         const nearestItem = this.itemSystem.getNearestItem(px, py, detectionRadius, true); 
         if (nearestItem) {
             if (this.itemSystem.claimItem(nearestItem.id, i)) {
@@ -384,16 +439,21 @@ export class SprigSystem {
             }
         }
 
-        // 5. Scouting (Goal: Find Resource)
+        // B. Search for nearest source (Cookie)
         const nearestSource = this.resourceSystem.getNearestSource(px, py, detectionRadius);
         if (nearestSource) {
-            const dx = nearestSource.x - px, dy = nearestSource.y - py, dSq = dx*dx + dy*dy;
-            if (dSq < CONFIG.HARVEST_RADIUS**2) {
+            const dx = nearestSource.x - px;
+            const dy = nearestSource.y - py;
+            const distSq = dx*dx + dy*dy;
+            
+            if (distSq < CONFIG.HARVEST_RADIUS**2) {
+                // Within harvest range
                 this.states[i] = SprigState.HARVESTING;
                 this.workTimers[i] = 1.0;
                 this.velocitiesX[i] = 0;
                 this.velocitiesY[i] = 0;
             } else {
+                // Seek source
                 this.seek(i, nearestSource.x, nearestSource.y, 1.0);
                 this.states[i] = SprigState.IDLE;
             }
@@ -451,19 +511,6 @@ export class SprigSystem {
         }
         this.seek(i, this.jobAnchorsX[i], this.jobAnchorsY[i], 0.5); 
         this.applyBoids(i, dt);
-    }
-
-    public applyDetectionBuff(x: number, y: number, radius: number, duration: number, amount: number) {
-        const rSq = radius * radius;
-        for (let i = 0; i < this.activeSprigCount; i++) {
-            const dx = this.positionsX[i] - x;
-            const dy = this.positionsY[i] - y;
-            if (dx*dx + dy*dy < rSq) {
-                this.detectionBuffTimers[i] = duration;
-                this.detectionBuffValues[i] = amount;
-                this.flashTimers[i] = 10; // Visual feedback
-            }
-        }
     }
 
     private checkContext(i: number, dt: number) {
