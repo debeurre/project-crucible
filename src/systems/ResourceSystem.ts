@@ -60,6 +60,53 @@ export class ResourceSystem implements ISystem {
         });
     }
 
+    public createRock(x: number, y: number, size: number) {
+        const numPoints = Math.floor(Math.random() * 4) + 6; // 6 to 9 points
+        const angles: number[] = [];
+        for (let i = 0; i < numPoints; i++) {
+            angles.push(Math.random() * Math.PI * 2);
+        }
+        angles.sort((a, b) => a - b);
+
+        const vertices: number[] = [];
+        for (const angle of angles) {
+            const r = size * (0.7 + Math.random() * 0.3);
+            vertices.push(Math.cos(angle) * r);
+            vertices.push(Math.sin(angle) * r);
+        }
+
+        this.structures.push({
+            id: this.nextId++,
+            type: StructureType.ROCK,
+            x,
+            y,
+            radius: size,
+            hp: 100,
+            maxHp: 100,
+            energy: 0,
+            maxEnergy: 0,
+            flashTimer: 0,
+            vertices
+        });
+    }
+
+    public getObstacles(): StructureData[] {
+        return this.structures.filter(s => s.type === StructureType.ROCK);
+    }
+
+    public removeStructureAt(x: number, y: number): boolean {
+        for (let i = this.structures.length - 1; i >= 0; i--) {
+            const s = this.structures[i];
+            const dx = s.x - x;
+            const dy = s.y - y;
+            if (dx*dx + dy*dy < s.radius * s.radius) {
+                this.structures.splice(i, 1);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public update(ticker: Ticker) {
         const dt = ticker.deltaTime;
         const seconds = dt / 60;

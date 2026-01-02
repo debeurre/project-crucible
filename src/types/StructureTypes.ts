@@ -4,7 +4,8 @@ export enum StructureType {
     CASTLE = 'CASTLE',
     BUSH = 'BUSH',
     RESOURCE_NODE = 'RESOURCE_NODE',
-    LEGACY_CRUCIBLE = 'CRUCIBLE'
+    LEGACY_CRUCIBLE = 'CRUCIBLE',
+    ROCK = 'ROCK'
 }
 
 export interface StructureData {
@@ -18,4 +19,5 @@ export interface StructureData {
     energy: number;
     maxEnergy: number;
     flashTimer: number; // 0 = no flash, > 0 = frames remaining
+    vertices?: number[]; // For polygonal structures like ROCK
 }

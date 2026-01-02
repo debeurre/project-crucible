@@ -8,7 +8,7 @@ export class ResourceRenderer {
     public container: Container;
     private app: Application;
     private resourceSystem: ResourceSystem;
-    private renderMap: Map<number, { container: Container, sprite: Sprite, ui: Graphics }> = new Map();
+    private renderMap: Map<number, { container: Container, visual: Container, ui: Graphics }> = new Map();
     
     private tapAnimProgress = 1.0;
     private holdAnimPhase = 0;
@@ -49,50 +49,64 @@ export class ResourceRenderer {
         }
     }
 
-    private createRenderObject(s: StructureData): { container: Container, sprite: Sprite, ui: Graphics } {
+    private createRenderObject(s: StructureData): { container: Container, visual: Container, ui: Graphics } {
         const container = new Container();
         container.x = s.x;
         container.y = s.y;
 
-        let texture;
-        const baseTint = this.getBaseTint(s.type);
+        let visual: Container;
 
-        switch (s.type) {
-            case StructureType.NEST:
-                texture = TextureFactory.getNestTexture(this.app.renderer);
-                break;
-            case StructureType.COOKIE:
-                texture = TextureFactory.getCookieTexture(this.app.renderer);
-                break;
-            case StructureType.CASTLE:
-                texture = TextureFactory.getCastleTexture(this.app.renderer);
-                break;
-            case StructureType.LEGACY_CRUCIBLE:
-                texture = TextureFactory.getCrucibleTexture(this.app.renderer);
-                break;
-            case StructureType.BUSH:
-                texture = TextureFactory.getBushTexture(this.app.renderer);
-                break;
-            case StructureType.RESOURCE_NODE:
-            default:
-                texture = TextureFactory.getTrapezoidTexture(this.app.renderer);
-                break;
-        }
+        if (s.type === StructureType.ROCK && s.vertices) {
+            const g = new Graphics();
+            g.moveTo(s.vertices[0], s.vertices[1]);
+            for (let i = 2; i < s.vertices.length; i += 2) {
+                g.lineTo(s.vertices[i], s.vertices[i+1]);
+            }
+            g.closePath();
+            g.fill(0x808080).stroke({ width: 2, color: 0x505050 });
+            visual = g;
+        } else {
+            let texture;
+            const baseTint = this.getBaseTint(s.type);
 
-        const sprite = new Sprite(texture);
-        sprite.anchor.set(0.5);
-        sprite.tint = baseTint;
-        
-        if (s.type === StructureType.RESOURCE_NODE || s.type === StructureType.BUSH || s.type === StructureType.COOKIE) {
-             sprite.rotation = CONFIG.RESOURCE_NODE_ROTATION;
+            switch (s.type) {
+                case StructureType.NEST:
+                    texture = TextureFactory.getNestTexture(this.app.renderer);
+                    break;
+                case StructureType.COOKIE:
+                    texture = TextureFactory.getCookieTexture(this.app.renderer);
+                    break;
+                case StructureType.CASTLE:
+                    texture = TextureFactory.getCastleTexture(this.app.renderer);
+                    break;
+                case StructureType.LEGACY_CRUCIBLE:
+                    texture = TextureFactory.getCrucibleTexture(this.app.renderer);
+                    break;
+                case StructureType.BUSH:
+                    texture = TextureFactory.getBushTexture(this.app.renderer);
+                    break;
+                case StructureType.RESOURCE_NODE:
+                default:
+                    texture = TextureFactory.getTrapezoidTexture(this.app.renderer);
+                    break;
+            }
+
+            const sprite = new Sprite(texture);
+            sprite.anchor.set(0.5);
+            sprite.tint = baseTint;
+            
+            if (s.type === StructureType.RESOURCE_NODE || s.type === StructureType.BUSH || s.type === StructureType.COOKIE) {
+                 sprite.rotation = CONFIG.RESOURCE_NODE_ROTATION;
+            }
+            visual = sprite;
         }
 
         const ui = new Graphics();
 
-        container.addChild(sprite);
+        container.addChild(visual);
         container.addChild(ui);
 
-        return { container, sprite, ui };
+        return { container, visual, ui };
     }
 
     private getBaseTint(type: StructureType): number {
@@ -102,19 +116,28 @@ export class ResourceRenderer {
             case StructureType.CASTLE: return CONFIG.CASTLE_COLOR;
             case StructureType.LEGACY_CRUCIBLE: return CONFIG.CRUCIBLE_COLOR;
             case StructureType.BUSH: return 0x006400;
+            case StructureType.ROCK: return 0xFFFFFF; // Tint handled by Graphics fill
             default: return CONFIG.RESOURCE_NODE_COLOR;
         }
     }
 
-    private updateRenderObject(obj: { container: Container, sprite: Sprite, ui: Graphics }, s: StructureData) {
+    private updateRenderObject(obj: { container: Container, visual: Container, ui: Graphics }, s: StructureData) {
         obj.container.x = s.x;
         obj.container.y = s.y;
 
-        const baseTint = this.getBaseTint(s.type);
-        if (s.flashTimer > 0) {
-            obj.sprite.tint = 0xFFFFFF;
-        } else {
-            obj.sprite.tint = baseTint;
+        if (s.type !== StructureType.ROCK) {
+            const baseTint = this.getBaseTint(s.type);
+            // Visual is a Sprite or Graphics. If Graphics, tint works differently (affects everything). 
+            // For Rocks, we might not want flash tinting or we do?
+            // If ROCK, we don't tint frame-by-frame unless flashing.
+            // But 'visual' is typed Container.
+            // Sprites have 'tint'. Graphics do too (v8).
+            const v = obj.visual as Sprite; // Cast for access
+            if (s.flashTimer > 0) {
+                v.tint = 0xFFFFFF;
+            } else {
+                v.tint = baseTint;
+            }
         }
 
         obj.ui.clear();
@@ -130,7 +153,7 @@ export class ResourceRenderer {
                  scaleX = 1.0 - (t * CONFIG.CASTLE_ANIMATION.HOLD_SQUEEZE_FACTOR);
             }
             const scaleY = 1.0 / Math.max(0.1, scaleX);
-            obj.sprite.scale.set(scaleX, scaleY);
+            obj.visual.scale.set(scaleX, scaleY);
 
             const pct = s.energy / s.maxEnergy;
             const width = 40;
