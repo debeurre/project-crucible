@@ -5,6 +5,7 @@ import { GraphSystem } from '../systems/GraphSystem';
 import { SprigSystem } from '../SprigSystem';
 import { TraceSystem } from '../systems/TraceSystem';
 import { ItemSystem } from '../systems/ItemSystem';
+import { ResourceSystem } from '../systems/ResourceSystem';
 
 export class EraserTool implements ITool {
     private flowFieldSystem: FlowFieldSystem;
@@ -12,6 +13,7 @@ export class EraserTool implements ITool {
     private sprigSystem: SprigSystem;
     private traceSystem: TraceSystem;
     private itemSystem: ItemSystem;
+    private resourceSystem: ResourceSystem;
     private readonly RADIUS = 40;
 
     constructor(
@@ -19,13 +21,15 @@ export class EraserTool implements ITool {
         graphSystem: GraphSystem, 
         sprigSystem: SprigSystem,
         traceSystem: TraceSystem,
-        itemSystem: ItemSystem
+        itemSystem: ItemSystem,
+        resourceSystem: ResourceSystem
     ) {
         this.flowFieldSystem = flowFieldSystem;
         this.graphSystem = graphSystem;
         this.sprigSystem = sprigSystem;
         this.traceSystem = traceSystem;
         this.itemSystem = itemSystem;
+        this.resourceSystem = resourceSystem;
     }
 
     onActivate(): void {}
@@ -53,5 +57,6 @@ export class EraserTool implements ITool {
         this.sprigSystem.removeSprigsAt(x, y, this.RADIUS);
         this.traceSystem.removeTracesAt(x, y, this.RADIUS);
         this.itemSystem.removeItemsAt(x, y, this.RADIUS);
+        this.resourceSystem.removeStructureAt(x, y);
     }
 }

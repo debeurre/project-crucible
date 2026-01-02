@@ -9,7 +9,7 @@ import { TaskIntent } from './types/GraphTypes';
 import { ResourceSystem } from './systems/ResourceSystem';
 import { ItemSystem } from './systems/ItemSystem';
 import { MapShape } from './types/MapTypes';
-import { TraceSystem, TraceType } from './systems/TraceSystem';
+import { TraceSystem, TraceType, Trace } from './systems/TraceSystem';
 import { StructureType, StructureData } from './types/StructureTypes';
 
 enum SprigState {
@@ -327,24 +327,6 @@ export class SprigSystem {
                 if (dist > 0.001) {
                     const force = (minDist - dist) / minDist; // Linear falloff
                     
-                    // Push
-                    const pushStrength = 500 * dt; // Arbitrary strong force scale? 
-                    // Wait, dt is usually ~1.0 for 60fps in Pixi Ticker? 
-                    // Ticker.deltaTime is 1 at 60FPS. 
-                    // Instructions say: vx += (dx/dist) * force * 500 * dt.
-                    // This assumes dt is in seconds? Or normalized? 
-                    // Pixi ticker.deltaTime is frame-scaled. ticker.deltaMS / 1000 is seconds.
-                    // "500 * dt" usually implies dt is seconds (e.g. 0.016).
-                    // If dt is 1.0, 500 is HUGE.
-                    // But maybe "Strong push" is intended.
-                    // I'll assume dt is `ticker.deltaTime / 60` (seconds) passed from Game.ts?
-                    // In Game.ts: `this.sprigSystem.update(ticker)`.
-                    // In update here: `const dt = ticker.deltaTime`. (This is ~1.0).
-                    // So if I use `dt`, 500 is massive velocity.
-                    // I will convert dt to seconds for physics calc if the prompt implies standard physics.
-                    // "vx += (dx/dist) * force * 500 * dt"
-                    // If 500 is pixels/sec, then dt should be seconds.
-                    
                     const dtSeconds = dt / 60;
                     
                     this.velocitiesX[i] += (dx / dist) * force * 500 * dtSeconds;
@@ -478,24 +460,39 @@ export class SprigSystem {
                 const avgVy = sumVy / nearbyTraces.length;
                 const flowLenSq = avgVx * avgVx + avgVy * avgVy;
                 
-                if (flowLenSq > 0.01) { // len > 0.1
-                    const flowLen = Math.sqrt(flowLenSq);
-                    const speed = CONFIG.MAX_SPEED;
-                    this.velocitiesX[i] = (-avgVx / flowLen) * speed;
-                    this.velocitiesY[i] = (-avgVy / flowLen) * speed;
-                    this.states[i] = SprigState.IDLE;
-                    return;
+            if (flowLenSq > 0.01) {
+                const flowLen = Math.sqrt(flowLenSq);
+                const speed = CONFIG.MAX_SPEED;
+                this.velocitiesX[i] = (-avgVx / flowLen) * speed;
+                this.velocitiesY[i] = (-avgVy / flowLen) * speed;
+            } else {
+                // Weak average flow. Check if we are near a moving trace (edge case).
+                let bestMovingTrace: Trace | null = null;
+                let maxVelSq = 0.01; // Threshold
+                
+                for (const t of nearbyTraces) {
+                    const vSq = t.vx*t.vx + t.vy*t.vy;
+                    if (vSq > maxVelSq) {
+                        maxVelSq = vSq;
+                        bestMovingTrace = t;
+                    }
+                }
+
+                if (bestMovingTrace) {
+                    // Found a moving trace, seek it to find the flow
+                    this.seek(i, bestMovingTrace.x, bestMovingTrace.y, 1.0);
                 } else {
-                    // Pool/Tool: Stationary flow
+                    // Truly stationary (Tool). Wander inside.
                     const first = nearbyTraces[0];
                     const r = first.radius * 0.5;
                     const angle = Math.random() * Math.PI * 2;
                     const dist = Math.random() * r;
                     this.seek(i, first.x + Math.cos(angle) * dist, first.y + Math.sin(angle) * dist, 0.5);
-                    this.states[i] = SprigState.IDLE;
-                    return;
                 }
             }
+            this.states[i] = SprigState.IDLE;
+            return;
+        }
         }
 
         // Priority 6: Wander (Leashed)
@@ -953,6 +950,7 @@ export class SprigSystem {
             
             if (dSq < rSq && dSq > 0) {
                 const dist = Math.sqrt(dSq);
+                // Hard push
                 const pushStrength = 5.0; 
                 sprigVelX += (dx / dist) * pushStrength;
                 sprigVelY += (dy / dist) * pushStrength;

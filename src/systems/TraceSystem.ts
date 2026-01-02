@@ -8,7 +8,7 @@ export enum TraceType {
     HOME = 2
 }
 
-interface Trace {
+export interface Trace {
     id: number;
     x: number;
     y: number;

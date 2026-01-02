@@ -135,6 +135,7 @@ export class Game {
             this.toolOverlaySystem,
             this.traceSystem,
             this.itemSystem,
+            this.resourceSystem,
             this.toolbar
         );
 
@@ -229,12 +230,21 @@ export class Game {
     }
 
     private update(ticker: Ticker) {
-        this.inputController.update(ticker);
+        // Clamp deltaTime to prevent explosions after tab switch
+        // 6.0 is 0.1s at 60fps
+        const dt = Math.min(ticker.deltaTime, 6.0); 
+        const tickerProxy = { 
+            ...ticker, 
+            deltaTime: dt,
+            deltaMS: (dt / 60) * 1000 
+        } as Ticker;
+
+        this.inputController.update(tickerProxy);
         
-        this.traceSystem.update(ticker); // Explicit update per instruction
-        this.updateGameLogic(ticker);
-        this.renderVisuals(ticker);
-        this.toolManager.update(ticker);
+        this.traceSystem.update(tickerProxy); 
+        this.updateGameLogic(tickerProxy);
+        this.renderVisuals(tickerProxy);
+        this.toolManager.update(tickerProxy);
         
         this.cleanupPaths();
     }

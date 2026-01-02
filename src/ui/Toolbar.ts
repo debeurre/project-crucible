@@ -2,7 +2,7 @@ import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { TaskIntent } from '../types/GraphTypes';
 import { MapShape } from '../types/MapTypes';
 
-export type ToolMode = 'PENCIL' | 'ERASER' | 'COMMAND_BRUSH' | 'FOOD_TRACE';
+export type ToolMode = 'PENCIL' | 'ERASER' | 'COMMAND_BRUSH' | 'FOOD_TRACE' | 'ROCK_DROPPER';
 
 export class Toolbar extends Container {
     private bg: Graphics;
@@ -10,6 +10,7 @@ export class Toolbar extends Container {
     private eraserBtn: Container;
     private brushBtn: Container; 
     private foodTraceBtn: Container; 
+    private rockBtn: Container;
     
     // Map Selector
     private mapBtn!: Container;
@@ -34,16 +35,18 @@ export class Toolbar extends Container {
         this.bg = new Graphics();
         this.addChild(this.bg);
 
-        // Tools (Ordered: COMMAND_BRUSH, PENCIL, ERASER, FOOD_TRACE)
+        // Tools (Ordered: COMMAND_BRUSH, PENCIL, ERASER, FOOD_TRACE, ROCK_DROPPER)
         this.brushBtn = this.createButton('COMMAND_BRUSH');
         this.pencilBtn = this.createButton('PENCIL');
         this.eraserBtn = this.createButton('ERASER');
         this.foodTraceBtn = this.createButton('FOOD_TRACE');
+        this.rockBtn = this.createButton('ROCK_DROPPER');
 
         this.addChild(this.brushBtn);
         this.addChild(this.pencilBtn);
         this.addChild(this.eraserBtn);
         this.addChild(this.foodTraceBtn);
+        this.addChild(this.rockBtn);
         
         // Map Button
         this.mapBtn = this.createMapButton();
@@ -181,13 +184,26 @@ export class Toolbar extends Container {
         else if (mode === 'COMMAND_BRUSH') this.drawBrushIcon(icon);
         else if (mode === 'FOOD_TRACE') {
             this.drawTraceIcon(icon);
-            // Green tint is handled by drawing in green directly or tinting?
-            // drawTraceIcon will handle color.
         }
+        else if (mode === 'ROCK_DROPPER') this.drawRockIcon(icon);
         else this.drawEraserIcon(icon);
         
         btn.addChild(icon);
         return btn;
+    }
+
+    private drawRockIcon(g: Graphics) {
+        g.clear();
+        // Jagged rock
+        g.moveTo(-6, -6);
+        g.lineTo(0, -10);
+        g.lineTo(6, -6);
+        g.lineTo(8, 0);
+        g.lineTo(4, 8);
+        g.lineTo(-4, 8);
+        g.lineTo(-8, 0);
+        g.closePath();
+        g.stroke({ width: 2, color: 0xFFFFFF });
     }
 
     private drawTraceIcon(g: Graphics) {
@@ -243,8 +259,8 @@ export class Toolbar extends Container {
         const gap = 10;
         const mapBtnW = 80;
         
-        // Tools: 4 buttons
-        const numTools = 4;
+        // Tools: 5 buttons
+        const numTools = 5;
         const toolsWidth = numTools * btnW + (numTools - 1) * gap;
 
         const mapWidth = mapBtnW;
@@ -263,11 +279,12 @@ export class Toolbar extends Container {
         // Position Tools
         let startX = -totalWidth / 2 + padding + btnW / 2;
         
-        // Order: COMMAND_BRUSH, PENCIL, ERASER, FOOD_TRACE
+        // Order: COMMAND_BRUSH, PENCIL, ERASER, FOOD_TRACE, ROCK_DROPPER
         this.brushBtn.x = startX;
         this.pencilBtn.x = startX + btnW + gap;
         this.eraserBtn.x = startX + (btnW + gap) * 2;
         this.foodTraceBtn.x = startX + (btnW + gap) * 3;
+        this.rockBtn.x = startX + (btnW + gap) * 4;
         
         // Position Map Button
         const mapStartX = startX + (btnW + gap) * (numTools - 1) + btnW / 2 + separator + mapBtnW / 2;
@@ -283,6 +300,7 @@ export class Toolbar extends Container {
         else if (this.activeTool === 'PENCIL') highlightX = this.pencilBtn.x;
         else if (this.activeTool === 'ERASER') highlightX = this.eraserBtn.x;
         else if (this.activeTool === 'FOOD_TRACE') highlightX = this.foodTraceBtn.x;
+        else if (this.activeTool === 'ROCK_DROPPER') highlightX = this.rockBtn.x;
 
         this.bg.circle(highlightX, 0, 22).fill({ color: 0xFFFFFF, alpha: 0.1 });
         
@@ -291,6 +309,7 @@ export class Toolbar extends Container {
         this.pencilBtn.alpha = this.activeTool === 'PENCIL' ? 1.0 : 0.5;
         this.eraserBtn.alpha = this.activeTool === 'ERASER' ? 1.0 : 0.5;
         this.foodTraceBtn.alpha = this.activeTool === 'FOOD_TRACE' ? 1.0 : 0.5;
+        this.rockBtn.alpha = this.activeTool === 'ROCK_DROPPER' ? 1.0 : 0.5;
     }
 
     public resize(screenWidth: number, screenHeight: number) {
