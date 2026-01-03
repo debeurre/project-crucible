@@ -1,0 +1,8 @@
+export const CONFIG = {
+    TILE_SIZE: 24,
+    WORLD_WIDTH: 40, // tiles
+    WORLD_HEIGHT: 30, // tiles
+};
+
+export const SCREEN_WIDTH = CONFIG.TILE_SIZE * CONFIG.WORLD_WIDTH;
+export const SCREEN_HEIGHT = CONFIG.TILE_SIZE * CONFIG.WORLD_HEIGHT;

@@ -1,34 +1,26 @@
-import { Application, Assets, BitmapFont } from 'pixi.js';
-import { Game } from './Game';
+import { Application } from 'pixi.js';
+import { WorldState } from './core/WorldState';
+import { RenderSystem } from './systems/RenderSystem';
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 
-async function main() {
+async function init() {
     const app = new Application();
     
     await app.init({
-        resizeTo: window, 
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT,
         backgroundColor: 0x1a1a1a,
         antialias: true,
     });
 
     document.body.appendChild(app.canvas);
 
-    // Disable right-click context menu
-    document.body.addEventListener('contextmenu', (e) => e.preventDefault());
-    
-    // Load Font
-    await Assets.load('./fonts/Virgil.woff2');
-    
-    // Register as BitmapFont for performance
-    BitmapFont.install({
-        name: 'Virgil',
-        style: {
-            fontFamily: 'Virgil',
-            fontSize: 32, 
-            fill: 0xffffff, 
-        }
-    });
+    const world = new WorldState();
+    const renderSystem = new RenderSystem(app, world);
 
-    new Game(app);
+    app.ticker.add(() => {
+        renderSystem.update();
+    });
 }
 
-main();
+init();
