@@ -6,6 +6,7 @@ export class RenderSystem {
     private app: Application;
     private world: WorldState;
     private gridGraphics: Graphics;
+    private sprigGraphics: Graphics;
     private container: Container;
     private needsRedraw: boolean = true;
 
@@ -14,8 +15,10 @@ export class RenderSystem {
         this.world = world;
         this.container = new Container();
         this.gridGraphics = new Graphics();
+        this.sprigGraphics = new Graphics();
         
         this.container.addChild(this.gridGraphics);
+        this.container.addChild(this.sprigGraphics);
         this.app.stage.addChild(this.container);
     }
 
@@ -24,6 +27,22 @@ export class RenderSystem {
             this.drawGrid();
             this.needsRedraw = false;
         }
+        this.drawSprigs();
+    }
+
+    private drawSprigs() {
+        const g = this.sprigGraphics;
+        g.clear();
+        
+        const sprigs = this.world.sprigs;
+        const count = CONFIG.MAX_SPRIGS;
+
+        for (let i = 0; i < count; i++) {
+            if (sprigs.active[i] === 1) {
+                g.circle(sprigs.x[i], sprigs.y[i], 3);
+            }
+        }
+        g.fill(0x00FF00);
     }
 
     private drawGrid() {

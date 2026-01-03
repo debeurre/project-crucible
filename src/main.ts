@@ -1,6 +1,7 @@
 import { Application } from 'pixi.js';
 import { WorldState } from './core/WorldState';
 import { RenderSystem } from './systems/RenderSystem';
+import { MovementSystem } from './systems/MovementSystem';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 
 async function init() {
@@ -17,8 +18,10 @@ async function init() {
 
     const world = new WorldState();
     const renderSystem = new RenderSystem(app, world);
+    const movementSystem = new MovementSystem();
 
     app.ticker.add(() => {
+        movementSystem.update(world, app.ticker.deltaTime);
         renderSystem.update();
     });
 }
