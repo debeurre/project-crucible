@@ -1,5 +1,8 @@
 # PROJECT CRUCIBLE: CONTEXT & RULES
 
+## CURRENT PHASE: REWRITE
+Refer to DESIGN.md for truth. Ignore src/ legacy code when designing new systems.
+
 ## 1. THE DEVELOPER (CRITICAL)
 - **Input Constraints:** Developer MOSTLY uses a mouse/touchscreen (Tap/Drag). 
 - **MINIMAL KEYBOARD CONTROLS:** Do not suggest WASD, arrow keys, or complex hotkeys.
