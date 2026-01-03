@@ -6,6 +6,12 @@ export class HiveMindSystem {
     public update(world: WorldState) {
         const sprigs = world.sprigs;
         const structures = world.structures;
+        
+        if (!structures) {
+            // console.error("HiveMindSystem: world.structures is undefined!");
+            return;
+        }
+
         const count = CONFIG.MAX_SPRIGS;
 
         // Cache positions
