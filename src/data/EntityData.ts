@@ -6,6 +6,10 @@ export class EntityData {
     public vx: Float32Array;
     public vy: Float32Array;
     public active: Uint8Array;
+    public state: Uint8Array;
+    public cargo: Uint8Array;
+    public targetX: Float32Array;
+    public targetY: Float32Array;
     public count: number;
 
     constructor() {
@@ -15,6 +19,10 @@ export class EntityData {
         this.vx = new Float32Array(size);
         this.vy = new Float32Array(size);
         this.active = new Uint8Array(size);
+        this.state = new Uint8Array(size);
+        this.cargo = new Uint8Array(size);
+        this.targetX = new Float32Array(size);
+        this.targetY = new Float32Array(size);
         this.count = 0;
     }
 
@@ -26,6 +34,10 @@ export class EntityData {
                 this.vx[i] = 0;
                 this.vy[i] = 0;
                 this.active[i] = 1;
+                this.state[i] = 0; // IDLE
+                this.cargo[i] = 0;
+                this.targetX[i] = startX;
+                this.targetY[i] = startY;
                 this.count++;
                 return i;
             }

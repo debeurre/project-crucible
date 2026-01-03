@@ -2,6 +2,8 @@ import { Application } from 'pixi.js';
 import { WorldState } from './core/WorldState';
 import { RenderSystem } from './systems/RenderSystem';
 import { MovementSystem } from './systems/MovementSystem';
+import { HiveMindSystem } from './systems/HiveMindSystem';
+import { NavigationSystem } from './systems/NavigationSystem';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 
 async function init() {
@@ -19,9 +21,14 @@ async function init() {
     const world = new WorldState();
     const renderSystem = new RenderSystem(app, world);
     const movementSystem = new MovementSystem();
+    const hiveMindSystem = new HiveMindSystem();
+    const navigationSystem = new NavigationSystem();
 
     app.ticker.add(() => {
-        movementSystem.update(world, app.ticker.deltaTime);
+        const dt = app.ticker.deltaTime;
+        hiveMindSystem.update(world);
+        navigationSystem.update(world, dt);
+        movementSystem.update(world, dt);
         renderSystem.update();
     });
 }

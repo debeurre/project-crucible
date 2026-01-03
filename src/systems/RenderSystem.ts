@@ -1,11 +1,13 @@
 import { Application, Graphics, Container } from 'pixi.js';
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
+import { StructureType } from '../data/StructureData';
 
 export class RenderSystem {
     private app: Application;
     private world: WorldState;
     private gridGraphics: Graphics;
+    private structureGraphics: Graphics;
     private sprigGraphics: Graphics;
     private container: Container;
     private needsRedraw: boolean = true;
@@ -15,9 +17,11 @@ export class RenderSystem {
         this.world = world;
         this.container = new Container();
         this.gridGraphics = new Graphics();
+        this.structureGraphics = new Graphics();
         this.sprigGraphics = new Graphics();
         
         this.container.addChild(this.gridGraphics);
+        this.container.addChild(this.structureGraphics);
         this.container.addChild(this.sprigGraphics);
         this.app.stage.addChild(this.container);
     }
@@ -25,24 +29,10 @@ export class RenderSystem {
     public update() {
         if (this.needsRedraw) {
             this.drawGrid();
+            this.drawStructures(); // Draw static structures once
             this.needsRedraw = false;
         }
         this.drawSprigs();
-    }
-
-    private drawSprigs() {
-        const g = this.sprigGraphics;
-        g.clear();
-        
-        const sprigs = this.world.sprigs;
-        const count = CONFIG.MAX_SPRIGS;
-
-        for (let i = 0; i < count; i++) {
-            if (sprigs.active[i] === 1) {
-                g.circle(sprigs.x[i], sprigs.y[i], 3);
-            }
-        }
-        g.fill(0x00FF00);
     }
 
     private drawGrid() {
@@ -72,5 +62,34 @@ export class RenderSystem {
         }
 
         g.stroke({ width: 1, color: lineColor });
+    }
+
+    private drawStructures() {
+        const g = this.structureGraphics;
+        g.clear();
+
+        for (const s of this.world.structures) {
+            let color = 0xFFFFFF;
+            if (s.type === StructureType.NEST) color = 0xFFD700; // Gold
+            if (s.type === StructureType.COOKIE) color = 0xD2B48C; // Tan
+            if (s.type === StructureType.ROCK) color = 0x808080; // Grey
+
+            g.circle(s.x, s.y, s.radius).fill(color);
+        }
+    }
+
+    private drawSprigs() {
+        const g = this.sprigGraphics;
+        g.clear();
+        
+        const sprigs = this.world.sprigs;
+        const count = CONFIG.MAX_SPRIGS;
+
+        for (let i = 0; i < count; i++) {
+            if (sprigs.active[i] === 1) {
+                const color = sprigs.cargo[i] === 1 ? 0xFF69B4 : 0x00FF00; // Pink if full, Green if empty
+                g.circle(sprigs.x[i], sprigs.y[i], 3).fill(color);
+            }
+        }
     }
 }
