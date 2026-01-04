@@ -35,6 +35,10 @@ export class NavigationSystem {
                 if (Math.abs(gradX) > 0.01 || Math.abs(gradY) > 0.01) {
                     vx += gradX * CONFIG.SCENT_STRENGTH * dt;
                     vy += gradY * CONFIG.SCENT_STRENGTH * dt;
+                    
+                    if (i === 0) { // Log for first sprig only to reduce noise
+                        console.log(`Scent detected: ${gradX.toFixed(2)}, ${gradY.toFixed(2)}`);
+                    }
                 }
             }
 
