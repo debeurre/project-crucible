@@ -19,6 +19,25 @@ export class NavigationSystem {
             let vx = sprigs.vx[i];
             let vy = sprigs.vy[i];
 
+            // 0. Scent Following (The Nose)
+            if (sprigs.cargo[i] === 0) {
+                const tileX = Math.floor(px / CONFIG.TILE_SIZE);
+                const tileY = Math.floor(py / CONFIG.TILE_SIZE);
+                
+                const left = world.map.getScent(tileX - 1, tileY);
+                const right = world.map.getScent(tileX + 1, tileY);
+                const up = world.map.getScent(tileX, tileY - 1);
+                const down = world.map.getScent(tileX, tileY + 1);
+
+                const gradX = right - left;
+                const gradY = down - up;
+
+                if (Math.abs(gradX) > 0.01 || Math.abs(gradY) > 0.01) {
+                    vx += gradX * CONFIG.SCENT_STRENGTH * dt;
+                    vy += gradY * CONFIG.SCENT_STRENGTH * dt;
+                }
+            }
+
             // 1. Steering (Seek Target)
             const dx = tx - px;
             const dy = ty - py;
