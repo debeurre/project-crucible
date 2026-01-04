@@ -4,6 +4,8 @@ import { RenderSystem } from './systems/RenderSystem';
 import { MovementSystem } from './systems/MovementSystem';
 import { HiveMindSystem } from './systems/HiveMindSystem';
 import { NavigationSystem } from './systems/NavigationSystem';
+import { InteractionSystem } from './systems/InteractionSystem';
+import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 
 async function init() {
@@ -18,15 +20,20 @@ async function init() {
     });
 
     document.body.appendChild(app.canvas);
+    
+    // Initialize Input
+    InputState.init(app.canvas);
 
     const world = new WorldState();
     const renderSystem = new RenderSystem(app, world);
     const movementSystem = new MovementSystem();
     const hiveMindSystem = new HiveMindSystem();
     const navigationSystem = new NavigationSystem();
+    const interactionSystem = new InteractionSystem();
 
     app.ticker.add(() => {
         const dt = app.ticker.deltaMS / 1000;
+        interactionSystem.update(world);
         hiveMindSystem.update(world);
         navigationSystem.update(world, dt);
         movementSystem.update(world, dt);
