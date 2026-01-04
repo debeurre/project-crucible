@@ -11,6 +11,7 @@ export class RenderSystem {
     private sprigGraphics: Graphics;
     private container: Container;
     private needsRedraw: boolean = true;
+    private lastStructureCount: number = 0;
 
     constructor(app: Application, world: WorldState) {
         this.app = app;
@@ -29,9 +30,17 @@ export class RenderSystem {
     public update() {
         if (this.needsRedraw) {
             this.drawGrid();
-            this.drawStructures(); // Draw static structures once
+            this.drawStructures(); 
             this.needsRedraw = false;
+            this.lastStructureCount = this.world.structures.length;
         }
+
+        // Trigger redraw if structures changed
+        if (this.world.structures.length !== this.lastStructureCount) {
+            this.drawStructures();
+            this.lastStructureCount = this.world.structures.length;
+        }
+
         this.drawSprigs();
     }
 
