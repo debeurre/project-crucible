@@ -52,6 +52,8 @@ export class RenderSystem {
         const g = this.scentGraphics;
         g.clear();
         
+        if (!this.world.map.scents) return;
+
         const scents = this.world.map.scents;
         const width = this.world.map.width;
         const height = this.world.map.height;

@@ -2,6 +2,11 @@ import { WorldState } from '../core/WorldState';
 
 export class EcologySystem {
     public update(world: WorldState, _dt: number) {
+        // Runtime patch for hot-reload state mismatch
+        if (!world.map.scents) {
+            world.map.scents = new Float32Array(world.map.width * world.map.height);
+        }
+
         const scents = world.map.scents;
         const len = scents.length;
 
