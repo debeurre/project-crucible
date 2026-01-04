@@ -1,49 +1,20 @@
 import { WorldState } from '../core/WorldState';
 import { InputState } from '../core/InputState';
-import { StructureType } from '../data/StructureData';
+import { CONFIG } from '../core/Config';
 
 export class InteractionSystem {
-    private wasDown: boolean = false;
-    private nextId: number = 1000; // Start high to avoid collision with initial IDs
-
     public update(world: WorldState) {
-        // Debounce: Only act on initial press (Click)
-        // If we want drag-draw, we remove the !this.wasDown check.
-        // Instructions: "Debounce: We need a simple 'Only one per click' check"
-        if (InputState.isDown && !this.wasDown) {
-            const x = InputState.x;
-            const y = InputState.y;
-            const radius = 30;
-
-            // Check if obstructed
-            let obstructed = false;
-            for (const s of world.structures) {
-                const dx = s.x - x;
-                const dy = s.y - y;
-                const r = s.radius + radius;
-                if (dx*dx + dy*dy < r*r) {
-                    obstructed = true;
-                    break;
+        // Paint Scent (Any Click/Drag)
+        if (InputState.isDown || InputState.isRightDown) {
+            if (world.map.scents) {
+                const gx = Math.floor(InputState.x / CONFIG.TILE_SIZE);
+                const gy = Math.floor(InputState.y / CONFIG.TILE_SIZE);
+                
+                if (gx >= 0 && gx < world.map.width && gy >= 0 && gy < world.map.height) {
+                    const index = gy * world.map.width + gx;
+                    world.map.scents[index] = Math.min(1.0, world.map.scents[index] + 1.0);
                 }
             }
-
-            if (!obstructed) {
-                world.structures.push({
-                    id: this.nextId++,
-                    type: StructureType.ROCK,
-                    x: x,
-                    y: y,
-                    radius: radius
-                });
-                console.log(`Spawned ROCK at ${x}, ${y}`);
-            }
         }
-
-        // Paint Scent (Right Click)
-        if (InputState.isRightDown) {
-            world.map.addScent(InputState.x, InputState.y, 1.0);
-        }
-
-        this.wasDown = InputState.isDown;
     }
 }
