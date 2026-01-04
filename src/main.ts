@@ -10,7 +10,7 @@ import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 
 async function init() {
-    console.log("Phoenix Engine Initialized");
+    console.log("Phoenix Engine Initialized - Phase 5 Reload");
     const app = new Application();
     
     await app.init({
