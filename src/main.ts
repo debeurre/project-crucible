@@ -10,7 +10,6 @@ import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 
 async function init() {
-    console.log("Phoenix Engine Initialized - Phase 5 Reload");
     const app = new Application();
     
     await app.init({
@@ -33,8 +32,6 @@ async function init() {
     const interactionSystem = new InteractionSystem();
     const ecologySystem = new EcologySystem();
 
-    let debugTimer = 0;
-
     app.ticker.add(() => {
         const dt = app.ticker.deltaMS / 1000;
         interactionSystem.update(world);
@@ -43,21 +40,6 @@ async function init() {
         navigationSystem.update(world, dt);
         movementSystem.update(world, dt);
         renderSystem.update();
-
-        // Debug Logging
-        debugTimer += dt;
-        if (debugTimer >= 1.0) {
-            debugTimer = 0;
-            let activeCount = 0;
-            for(let i=0; i<world.sprigs.active.length; i++) if(world.sprigs.active[i]) activeCount++;
-            
-            console.log(`Active Sprigs: ${activeCount}`);
-            if (world.sprigs.active[0]) {
-                console.log(`S0 Pos: (${world.sprigs.x[0].toFixed(1)}, ${world.sprigs.y[0].toFixed(1)}) Vel: (${world.sprigs.vx[0].toFixed(1)}, ${world.sprigs.vy[0].toFixed(1)})`);
-            } else {
-                console.log("S0 Inactive");
-            }
-        }
     });
 }
 
