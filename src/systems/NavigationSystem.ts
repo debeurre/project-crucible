@@ -35,10 +35,6 @@ export class NavigationSystem {
                 if (Math.abs(gradX) > 0.01 || Math.abs(gradY) > 0.01) {
                     vx += gradX * CONFIG.SCENT_STRENGTH * dt;
                     vy += gradY * CONFIG.SCENT_STRENGTH * dt;
-                    
-                    if (i === 0) { // Log for first sprig only to reduce noise
-                        console.log(`Scent detected: ${gradX.toFixed(2)}, ${gradY.toFixed(2)}`);
-                    }
                 }
             }
 
@@ -46,7 +42,7 @@ export class NavigationSystem {
             const dx = tx - px;
             const dy = ty - py;
             const distToTarget = Math.sqrt(dx*dx + dy*dy);
-
+            
             if (distToTarget > 0) {
                 // Desired velocity is full speed towards target
                 const desiredX = (dx / distToTarget) * CONFIG.MAX_SPEED;
