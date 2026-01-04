@@ -35,8 +35,8 @@ export class NavigationSystem {
                 const gradLen = Math.sqrt(gradX * gradX + gradY * gradY);
                 if (gradLen > 0.01) {
                     // Normalize and apply strong force
-                    vx += (gradX / gradLen) * 500.0 * dt;
-                    vy += (gradY / gradLen) * 500.0 * dt;
+                    vx += (gradX / gradLen) * CONFIG.SCENT_STRENGTH * dt;
+                    vy += (gradY / gradLen) * CONFIG.SCENT_STRENGTH * dt;
                 }
             }
 
