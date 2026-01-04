@@ -6,8 +6,6 @@ export class NavigationSystem {
     public update(world: WorldState, dt: number) {
         const sprigs = world.sprigs;
         const count = CONFIG.MAX_SPRIGS;
-        // Tuning
-        const steeringStrength = 10.0; 
 
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
@@ -18,6 +16,8 @@ export class NavigationSystem {
             const ty = sprigs.targetY[i];
             let vx = sprigs.vx[i];
             let vy = sprigs.vy[i];
+
+            const steeringStrength = sprigs.cargo[i] === 0 ? 2.0 : 10.0;
 
             // 0. Scent Following (The Nose)
             if (sprigs.cargo[i] === 0) {

@@ -17,6 +17,16 @@ export class MovementSystem {
             sprigs.x[i] += vx * dt;
             sprigs.y[i] += vy * dt;
 
+            // Drop Scent (Haulers leave trails)
+            if (sprigs.cargo[i] === 1 && world.map.scents) {
+                const gx = Math.floor(sprigs.x[i] / CONFIG.TILE_SIZE);
+                const gy = Math.floor(sprigs.y[i] / CONFIG.TILE_SIZE);
+                if (gx >= 0 && gx < world.map.width && gy >= 0 && gy < world.map.height) {
+                    const idx = gy * world.map.width + gx;
+                    world.map.scents[idx] = Math.min(1.0, world.map.scents[idx] + 0.5 * dt);
+                }
+            }
+
             // Speed Limit
             const speedSqr = vx*vx + vy*vy;
             if (speedSqr > maxSpeedSq) {
