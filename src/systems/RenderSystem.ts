@@ -9,6 +9,7 @@ export class RenderSystem {
     private gridGraphics: Graphics;
     private structureGraphics: Graphics;
     private sprigGraphics: Graphics;
+    private scentGraphics: Graphics;
     private container: Container;
     private needsRedraw: boolean = true;
     private lastStructureCount: number = 0;
@@ -18,10 +19,12 @@ export class RenderSystem {
         this.world = world;
         this.container = new Container();
         this.gridGraphics = new Graphics();
+        this.scentGraphics = new Graphics(); // Below structures/sprigs
         this.structureGraphics = new Graphics();
         this.sprigGraphics = new Graphics();
         
         this.container.addChild(this.gridGraphics);
+        this.container.addChild(this.scentGraphics);
         this.container.addChild(this.structureGraphics);
         this.container.addChild(this.sprigGraphics);
         this.app.stage.addChild(this.container);
@@ -41,7 +44,29 @@ export class RenderSystem {
             this.lastStructureCount = this.world.structures.length;
         }
 
+        this.drawScents();
         this.drawSprigs();
+    }
+
+    private drawScents() {
+        const g = this.scentGraphics;
+        g.clear();
+        
+        const scents = this.world.map.scents;
+        const width = this.world.map.width;
+        const height = this.world.map.height;
+        const tileSize = CONFIG.TILE_SIZE;
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const i = y * width + x;
+                const val = scents[i];
+                if (val > 0.05) {
+                    g.rect(x * tileSize, y * tileSize, tileSize, tileSize)
+                     .fill({ color: 0x00FF00, alpha: val * 0.5 });
+                }
+            }
+        }
     }
 
     private drawGrid() {

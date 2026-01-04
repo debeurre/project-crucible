@@ -39,6 +39,11 @@ export class InteractionSystem {
             }
         }
 
+        // Paint Scent (Right Click)
+        if (InputState.isRightDown) {
+            world.map.addScent(InputState.x, InputState.y, 1.0);
+        }
+
         this.wasDown = InputState.isDown;
     }
 }
