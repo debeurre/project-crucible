@@ -23,7 +23,7 @@ export class HiveMindSystem {
 
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
-
+            
             const cargo = sprigs.cargo[i];
             const px = sprigs.x[i];
             const py = sprigs.y[i];
