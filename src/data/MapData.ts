@@ -35,6 +35,6 @@ export class MapData {
 
     public getScent(gx: number, gy: number): number {
         if (gx < 0 || gx >= this.width || gy < 0 || gy >= this.height) return 0;
-        return this.scents[this.getIndex(gx, gy)];
+        return this.scents[this.getIndex(gx, gy)] || 0;
     }
 }
