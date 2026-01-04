@@ -32,9 +32,11 @@ export class NavigationSystem {
                 const gradX = right - left;
                 const gradY = down - up;
 
-                if (Math.abs(gradX) > 0.01 || Math.abs(gradY) > 0.01) {
-                    vx += gradX * CONFIG.SCENT_STRENGTH * dt;
-                    vy += gradY * CONFIG.SCENT_STRENGTH * dt;
+                const gradLen = Math.sqrt(gradX * gradX + gradY * gradY);
+                if (gradLen > 0.01) {
+                    // Normalize and apply strong force
+                    vx += (gradX / gradLen) * 500.0 * dt;
+                    vy += (gradY / gradLen) * 500.0 * dt;
                 }
             }
 
