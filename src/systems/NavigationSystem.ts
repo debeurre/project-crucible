@@ -30,34 +30,35 @@ export class NavigationSystem {
 
             // 0. Scent Following (The Nose)
             if (sprigs.cargo[i] === 0) {
+                const tileX = Math.floor(px / CONFIG.TILE_SIZE);
+                const tileY = Math.floor(py / CONFIG.TILE_SIZE);
+                
+                const left = world.map.getScent(tileX - 1, tileY);
+                const right = world.map.getScent(tileX + 1, tileY);
+                const up = world.map.getScent(tileX, tileY - 1);
+                const down = world.map.getScent(tileX, tileY + 1);
+
+                let gradX = right - left;
+                let gradY = down - up;
+
                 const dxNest = px - nestX;
                 const dyNest = py - nestY;
                 const distToNest = Math.sqrt(dxNest*dxNest + dyNest*dyNest);
 
                 if (distToNest < 100) {
-                    // Nest Repulsion / Clear the area
+                    // Nest Repulsion: Invert Scents to push outward
+                    gradX *= -1;
+                    gradY *= -1;
                     steeringStrength = 5.0;
                 } else {
                     steeringStrength = 2.0;
-                    
-                    // Scent Logic
-                    const tileX = Math.floor(px / CONFIG.TILE_SIZE);
-                    const tileY = Math.floor(py / CONFIG.TILE_SIZE);
-                    
-                    const left = world.map.getScent(tileX - 1, tileY);
-                    const right = world.map.getScent(tileX + 1, tileY);
-                    const up = world.map.getScent(tileX, tileY - 1);
-                    const down = world.map.getScent(tileX, tileY + 1);
+                }
 
-                    const gradX = right - left;
-                    const gradY = down - up;
-
-                    const gradLen = Math.sqrt(gradX * gradX + gradY * gradY);
-                    if (gradLen > 0.01) {
-                        // Normalize and apply strong force
-                        vx += (gradX / gradLen) * CONFIG.SCENT_STRENGTH * dt;
-                        vy += (gradY / gradLen) * CONFIG.SCENT_STRENGTH * dt;
-                    }
+                const gradLen = Math.sqrt(gradX * gradX + gradY * gradY);
+                if (gradLen > 0.01) {
+                    // Normalize and apply strong force
+                    vx += (gradX / gradLen) * CONFIG.SCENT_STRENGTH * dt;
+                    vy += (gradY / gradLen) * CONFIG.SCENT_STRENGTH * dt;
                 }
             }
 
