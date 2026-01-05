@@ -27,8 +27,8 @@ export class RenderSystem {
         
         this.container.addChild(this.gridGraphics);
         this.container.addChild(this.roadGraphics);
-        this.container.addChild(this.scentGraphics);
         this.container.addChild(this.structureGraphics);
+        this.container.addChild(this.scentGraphics);
         this.container.addChild(this.sprigGraphics);
         this.app.stage.addChild(this.container);
     }
