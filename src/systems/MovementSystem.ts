@@ -5,7 +5,6 @@ export class MovementSystem {
     public update(world: WorldState, dt: number) {
         const sprigs = world.sprigs;
         const count = CONFIG.MAX_SPRIGS;
-        const maxSpeedSq = CONFIG.MAX_SPEED * CONFIG.MAX_SPEED;
 
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
@@ -28,9 +27,13 @@ export class MovementSystem {
             }
 
             // Speed Limit
+            const roadVal = world.map.getRoad(sprigs.x[i], sprigs.y[i]);
+            const currentMaxSpeed = CONFIG.MAX_SPEED * (1.0 + roadVal * 0.5);
+            const maxSpeedSq = currentMaxSpeed * currentMaxSpeed;
+
             const speedSqr = vx*vx + vy*vy;
             if (speedSqr > maxSpeedSq) {
-                const scale = CONFIG.MAX_SPEED / Math.sqrt(speedSqr);
+                const scale = currentMaxSpeed / Math.sqrt(speedSqr);
                 sprigs.vx[i] *= scale;
                 sprigs.vy[i] *= scale;
             }

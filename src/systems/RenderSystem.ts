@@ -7,9 +7,10 @@ export class RenderSystem {
     private app: Application;
     private world: WorldState;
     private gridGraphics: Graphics;
+    private roadGraphics: Graphics;
+    private scentGraphics: Graphics;
     private structureGraphics: Graphics;
     private sprigGraphics: Graphics;
-    private scentGraphics: Graphics;
     private container: Container;
     private needsRedraw: boolean = true;
     private lastStructureCount: number = 0;
@@ -19,11 +20,13 @@ export class RenderSystem {
         this.world = world;
         this.container = new Container();
         this.gridGraphics = new Graphics();
-        this.scentGraphics = new Graphics(); // Below structures/sprigs
+        this.roadGraphics = new Graphics(); // Bottom layer
+        this.scentGraphics = new Graphics(); 
         this.structureGraphics = new Graphics();
         this.sprigGraphics = new Graphics();
         
         this.container.addChild(this.gridGraphics);
+        this.container.addChild(this.roadGraphics);
         this.container.addChild(this.scentGraphics);
         this.container.addChild(this.structureGraphics);
         this.container.addChild(this.sprigGraphics);
@@ -44,8 +47,32 @@ export class RenderSystem {
             this.lastStructureCount = this.world.structures.length;
         }
 
+        this.drawRoads();
         this.drawScents();
         this.drawSprigs();
+    }
+
+    private drawRoads() {
+        const g = this.roadGraphics;
+        g.clear();
+        
+        if (!this.world.map.roads) return;
+
+        const roads = this.world.map.roads;
+        const width = this.world.map.width;
+        const height = this.world.map.height;
+        const tileSize = CONFIG.TILE_SIZE;
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const i = y * width + x;
+                const val = roads[i];
+                if (val > 0.1) {
+                    g.rect(x * tileSize, y * tileSize, tileSize, tileSize)
+                     .fill({ color: 0x8B4513, alpha: val });
+                }
+            }
+        }
     }
 
     private drawScents() {

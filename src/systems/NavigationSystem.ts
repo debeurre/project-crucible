@@ -6,6 +6,15 @@ export class NavigationSystem {
     public update(world: WorldState, dt: number) {
         const sprigs = world.sprigs;
         const count = CONFIG.MAX_SPRIGS;
+        
+        let nestX = 0, nestY = 0;
+        for (const s of world.structures) {
+            if (s.type === StructureType.NEST) {
+                nestX = s.x;
+                nestY = s.y;
+                break;
+            }
+        }
 
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
@@ -17,26 +26,38 @@ export class NavigationSystem {
             let vx = sprigs.vx[i];
             let vy = sprigs.vy[i];
 
-            const steeringStrength = sprigs.cargo[i] === 0 ? 2.0 : 10.0;
+            let steeringStrength = 10.0; // Default for Haulers
 
             // 0. Scent Following (The Nose)
             if (sprigs.cargo[i] === 0) {
-                const tileX = Math.floor(px / CONFIG.TILE_SIZE);
-                const tileY = Math.floor(py / CONFIG.TILE_SIZE);
-                
-                const left = world.map.getScent(tileX - 1, tileY);
-                const right = world.map.getScent(tileX + 1, tileY);
-                const up = world.map.getScent(tileX, tileY - 1);
-                const down = world.map.getScent(tileX, tileY + 1);
+                const dxNest = px - nestX;
+                const dyNest = py - nestY;
+                const distToNest = Math.sqrt(dxNest*dxNest + dyNest*dyNest);
 
-                const gradX = right - left;
-                const gradY = down - up;
+                if (distToNest < 100) {
+                    // Nest Repulsion / Clear the area
+                    steeringStrength = 5.0;
+                } else {
+                    steeringStrength = 2.0;
+                    
+                    // Scent Logic
+                    const tileX = Math.floor(px / CONFIG.TILE_SIZE);
+                    const tileY = Math.floor(py / CONFIG.TILE_SIZE);
+                    
+                    const left = world.map.getScent(tileX - 1, tileY);
+                    const right = world.map.getScent(tileX + 1, tileY);
+                    const up = world.map.getScent(tileX, tileY - 1);
+                    const down = world.map.getScent(tileX, tileY + 1);
 
-                const gradLen = Math.sqrt(gradX * gradX + gradY * gradY);
-                if (gradLen > 0.01) {
-                    // Normalize and apply strong force
-                    vx += (gradX / gradLen) * CONFIG.SCENT_STRENGTH * dt;
-                    vy += (gradY / gradLen) * CONFIG.SCENT_STRENGTH * dt;
+                    const gradX = right - left;
+                    const gradY = down - up;
+
+                    const gradLen = Math.sqrt(gradX * gradX + gradY * gradY);
+                    if (gradLen > 0.01) {
+                        // Normalize and apply strong force
+                        vx += (gradX / gradLen) * CONFIG.SCENT_STRENGTH * dt;
+                        vy += (gradY / gradLen) * CONFIG.SCENT_STRENGTH * dt;
+                    }
                 }
             }
 

@@ -5,12 +5,14 @@ export class MapData {
     public height: number;
     public tiles: Uint8Array;
     public scents: Float32Array;
+    public roads: Float32Array;
 
     constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
         this.tiles = new Uint8Array(width * height);
         this.scents = new Float32Array(width * height);
+        this.roads = new Float32Array(width * height);
     }
 
     public getIndex(x: number, y: number): number {
@@ -36,5 +38,12 @@ export class MapData {
     public getScent(gx: number, gy: number): number {
         if (gx < 0 || gx >= this.width || gy < 0 || gy >= this.height) return 0;
         return this.scents[this.getIndex(gx, gy)] || 0;
+    }
+
+    public getRoad(worldX: number, worldY: number): number {
+        const gx = Math.floor(worldX / CONFIG.TILE_SIZE);
+        const gy = Math.floor(worldY / CONFIG.TILE_SIZE);
+        if (gx < 0 || gx >= this.width || gy < 0 || gy >= this.height) return 0;
+        return this.roads[this.getIndex(gx, gy)] || 0;
     }
 }
