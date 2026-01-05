@@ -8,6 +8,7 @@ import { InputState } from '../core/InputState';
 export class ToolManager {
     private tools: Record<string, Tool>;
     private activeTool: Tool;
+    private activeToolName: string;
     private wasDown: boolean = false;
 
     constructor(_world: WorldState) { // World needed for initialization? No, just logic.
@@ -16,14 +17,20 @@ export class ToolManager {
             'ERASER': new EraserTool(),
             'SCENT': new ScentTool()
         };
+        this.activeToolName = 'SCENT';
         this.activeTool = this.tools['SCENT']; // Default
     }
 
     public setTool(name: string) {
         if (this.tools[name]) {
             this.activeTool = this.tools[name];
+            this.activeToolName = name;
             console.log(`Tool switched to: ${name}`);
         }
+    }
+
+    public getActiveToolName(): string {
+        return this.activeToolName;
     }
 
     public update(world: WorldState) {

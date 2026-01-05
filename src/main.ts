@@ -34,11 +34,64 @@ async function init() {
     const ecologySystem = new EcologySystem();
     const uiSystem = new UISystem(app);
 
+    // Toolbar UI
+    const toolButtons: Record<string, HTMLDivElement> = {};
+    const tools = ['SCENT', 'ROCK', 'ERASER'];
+
+    function createToolbar() {
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.bottom = '20px';
+        container.style.left = '50%';
+        container.style.transform = 'translateX(-50%)';
+        container.style.display = 'flex';
+        container.style.gap = '10px';
+        container.style.zIndex = '100';
+        document.body.appendChild(container);
+
+        tools.forEach(name => {
+            const btn = document.createElement('div');
+            btn.textContent = name;
+            btn.style.backgroundColor = '#444';
+            btn.style.color = 'white';
+            btn.style.padding = '10px 20px';
+            btn.style.border = '1px solid #555';
+            btn.style.borderRadius = '5px';
+            btn.style.cursor = 'pointer';
+            btn.style.fontFamily = 'monospace';
+            btn.style.userSelect = 'none';
+            
+            btn.addEventListener('pointerdown', (e) => {
+                e.stopPropagation(); // Prevent map interaction
+                toolManager.setTool(name);
+            });
+
+            container.appendChild(btn);
+            toolButtons[name] = btn;
+        });
+    }
+
+    function updateButtons() {
+        const active = toolManager.getActiveToolName();
+        tools.forEach(name => {
+            const btn = toolButtons[name];
+            if (name === active) {
+                btn.style.backgroundColor = '#4CAF50'; // Green
+                btn.style.borderColor = '#66BB6A';
+            } else {
+                btn.style.backgroundColor = '#444';
+                btn.style.borderColor = '#555';
+            }
+        });
+    }
+
+    createToolbar();
+
     // Keybinds
     window.addEventListener('keydown', (e) => {
-        if (e.key === '1') toolManager.setTool('ROCK');
-        if (e.key === '2') toolManager.setTool('ERASER');
-        if (e.key === '3') toolManager.setTool('SCENT');
+        if (e.key === '1') toolManager.setTool('SCENT');
+        if (e.key === '2') toolManager.setTool('ROCK');
+        if (e.key === '3') toolManager.setTool('ERASER');
     });
 
     app.ticker.add(() => {
@@ -50,6 +103,7 @@ async function init() {
         movementSystem.update(world, dt);
         renderSystem.update();
         uiSystem.update(world);
+        updateButtons();
     });
 }
 
