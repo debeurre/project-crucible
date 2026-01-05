@@ -27,7 +27,16 @@ export class MovementSystem {
             }
 
             // Speed Limit
-            const roadVal = world.map.getRoad(sprigs.x[i], sprigs.y[i]);
+            let roadVal = 0;
+            if (world.map.roads) {
+                const gx = Math.floor(sprigs.x[i] / CONFIG.TILE_SIZE);
+                const gy = Math.floor(sprigs.y[i] / CONFIG.TILE_SIZE);
+                if (gx >= 0 && gx < world.map.width && gy >= 0 && gy < world.map.height) {
+                    const idx = gy * world.map.width + gx;
+                    roadVal = world.map.roads[idx] || 0;
+                }
+            }
+            
             const currentMaxSpeed = CONFIG.MAX_SPEED * (1.0 + roadVal * 0.5);
             const maxSpeedSq = currentMaxSpeed * currentMaxSpeed;
 
