@@ -28,38 +28,66 @@ export class NavigationSystem {
 
             let steeringStrength = 10.0; // Default for Haulers
 
-            // 0. Scent Following (The Nose)
+            // 0. Environmental Steering (Scent + Road Magnetism)
             if (sprigs.cargo[i] === 0) {
                 const tileX = Math.floor(px / CONFIG.TILE_SIZE);
                 const tileY = Math.floor(py / CONFIG.TILE_SIZE);
                 
-                const left = world.map.getScent(tileX - 1, tileY);
-                const right = world.map.getScent(tileX + 1, tileY);
-                const up = world.map.getScent(tileX, tileY - 1);
-                const down = world.map.getScent(tileX, tileY + 1);
+                // 1. Scent Gradient
+                const leftScent = world.map.getScent(tileX - 1, tileY);
+                const rightScent = world.map.getScent(tileX + 1, tileY);
+                const upScent = world.map.getScent(tileX, tileY - 1);
+                const downScent = world.map.getScent(tileX, tileY + 1);
 
-                let gradX = right - left;
-                let gradY = down - up;
+                let scentGradX = rightScent - leftScent;
+                let scentGradY = downScent - upScent;
 
                 const dxNest = px - nestX;
                 const dyNest = py - nestY;
                 const distToNest = Math.sqrt(dxNest*dxNest + dyNest*dyNest);
 
                 if (distToNest < 100) {
-                    // Nest Repulsion: Invert Scents to push outward
-                    gradX *= -1;
-                    gradY *= -1;
-                    steeringStrength = 5.0;
+                    // Nest Repulsion: Invert Scents
+                    scentGradX *= -1;
+                    scentGradY *= -1;
+                    steeringStrength = 5.0; // Boost steering to escape
                 } else {
                     steeringStrength = 2.0;
                 }
 
-                const gradLen = Math.sqrt(gradX * gradX + gradY * gradY);
-                if (gradLen > 0.01) {
-                    // Normalize and apply strong force
-                    vx += (gradX / gradLen) * CONFIG.SCENT_STRENGTH * dt;
-                    vy += (gradY / gradLen) * CONFIG.SCENT_STRENGTH * dt;
+                // 2. Road Gradient
+                let roadGradX = 0;
+                let roadGradY = 0;
+                if (world.map.roads) {
+                    // Inline getRoad-like access for neighbors
+                    // Helper to safely get road val
+                    const getRoadVal = (gx: number, gy: number) => {
+                        if (gx < 0 || gx >= world.map.width || gy < 0 || gy >= world.map.height) return 0;
+                        return world.map.roads[gy * world.map.width + gx] || 0;
+                    };
+
+                    const leftRoad = getRoadVal(tileX - 1, tileY);
+                    const rightRoad = getRoadVal(tileX + 1, tileY);
+                    const upRoad = getRoadVal(tileX, tileY - 1);
+                    const downRoad = getRoadVal(tileX, tileY + 1);
+
+                    roadGradX = rightRoad - leftRoad;
+                    roadGradY = downRoad - upRoad;
                 }
+
+                // 3. Combine and Apply
+                // Normalize scent gradient if it's strong enough to be a vector
+                const scentLen = Math.sqrt(scentGradX*scentGradX + scentGradY*scentGradY);
+                if (scentLen > 0.01) {
+                    // Normalized Scent Force
+                    vx += (scentGradX / scentLen) * CONFIG.SCENT_STRENGTH * dt;
+                    vy += (scentGradY / scentLen) * CONFIG.SCENT_STRENGTH * dt;
+                }
+
+                // Road Magnetism (Add directly, as it centers the unit)
+                // If road gradient is positive X, it means road is stronger to the right. Move right.
+                vx += roadGradX * CONFIG.ROAD_MAGNETISM * dt;
+                vy += roadGradY * CONFIG.ROAD_MAGNETISM * dt;
             }
 
             // 1. Steering (Seek Target)

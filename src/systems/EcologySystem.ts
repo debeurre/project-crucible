@@ -14,12 +14,13 @@ export class EcologySystem {
         const roads = world.map.roads;
         const len = scents.length;
         
-        // Decay factor matching 0.995 per frame at 60fps
-        const scentDecayFactor = Math.pow(0.995, dt * 60);
+        // Decay factor matching 0.998 per frame at 60fps
+        const scentDecayFactor = Math.pow(0.998, dt * 60);
+        // Road decay factor matching 0.999 per frame at 60fps
+        const roadDecayFactor = Math.pow(0.999, dt * 60);
         
         const roadThreshold = 0.1;
         const roadBuild = 1.0 * dt;
-        const roadDecay = 0.1 * dt;
 
         for (let i = 0; i < len; i++) {
             // Scent Logic
@@ -34,7 +35,8 @@ export class EcologySystem {
             if (scents[i] > roadThreshold) {
                 roads[i] = Math.min(1.0, roads[i] + roadBuild);
             } else {
-                roads[i] = Math.max(0.0, roads[i] - roadDecay);
+                roads[i] *= roadDecayFactor;
+                if (roads[i] < 0.01) roads[i] = 0;
             }
         }
     }
