@@ -70,13 +70,20 @@ async function init() {
             toolButtons[name] = btn;
         });
     }
+    
+    let lastActiveTool = '';
 
     function updateButtons() {
         const active = toolManager.getActiveToolName();
+        // Only touch the DOM if the tool changed
+        if (active === lastActiveTool) return;
+        
+        lastActiveTool = active;
+
         tools.forEach(name => {
             const btn = toolButtons[name];
             if (name === active) {
-                btn.style.backgroundColor = '#4CAF50'; // Green
+                btn.style.backgroundColor = '#4CAF50';
                 btn.style.borderColor = '#66BB6A';
             } else {
                 btn.style.backgroundColor = '#444';
