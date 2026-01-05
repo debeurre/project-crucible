@@ -50,7 +50,7 @@ export class NavigationSystem {
                     // Nest Repulsion: Invert Scents
                     scentGradX *= -1;
                     scentGradY *= -1;
-                    steeringStrength = 5.0; // Boost steering to escape
+                    steeringStrength = 5.0; 
                 } else {
                     steeringStrength = 2.0;
                 }
@@ -59,8 +59,6 @@ export class NavigationSystem {
                 let roadGradX = 0;
                 let roadGradY = 0;
                 if (world.map.roads) {
-                    // Inline getRoad-like access for neighbors
-                    // Helper to safely get road val
                     const getRoadVal = (gx: number, gy: number) => {
                         if (gx < 0 || gx >= world.map.width || gy < 0 || gy >= world.map.height) return 0;
                         return world.map.roads[gy * world.map.width + gx] || 0;
@@ -75,17 +73,13 @@ export class NavigationSystem {
                     roadGradY = downRoad - upRoad;
                 }
 
-                // 3. Combine and Apply
-                // Normalize scent gradient if it's strong enough to be a vector
+                // 3. Apply Forces
                 const scentLen = Math.sqrt(scentGradX*scentGradX + scentGradY*scentGradY);
                 if (scentLen > 0.01) {
-                    // Normalized Scent Force
                     vx += (scentGradX / scentLen) * CONFIG.SCENT_STRENGTH * dt;
                     vy += (scentGradY / scentLen) * CONFIG.SCENT_STRENGTH * dt;
                 }
 
-                // Road Magnetism (Add directly, as it centers the unit)
-                // If road gradient is positive X, it means road is stronger to the right. Move right.
                 vx += roadGradX * CONFIG.ROAD_MAGNETISM * dt;
                 vy += roadGradY * CONFIG.ROAD_MAGNETISM * dt;
             }
@@ -94,18 +88,32 @@ export class NavigationSystem {
             const dx = tx - px;
             const dy = ty - py;
             const distToTarget = Math.sqrt(dx*dx + dy*dy);
-            
+
             if (distToTarget > 0) {
-                // Desired velocity is full speed towards target
                 const desiredX = (dx / distToTarget) * CONFIG.MAX_SPEED;
                 const desiredY = (dy / distToTarget) * CONFIG.MAX_SPEED;
+                vx += (desiredX - vx) * steeringStrength * dt;
+                vy += (desiredY - vy) * steeringStrength * dt;
+            }
 
-                // Steering force: (desired - velocity) * strength
-                const forceX = (desiredX - vx) * steeringStrength;
-                const forceY = (desiredY - vy) * steeringStrength;
-
-                vx += forceX * dt;
-                vy += forceY * dt;
+            // 1.5 Separation
+            // Inline random sampling for speed/simplicity
+            for (let k = 0; k < 10; k++) {
+                const neighborIdx = Math.floor(Math.random() * CONFIG.MAX_SPRIGS);
+                if (neighborIdx === i || sprigs.active[neighborIdx] === 0) continue;
+                
+                const sepDx = px - sprigs.x[neighborIdx];
+                const sepDy = py - sprigs.y[neighborIdx];
+                const sepDistSq = sepDx*sepDx + sepDy*sepDy;
+                
+                if (sepDistSq < 225) { // 15px
+                    const sepDist = Math.sqrt(sepDistSq);
+                    if (sepDist > 0.001) {
+                        const force = 200.0 * dt;
+                        vx += (sepDx / sepDist) * force;
+                        vy += (sepDy / sepDist) * force;
+                    }
+                }
             }
 
             // 2. Hard Collision (The Slide)
@@ -118,27 +126,19 @@ export class NavigationSystem {
 
                     if (distSqr < minDist * minDist) {
                         const dist = Math.sqrt(distSqr);
-                        
-                        // Normal Vector
                         let nx = 0, ny = 0;
-                        if (dist > 0.0001) {
+                        if (dist > 0.001) {
                             nx = rdx / dist;
                             ny = rdy / dist;
                         } else {
-                            nx = 1; 
-                            ny = 0;
+                            nx = 1; ny = 0;
                         }
 
-                        // Project Position (Push Out)
                         const overlap = minDist - dist;
                         sprigs.x[i] += nx * overlap;
                         sprigs.y[i] += ny * overlap;
 
-                        // Project Velocity (Slide)
-                        // dotProduct = velocity . normal
                         const dotProduct = vx * nx + vy * ny;
-                        
-                        // If moving into wall (dot < 0), remove that component
                         if (dotProduct < 0) {
                             vx -= dotProduct * nx;
                             vy -= dotProduct * ny;
@@ -147,7 +147,6 @@ export class NavigationSystem {
                 }
             }
 
-            // Update velocity back to array
             sprigs.vx[i] = vx;
             sprigs.vy[i] = vy;
         }
