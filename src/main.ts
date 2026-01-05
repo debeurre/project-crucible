@@ -4,8 +4,9 @@ import { RenderSystem } from './systems/RenderSystem';
 import { MovementSystem } from './systems/MovementSystem';
 import { HiveMindSystem } from './systems/HiveMindSystem';
 import { NavigationSystem } from './systems/NavigationSystem';
-import { InteractionSystem } from './systems/InteractionSystem';
+import { ToolManager } from './systems/ToolManager';
 import { EcologySystem } from './systems/EcologySystem';
+import { UISystem } from './systems/UISystem';
 import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 
@@ -29,17 +30,26 @@ async function init() {
     const movementSystem = new MovementSystem();
     const hiveMindSystem = new HiveMindSystem();
     const navigationSystem = new NavigationSystem();
-    const interactionSystem = new InteractionSystem();
+    const toolManager = new ToolManager(world);
     const ecologySystem = new EcologySystem();
+    const uiSystem = new UISystem(app);
+
+    // Keybinds
+    window.addEventListener('keydown', (e) => {
+        if (e.key === '1') toolManager.setTool('ROCK');
+        if (e.key === '2') toolManager.setTool('ERASER');
+        if (e.key === '3') toolManager.setTool('SCENT');
+    });
 
     app.ticker.add(() => {
         const dt = app.ticker.deltaMS / 1000;
-        interactionSystem.update(world);
+        toolManager.update(world);
         ecologySystem.update(world, dt);
         hiveMindSystem.update(world);
         navigationSystem.update(world, dt);
         movementSystem.update(world, dt);
         renderSystem.update();
+        uiSystem.update(world);
     });
 }
 

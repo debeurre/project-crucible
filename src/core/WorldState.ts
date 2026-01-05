@@ -7,6 +7,7 @@ export class WorldState {
     public map: MapData;
     public sprigs: EntityData;
     public structures: Structure[];
+    public foodStored: number = 0;
 
     constructor() {
         this.map = new MapData(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
@@ -27,7 +28,7 @@ export class WorldState {
         const startX = 100;
         const startY = 300;
         
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 10; i++) {
             const x = startX + (Math.random() - 0.5) * 50;
             const y = startY + (Math.random() - 0.5) * 50;
             this.sprigs.spawn(x, y);
