@@ -55,50 +55,12 @@ export class NavigationSystem {
                     steeringStrength = 2.0;
                 }
 
-                // 2. Road Gradient
-                let roadGradX = 0;
-                let roadGradY = 0;
-                if (world.map.roads) {
-                    const getRoadVal = (gx: number, gy: number) => {
-                        if (gx < 0 || gx >= world.map.width || gy < 0 || gy >= world.map.height) return 0;
-                        return world.map.roads[gy * world.map.width + gx] || 0;
-                    };
-
-                    const leftRoad = getRoadVal(tileX - 1, tileY);
-                    const rightRoad = getRoadVal(tileX + 1, tileY);
-                    const upRoad = getRoadVal(tileX, tileY - 1);
-                    const downRoad = getRoadVal(tileX, tileY + 1);
-
-                    roadGradX = rightRoad - leftRoad;
-                    roadGradY = downRoad - upRoad;
-                }
-                
-                // Directional Magnetism Fix
-                const roadGradLen = Math.sqrt(roadGradX * roadGradX + roadGradY * roadGradY);
-                if (roadGradLen > 0.001) {
-                    const speed = Math.sqrt(sprigs.vx[i] * sprigs.vx[i] + sprigs.vy[i] * sprigs.vy[i]);
-                    if (speed > 0.1) {
-                        const nx = sprigs.vx[i] / speed;
-                        const ny = sprigs.vy[i] / speed;
-                        const dot = roadGradX * nx + roadGradY * ny;
-                        
-                        // If gradient points backwards (braking), remove that component
-                        if (dot < 0) {
-                            roadGradX -= dot * nx;
-                            roadGradY -= dot * ny;
-                        }
-                    }
-                }
-
-                // 3. Apply Forces
+                // 3. Apply Forces (Scent Only)
                 const scentLen = Math.sqrt(scentGradX*scentGradX + scentGradY*scentGradY);
                 if (scentLen > 0.01) {
                     vx += (scentGradX / scentLen) * CONFIG.SCENT_STRENGTH * dt;
                     vy += (scentGradY / scentLen) * CONFIG.SCENT_STRENGTH * dt;
                 }
-
-                vx += roadGradX * CONFIG.ROAD_MAGNETISM * dt;
-                vy += roadGradY * CONFIG.ROAD_MAGNETISM * dt;
             }
 
             // 1. Steering (Seek Target)

@@ -6,7 +6,7 @@ export const CONFIG = {
     MAX_SPEED: 50.0, // Pixels per second
     SPRIG_RADIUS: 5.0,
     SCENT_STRENGTH: 500.0,
-    ROAD_MAGNETISM: 100.0,
+    ROAD_MAGNETISM: 0.0,
 };
 
 export const SCREEN_WIDTH = CONFIG.TILE_SIZE * CONFIG.WORLD_WIDTH;
