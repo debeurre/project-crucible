@@ -2,9 +2,11 @@ import { Application, Text, TextStyle } from 'pixi.js';
 import { WorldState } from '../core/WorldState';
 
 export class UISystem {
+    private app: Application;
     private statsText: Text;
 
     constructor(app: Application) {
+        this.app = app;
         const style = new TextStyle({
             fontFamily: 'monospace',
             fontSize: 16,
@@ -28,6 +30,7 @@ export class UISystem {
             if (active[i]) activeCount++;
         }
         
-        this.statsText.text = `Sprigs: ${activeCount} | Food: ${world.foodStored}`;
+        const fps = Math.round(this.app.ticker.FPS);
+        this.statsText.text = `FPS: ${fps} | Sprigs: ${activeCount} | Food: ${world.foodStored}`;
     }
 }

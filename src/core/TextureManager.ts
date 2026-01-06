@@ -8,8 +8,8 @@ export class TextureManager {
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <defs>
     <filter id="fuzzy">
-      <feTurbulence type="fractalNoise" baseFrequency="0.15" numOctaves="3" />
-      <feDisplacementMap in="SourceGraphic" scale="3" />
+      <feTurbulence type="fractalNoise" baseFrequency="0.15" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" />
     </filter>
   </defs>
   <circle cx="32" cy="32" r="20" fill="white" filter="url(#fuzzy)" />
