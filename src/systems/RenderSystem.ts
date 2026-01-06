@@ -27,9 +27,6 @@ export class RenderSystem {
         this.structureGraphics = new Graphics();
         this.spriteContainer = new Container();
         
-        // Initialize TextureManager
-        TextureManager.init(app);
-
         this.container.addChild(this.gridGraphics);
         this.container.addChild(this.roadGraphics);
         this.container.addChild(this.structureGraphics);
@@ -65,6 +62,7 @@ export class RenderSystem {
         for (const [id, sprite] of this.sprites) {
             if (sprigs.active[id] === 0) {
                 this.spriteContainer.removeChild(sprite);
+                sprite.destroy();
                 this.sprites.delete(id);
             }
         }
@@ -85,9 +83,9 @@ export class RenderSystem {
                 sprite.x = sprigs.x[i];
                 sprite.y = sprigs.y[i];
 
-                // Update Rotation
+                // Update Rotation (align with velocity + 90 deg offset)
                 if (Math.abs(sprigs.vx[i]) > 0.01 || Math.abs(sprigs.vy[i]) > 0.01) {
-                     sprite.rotation = Math.atan2(sprigs.vy[i], sprigs.vx[i]);
+                     sprite.rotation = Math.atan2(sprigs.vy[i], sprigs.vx[i]) + 1.57;
                 }
 
                 // Tint
@@ -98,9 +96,7 @@ export class RenderSystem {
                 }
                 
                 // Scale
-                const r = CONFIG.SPRIG_RADIUS;
-                sprite.width = r * 4;
-                sprite.height = r * 4;
+                sprite.scale.set(0.6);
             }
         }
     }

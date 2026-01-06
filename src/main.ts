@@ -7,6 +7,7 @@ import { NavigationSystem } from './systems/NavigationSystem';
 import { ToolManager } from './systems/ToolManager';
 import { EcologySystem } from './systems/EcologySystem';
 import { UISystem } from './systems/UISystem';
+import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 
@@ -26,6 +27,10 @@ async function init() {
     InputState.init(app.canvas);
 
     const world = new WorldState();
+
+    // Initialize TextureManager before RenderSystem
+    await TextureManager.init(app);
+
     const renderSystem = new RenderSystem(app, world);
     const movementSystem = new MovementSystem();
     const hiveMindSystem = new HiveMindSystem();
