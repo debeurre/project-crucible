@@ -1,25 +1,42 @@
-import { Texture, Application } from 'pixi.js';
+import { Texture, Application, Graphics } from 'pixi.js';
 
 export class TextureManager {
-    public static sootTexture: Texture;
+    // Fallback to white texture initially
+    public static sootTexture: Texture = Texture.WHITE;
 
     public static init(app: Application): void {
-        const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <defs>
-    <filter id="fuzzy">
-      <feTurbulence type="fractalNoise" baseFrequency="0.15" numOctaves="3" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" />
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="20" fill="white" filter="url(#fuzzy)" />
-  <circle cx="26" cy="28" r="4" fill="black" />
-  <circle cx="38" cy="28" r="4" fill="black" />
-</svg>`;
+        const g = new Graphics();
 
-        // Convert to data URI to ensure it loads correctly
-        const svgData = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        
-        this.sootTexture = Texture.from(svgData);
+        // 1. Draw "Sketchy" Body (White base for tinting)
+        // Fill center to ensure it's solid
+        g.circle(0, 0, 18).fill(0xFFFFFF);
+
+        // Use multiple strokes to simulate roughness/sketchiness
+        for (let i = 0; i < 4; i++) {
+            const r = 18 + Math.random() * 3; // Radius variation
+            const offset = 2;
+            const ox = (Math.random() - 0.5) * offset;
+            const oy = (Math.random() - 0.5) * offset;
+            
+            g.circle(ox, oy, r).stroke({ width: 1, color: 0xFFFFFF, alpha: 0.6 });
+        }
+
+        // 2. Eyes (Black)
+        // Positioned relative to center
+        g.circle(-6, -4, 3.5).fill(0x000000);
+        g.circle(6, -4, 3.5).fill(0x000000);
+
+        // 3. Generate Texture
+        // Using render method to generate texture from graphics
+        try {
+            this.sootTexture = app.renderer.generateTexture({
+                target: g,
+                resolution: 2,
+                antialias: true
+            });
+        } catch (e) {
+            console.warn("TextureManager: generateTexture failed, falling back to basic graphics.", e);
+            // Fallback: Just keep Texture.WHITE or try a simpler generation if possible
+        }
     }
 }
