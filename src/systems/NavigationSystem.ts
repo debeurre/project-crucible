@@ -72,6 +72,23 @@ export class NavigationSystem {
                     roadGradX = rightRoad - leftRoad;
                     roadGradY = downRoad - upRoad;
                 }
+                
+                // Directional Magnetism Fix
+                const roadGradLen = Math.sqrt(roadGradX * roadGradX + roadGradY * roadGradY);
+                if (roadGradLen > 0.001) {
+                    const speed = Math.sqrt(sprigs.vx[i] * sprigs.vx[i] + sprigs.vy[i] * sprigs.vy[i]);
+                    if (speed > 0.1) {
+                        const nx = sprigs.vx[i] / speed;
+                        const ny = sprigs.vy[i] / speed;
+                        const dot = roadGradX * nx + roadGradY * ny;
+                        
+                        // If gradient points backwards (braking), remove that component
+                        if (dot < 0) {
+                            roadGradX -= dot * nx;
+                            roadGradY -= dot * ny;
+                        }
+                    }
+                }
 
                 // 3. Apply Forces
                 const scentLen = Math.sqrt(scentGradX*scentGradX + scentGradY*scentGradY);
