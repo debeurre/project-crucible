@@ -1,22 +1,22 @@
-# Project Crucible: Eusocial Garden Sim
+# PROJECT CRUCIBLE: DESIGN SPEC (LIVING)
 
-## Core Concepts
+## Current Goal: Discrete A* Rail Fields
+We are transitioning from fluid, pheromone-based movement to high-efficiency, discrete rail networks. Sprigs should not wander aimlessly; they should commute.
 
-*   **Grid-Based Map:** 2D Array for Terrain (Walls), Scents (Pheromones), and Influence (Danger).
-*   **Entity Component System (DOD):** Flat arrays (Float32Array) for all unit data.
-*   **Hybrid Movement:** Units float on x,y but steer based on Grid Flow Fields.
+## Data Structure: The Rail
+A **Rail** is a physical path represented as an array of discrete `{ x, y }` coordinates (nodes).
+- **Generation:** Rails are generated using A* pathfinding between high-interest points (e.g., Nest and a Resource).
+- **Format:** `Rail = Array<{ x: number, y: number }>`.
 
-## Architecture
+## Agent Logic: Commuting
+Sprigs transition from "Wander/Scent" mode to "Rail" mode when near a high-strength path.
+- **Acquisition:** A Sprig finds the closest node on a rail.
+- **Traversing:** The Sprig moves linearly along the array index (incremental or decremental based on target).
+- **Fluidity:** Sprigs can "derail" if they encounter a higher-priority signal (e.g., fresh food nearby) or a blockage.
 
-*   **WorldState:** Holds all Data (Map + Entities).
-*   **Systems:** Pure logic functions (Decision, Navigation, Ecology).
-*   **Renderer:** Pure PixiJS view.
-
-## The Loop
-
-1.  **Input:** Capture player Traces.
-2.  **Ecology:** Update Pheromone Grid (Decay/Spread).
-3.  **HiveMind:** Assign States (Haul/Scavenge) based on Inventory.
-4.  **Navigation:** Calculate Velocities (Flow Field + Steering).
-5.  **Physics:** Integrate Positions (pos += vel * dt).
-6.  **Render:** Sync Sprites to Positions.
+## Persistence: The Metabolic Loop
+Rails are not permanent infrastructure but biological pathways.
+- **Metabolism:** Rails have a `strength` value (0.0 to 1.0).
+- **Decay:** Strength decays over time if unused.
+- **Reinforcement:** High traffic (Sprigs passing over a node) reinforces the strength.
+- **Visuals:** High-strength rails appear as solid packed dirt; low-strength rails appear as faint paths.
