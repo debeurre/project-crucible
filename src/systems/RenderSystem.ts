@@ -1,7 +1,8 @@
-import { Application, Graphics, Container } from 'pixi.js';
+import { Application, Graphics, Container, Sprite } from 'pixi.js';
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
 import { StructureType } from '../data/StructureData';
+import { TextureManager } from '../core/TextureManager';
 
 export class RenderSystem {
     private app: Application;
@@ -10,10 +11,11 @@ export class RenderSystem {
     private roadGraphics: Graphics;
     private scentGraphics: Graphics;
     private structureGraphics: Graphics;
-    private sprigGraphics: Graphics;
+    private spriteContainer: Container;
     private container: Container;
     private needsRedraw: boolean = true;
     private lastStructureCount: number = 0;
+    private sprites: Map<number, Sprite> = new Map();
 
     constructor(app: Application, world: WorldState) {
         this.app = app;
@@ -23,13 +25,16 @@ export class RenderSystem {
         this.roadGraphics = new Graphics(); // Bottom layer
         this.scentGraphics = new Graphics(); 
         this.structureGraphics = new Graphics();
-        this.sprigGraphics = new Graphics();
+        this.spriteContainer = new Container();
         
+        // Initialize TextureManager
+        TextureManager.init(app);
+
         this.container.addChild(this.gridGraphics);
         this.container.addChild(this.roadGraphics);
         this.container.addChild(this.structureGraphics);
         this.container.addChild(this.scentGraphics);
-        this.container.addChild(this.sprigGraphics);
+        this.container.addChild(this.spriteContainer); // Add sprites above floor/scents
         this.app.stage.addChild(this.container);
     }
 
@@ -49,7 +54,55 @@ export class RenderSystem {
 
         this.drawRoads();
         this.drawScents();
-        this.drawSprigs();
+        this.updateSprigs();
+    }
+
+    private updateSprigs() {
+        const sprigs = this.world.sprigs;
+        const count = CONFIG.MAX_SPRIGS;
+
+        // 1. Prune dead sprites
+        for (const [id, sprite] of this.sprites) {
+            if (sprigs.active[id] === 0) {
+                this.spriteContainer.removeChild(sprite);
+                this.sprites.delete(id);
+            }
+        }
+
+        // 2. Sync active sprigs
+        for (let i = 0; i < count; i++) {
+            if (sprigs.active[i] === 1) {
+                let sprite = this.sprites.get(i);
+
+                if (!sprite) {
+                    sprite = new Sprite(TextureManager.sootTexture);
+                    sprite.anchor.set(0.5); // Center anchor
+                    this.spriteContainer.addChild(sprite);
+                    this.sprites.set(i, sprite);
+                }
+
+                // Update Position
+                sprite.x = sprigs.x[i];
+                sprite.y = sprigs.y[i];
+
+                // Update Rotation
+                if (Math.abs(sprigs.vx[i]) > 0.01 || Math.abs(sprigs.vy[i]) > 0.01) {
+                     sprite.rotation = Math.atan2(sprigs.vy[i], sprigs.vx[i]);
+                }
+
+                // Tint
+                if (sprigs.cargo[i] === 1) {
+                    sprite.tint = 0xFF69B4; // Hot Pink
+                } else {
+                    sprite.tint = 0x00FF00; // Lime Green
+                }
+                
+                // Scale
+                const r = CONFIG.SPRIG_RADIUS;
+                sprite.width = r * 4;
+                sprite.height = r * 4;
+            }
+        }
     }
 
     private drawRoads() {
@@ -138,21 +191,6 @@ export class RenderSystem {
             if (s.type === StructureType.ROCK) color = 0x808080; // Grey
 
             g.circle(s.x, s.y, s.radius).fill(color);
-        }
-    }
-
-    private drawSprigs() {
-        const g = this.sprigGraphics;
-        g.clear();
-        
-        const sprigs = this.world.sprigs;
-        const count = CONFIG.MAX_SPRIGS;
-
-        for (let i = 0; i < count; i++) {
-            if (sprigs.active[i] === 1) {
-                const color = sprigs.cargo[i] === 1 ? 0xFF69B4 : 0x00FF00; // Pink if full, Green if empty
-                g.circle(sprigs.x[i], sprigs.y[i], 3).fill(color);
-            }
         }
     }
 }
