@@ -45,21 +45,25 @@ export class RailSystem {
             const cookie = world.structures.find(s => s.type === StructureType.COOKIE);
 
             if (nest && cookie) {
-                // ... (Grid refresh logic)
+                // Ensure grid is fresh
                 world.refreshGrid();
                 const grid = world.grid;
-                // Hack: Unblock start/end
-                const cxStart = Math.floor(nest.x / CONFIG.GRID_SIZE);
-                const cyStart = Math.floor(nest.y / CONFIG.GRID_SIZE);
-                const cxEnd = Math.floor(cookie.x / CONFIG.GRID_SIZE);
-                const cyEnd = Math.floor(cookie.y / CONFIG.GRID_SIZE);
-                
-                if (cxStart >= 0 && cxStart < grid.cols && cyStart >= 0 && cyStart < grid.rows) {
-                    grid.data[cyStart * grid.cols + cxStart] = 0;
-                }
-                 if (cxEnd >= 0 && cxEnd < grid.cols && cyEnd >= 0 && cyEnd < grid.rows) {
-                    grid.data[cyEnd * grid.cols + cxEnd] = 0;
-                }
+
+                // Hack: Unblock start/end areas completely so pathfinder can enter/exit
+                const unblockStructure = (s: any) => {
+                    const cx = Math.floor(s.x / CONFIG.GRID_SIZE);
+                    const cy = Math.floor(s.y / CONFIG.GRID_SIZE);
+                    const r = Math.ceil(s.radius / CONFIG.GRID_SIZE);
+                    for (let y = cy - r; y <= cy + r; y++) {
+                        for (let x = cx - r; x <= cx + r; x++) {
+                            if (x >= 0 && x < grid.cols && y >= 0 && y < grid.rows) {
+                                grid.data[y * grid.cols + x] = 0;
+                            }
+                        }
+                    }
+                };
+                unblockStructure(nest);
+                unblockStructure(cookie);
 
                 console.log("Pathfinding (A* Blocky)...");
                 const rawPath = Pathfinder.findPath(nest.x, nest.y, cookie.x, cookie.y, grid);
