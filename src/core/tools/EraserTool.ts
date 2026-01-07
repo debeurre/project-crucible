@@ -20,6 +20,7 @@ export class EraserTool implements Tool {
             const dy = s.y - y;
             if (dx*dx + dy*dy < (s.radius + radius)**2) {
                 world.structures.splice(i, 1);
+                world.refreshGrid();
             }
         }
     }

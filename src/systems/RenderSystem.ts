@@ -11,6 +11,7 @@ export class RenderSystem {
     private roadGraphics: Graphics;
     private scentGraphics: Graphics;
     private structureGraphics: Graphics;
+    private obstacleDebugGraphics: Graphics;
     private spriteContainer: Container;
     private container: Container;
     private needsRedraw: boolean = true;
@@ -25,11 +26,13 @@ export class RenderSystem {
         this.roadGraphics = new Graphics(); // Bottom layer
         this.scentGraphics = new Graphics(); 
         this.structureGraphics = new Graphics();
+        this.obstacleDebugGraphics = new Graphics();
         this.spriteContainer = new Container();
         
         this.container.addChild(this.gridGraphics);
         this.container.addChild(this.roadGraphics);
         this.container.addChild(this.structureGraphics);
+        this.container.addChild(this.obstacleDebugGraphics); // Debug overlay above structures
         this.container.addChild(this.scentGraphics);
         this.container.addChild(this.spriteContainer); // Add sprites above floor/scents
         this.app.stage.addChild(this.container);
@@ -51,7 +54,24 @@ export class RenderSystem {
 
         this.drawRoads();
         this.drawScents();
+        this.drawObstacleGrid();
         this.updateSprigs();
+    }
+
+    private drawObstacleGrid() {
+        const g = this.obstacleDebugGraphics;
+        g.clear();
+        const grid = this.world.grid;
+        if (!grid) return;
+
+        for (let y = 0; y < grid.rows; y++) {
+            for (let x = 0; x < grid.cols; x++) {
+                if (grid.data[y * grid.cols + x] === 1) {
+                    g.rect(x * CONFIG.GRID_SIZE, y * CONFIG.GRID_SIZE, CONFIG.GRID_SIZE, CONFIG.GRID_SIZE)
+                     .fill({ color: 0xFF0000, alpha: 0.3 });
+                }
+            }
+        }
     }
 
     private updateSprigs() {

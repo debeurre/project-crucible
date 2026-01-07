@@ -27,6 +27,7 @@ export class RockTool implements Tool {
                 y: y,
                 radius: radius
             });
+            world.refreshGrid();
         }
     }
 

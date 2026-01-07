@@ -2,17 +2,20 @@ import { MapData } from '../data/MapData';
 import { CONFIG } from './Config';
 import { EntityData } from '../data/EntityData';
 import { Structure, StructureType } from '../data/StructureData';
+import { Grid } from './Grid';
 
 export class WorldState {
     public map: MapData;
     public sprigs: EntityData;
     public structures: Structure[];
+    public grid: Grid;
     public foodStored: number = 0;
 
     constructor() {
         this.map = new MapData(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
         this.sprigs = new EntityData();
         this.structures = [];
+        this.grid = new Grid(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
 
         const cx = (CONFIG.WORLD_WIDTH * CONFIG.TILE_SIZE) / 2;
         const cy = (CONFIG.WORLD_HEIGHT * CONFIG.TILE_SIZE) / 2;
@@ -36,5 +39,11 @@ export class WorldState {
             const y = startY + (Math.random() - 0.5) * 50;
             this.sprigs.spawn(x, y);
         }
+        
+        this.refreshGrid();
+    }
+
+    public refreshGrid() {
+        this.grid.bake(this.structures);
     }
 }
