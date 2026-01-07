@@ -47,14 +47,11 @@ export class MovementSystem {
                 vy *= scale;
             }
 
-            // 5. Scent Drop (Haulers)
-            if (sprigs.cargo[i] === 1 && speedSqr > 400 && world.map.scents) {
-                const gx = Math.floor(sprigs.x[i] / CONFIG.TILE_SIZE);
-                const gy = Math.floor(sprigs.y[i] / CONFIG.TILE_SIZE);
-                if (gx >= 0 && gx < world.map.width && gy >= 0 && gy < world.map.height) {
-                    const idx = gy * world.map.width + gx;
-                    world.map.scents[idx] = Math.min(1.0, world.map.scents[idx] + 0.5 * dt);
-                }
+            // 5. Heavy Hauler Oscillation
+            if (sprigs.cargo[i] === 1) {
+                const oscillation = 1.0 + Math.sin(performance.now() * 0.01 * CONFIG.HAULER_OSCILLATION_FREQ) * CONFIG.HAULER_OSCILLATION_AMP;
+                vx *= oscillation;
+                vy *= oscillation;
             }
 
             // Store State

@@ -55,8 +55,8 @@ export class NavigationSystem {
 
                 const scentLen = Math.sqrt(scentGradX*scentGradX + scentGradY*scentGradY);
                 if (scentLen > 0.01) {
-                    scentAx = (scentGradX / scentLen) * (CONFIG.SCENT_STRENGTH * 0.1); // 90% Nerf
-                    scentAy = (scentGradY / scentLen) * (CONFIG.SCENT_STRENGTH * 0.1);
+                    scentAx = (scentGradX / scentLen) * (CONFIG.SCENT_STRENGTH * CONFIG.SCENT_WEIGHT);
+                    scentAy = (scentGradY / scentLen) * (CONFIG.SCENT_STRENGTH * CONFIG.SCENT_WEIGHT);
                 }
             }
 
@@ -67,11 +67,9 @@ export class NavigationSystem {
 
             if (world.rail && world.rail.length > 1) {
                 // Find closest point
-                // Optimization: In a full system, we'd cache the index.
                 let minDistSq = Infinity;
                 let closestIdx = -1;
                 
-                // Scan a subset or full? Full for robustness in prototype.
                 for (let j = 0; j < world.rail.length; j += 2) {
                     const r = world.rail[j];
                     const rdx = r.x - px;
@@ -87,10 +85,10 @@ export class NavigationSystem {
                     railActive = true;
                     // Attraction
                     const r = world.rail[closestIdx];
-                    const attrX = (r.x - px) * CONFIG.RAIL_MAGNET_STRENGTH * 2; // Boosted
+                    const attrX = (r.x - px) * CONFIG.RAIL_MAGNET_STRENGTH * 2; 
                     const attrY = (r.y - py) * CONFIG.RAIL_MAGNET_STRENGTH * 2;
 
-                    // Tangent
+                    // Tangent (Push)
                     let nextIdx = closestIdx;
                     if (sprigs.cargo[i] === 0) {
                          nextIdx = Math.min(closestIdx + 5, world.rail.length - 1);
@@ -106,6 +104,8 @@ export class NavigationSystem {
                         const tLen = Math.sqrt(tdx*tdx + tdy*tdy);
                         if (tLen > 0.01) {
                             const speed = 400.0;
+                            // Rail Push: If aligned, boost speed? 
+                            // For now, tangent force IS the push.
                             tanX = (tdx / tLen) * speed;
                             tanY = (tdy / tLen) * speed;
                         }
@@ -118,8 +118,8 @@ export class NavigationSystem {
 
             // Blend
             if (railActive) {
-                ax += railAx * 0.8 + scentAx * 0.2;
-                ay += railAy * 0.8 + scentAy * 0.2;
+                ax += railAx * CONFIG.RAIL_WEIGHT + scentAx * CONFIG.SCENT_WEIGHT;
+                ay += railAy * CONFIG.RAIL_WEIGHT + scentAy * CONFIG.SCENT_WEIGHT;
             } else {
                 ax += scentAx;
                 ay += scentAy;
