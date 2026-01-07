@@ -16,6 +16,9 @@ export class NavigationSystem {
             }
         }
 
+        for (let i = 0; i < count; i++) {
+            if (sprigs.active[i] === 0) continue;
+
             // Reset acceleration
             let ax = 0;
             let ay = 0;
