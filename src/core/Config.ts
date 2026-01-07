@@ -1,12 +1,14 @@
 export const CONFIG = {
     TILE_SIZE: 24,
-    WORLD_WIDTH: 40, // tiles
-    WORLD_HEIGHT: 30, // tiles
+    WORLD_WIDTH: 75, // tiles
+    WORLD_HEIGHT: 40, // tiles
     MAX_SPRIGS: 2000,
     MAX_SPEED: 50.0, // Pixels per second
     SPRIG_RADIUS: 5.0,
     SCENT_STRENGTH: 500.0,
     ROAD_MAGNETISM: 0.0,
+    GRID_SIZE: 16,
+    RAIL_MAGNET_STRENGTH: 5.0,
 };
 
 export const SCREEN_WIDTH = CONFIG.TILE_SIZE * CONFIG.WORLD_WIDTH;
