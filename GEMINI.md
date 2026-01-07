@@ -8,6 +8,7 @@ As of JAN-06-2026: Moving from Pheromones to Rail Fields.
 - **MINIMAL KEYBOARD CONTROLS:** Do not suggest WASD, arrow keys, or complex hotkeys.
 - **Deafness:** Developer is deaf. Do not rely on audio cues. Feedback must be VISUAL FIRST (screen shake, flash, floating text, particle bursts).
 - **Workflow:** Developer uses 4-6 hour energy blocks. Code must be modular, easy to "pick up and put down."
+- **Preference for User Edits:** When there is ambiguity about whether a tweak is from the user or the agent, PREFER THE USER'S EDITS. Ask if unsure.
 
 ## 2. THE GAME: "Garden Realms"
 - **Genre:** Garden Colony Logistics Sim (*SimAnt* + *Pikmin* + *Dwarf Fortress*).
