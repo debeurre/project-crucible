@@ -20,3 +20,9 @@ Rails are not permanent infrastructure but biological pathways.
 - **Decay:** Strength decays over time if unused.
 - **Reinforcement:** High traffic (Sprigs passing over a node) reinforces the strength.
 - **Visuals:** High-strength rails appear as solid packed dirt; low-strength rails appear as faint paths.
+
+## Architectural Hierarchy
+We enforce a strict three-tier logic hierarchy to ensure ECS purity and maintainable physics:
+1. **HiveMind (State):** Determines *What* to do. Sets entity states (Idle, Seeking) and targets. Handles high-level logic and arrival triggers.
+2. **Navigation (Vectors):** Determines *Where* to go. Calculates forces and desired vectors (Scent, Rail, Separation). Outputs acceleration (`ax`, `ay`).
+3. **Movement (Physics):** Determines *How* to get there. Pure integration of velocity and position (`vx += ax * dt`, `x += vx * dt`). Handles friction and basic speed limits.
