@@ -1,7 +1,6 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { WorldState } from '../core/WorldState';
 import { Pathfinder, RailNode } from '../logic/Pathfinder';
-import { Spline } from '../logic/Spline';
 import { StructureType } from '../data/StructureData';
 import { CONFIG } from '../core/Config';
 
@@ -48,14 +47,13 @@ export class RailSystem {
                     grid.data[cyEnd * grid.cols + cxEnd] = 0;
                 }
 
-                console.log("Pathfinding...");
+                console.log("Pathfinding (A* Blocky)...");
                 const rawPath = Pathfinder.findPath(nest.x, nest.y, cookie.x, cookie.y, grid);
                 
                 if (rawPath.length > 0) {
-                     const smoothPath = Spline.generateSmoothPath(rawPath, 20); // High res for smoothness
-                     world.rail = smoothPath;
+                     world.rail = rawPath;
                      this.drawRail(world.rail);
-                     console.log(`Rail generated: ${smoothPath.length} smooth segments.`);
+                     console.log(`Rail generated: ${rawPath.length} nodes.`);
                 } else {
                     console.log("No path found.");
                 }
@@ -69,10 +67,22 @@ export class RailSystem {
         g.clear();
         if (rail.length < 2) return;
 
+        // Draw "Road" style: Blocky, 16px wide
         g.moveTo(rail[0].x, rail[0].y);
         for (let i = 1; i < rail.length; i++) {
             g.lineTo(rail[i].x, rail[i].y);
         }
-        g.stroke({ width: 6, color: 0x228B22, alpha: 0.8, cap: 'round', join: 'round' });
+        
+        // 16px wide, Grey road
+        g.stroke({ width: 16, color: 0x555555, alpha: 1.0, cap: 'square', join: 'bevel' });
+        
+        // Optional: Draw center line
+        /*
+        g.moveTo(rail[0].x, rail[0].y);
+        for (let i = 1; i < rail.length; i++) {
+            g.lineTo(rail[i].x, rail[i].y);
+        }
+        g.stroke({ width: 2, color: 0xFFFFFF, alpha: 0.5 });
+        */
     }
 }
