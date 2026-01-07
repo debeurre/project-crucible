@@ -32,6 +32,10 @@ export class MovementSystem {
 
                 // Lock-on Range: 30px
                 if (minDistSq < 900) {
+                    // Dampen existing velocity (Wander/Scent) to favor Rail
+                    sprigs.vx[i] *= 0.95;
+                    sprigs.vy[i] *= 0.95;
+
                     const r = world.rail[closestIdx];
                     
                     // 1. Attraction (Pull towards line)

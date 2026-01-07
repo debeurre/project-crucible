@@ -58,8 +58,8 @@ export class NavigationSystem {
                 // 3. Apply Forces (Scent Only)
                 const scentLen = Math.sqrt(scentGradX*scentGradX + scentGradY*scentGradY);
                 if (scentLen > 0.01) {
-                    vx += (scentGradX / scentLen) * CONFIG.SCENT_STRENGTH * dt;
-                    vy += (scentGradY / scentLen) * CONFIG.SCENT_STRENGTH * dt;
+                    vx += (scentGradX / scentLen) * (CONFIG.SCENT_STRENGTH * 0.1) * dt;
+                    vy += (scentGradY / scentLen) * (CONFIG.SCENT_STRENGTH * 0.1) * dt;
                 }
             }
 
@@ -68,11 +68,16 @@ export class NavigationSystem {
             const dy = ty - py;
             const distToTarget = Math.sqrt(dx*dx + dy*dy);
 
-            if (distToTarget > 0) {
+            // Interaction Buffer Check: Stop pushing if close enough
+            if (distToTarget > CONFIG.INTERACTION_BUFFER) {
                 const desiredX = (dx / distToTarget) * CONFIG.MAX_SPEED;
                 const desiredY = (dy / distToTarget) * CONFIG.MAX_SPEED;
                 vx += (desiredX - vx) * steeringStrength * dt;
                 vy += (desiredY - vy) * steeringStrength * dt;
+            } else {
+                // Arrived: Dampen velocity
+                vx *= 0.9;
+                vy *= 0.9;
             }
 
             // 1.5 Separation
