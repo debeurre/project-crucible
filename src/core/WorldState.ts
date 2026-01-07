@@ -21,13 +21,13 @@ export class WorldState {
         const cy = (CONFIG.WORLD_HEIGHT * CONFIG.TILE_SIZE) / 2;
 
         // Structures
-        this.structures.push({ id: 0, type: StructureType.NEST, x: cx - 150, y: cy, radius: 30 });
-        this.structures.push({ id: 1, type: StructureType.COOKIE, x: cx + 150, y: cy, radius: 30 });
+        this.structures.push({ id: 0, type: StructureType.NEST, x: cx - 200, y: cy, radius: 30 });
+        this.structures.push({ id: 1, type: StructureType.COOKIE, x: cx + 200, y: cy, radius: 30 });
         
         // Obstacles
         this.structures.push({ id: 2, type: StructureType.ROCK, x: cx, y: cy, radius: 30 });
-        this.structures.push({ id: 3, type: StructureType.ROCK, x: cx + 60, y: cy - 50, radius: 40 });
-        this.structures.push({ id: 4, type: StructureType.ROCK, x: cx - 60, y: cy + 50, radius: 25 });
+        this.structures.push({ id: 3, type: StructureType.ROCK, x: cx + 90, y: cy - 50, radius: 40 });
+        this.structures.push({ id: 4, type: StructureType.ROCK, x: cx - 90, y: cy + 25, radius: 25 });
 
         // Spawn Test Swarm
         // Spawn at Nest
