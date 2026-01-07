@@ -5,6 +5,8 @@ export class EntityData {
     public y: Float32Array;
     public vx: Float32Array;
     public vy: Float32Array;
+    public ax: Float32Array;
+    public ay: Float32Array;
     public active: Uint8Array;
     public state: Uint8Array;
     public cargo: Uint8Array;
@@ -18,6 +20,8 @@ export class EntityData {
         this.y = new Float32Array(size);
         this.vx = new Float32Array(size);
         this.vy = new Float32Array(size);
+        this.ax = new Float32Array(size);
+        this.ay = new Float32Array(size);
         this.active = new Uint8Array(size);
         this.state = new Uint8Array(size);
         this.cargo = new Uint8Array(size);
@@ -33,6 +37,8 @@ export class EntityData {
                 this.y[i] = startY;
                 this.vx[i] = 0;
                 this.vy[i] = 0;
+                this.ax[i] = 0;
+                this.ay[i] = 0;
                 this.active[i] = 1;
                 this.state[i] = 0; // IDLE
                 this.cargo[i] = 0;

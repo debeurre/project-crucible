@@ -16,24 +16,24 @@ export class NavigationSystem {
             }
         }
 
-        for (let i = 0; i < count; i++) {
-            if (sprigs.active[i] === 0) continue;
-
+            // Reset acceleration
+            let ax = 0;
+            let ay = 0;
+            
             const px = sprigs.x[i];
             const py = sprigs.y[i];
             const tx = sprigs.targetX[i];
             const ty = sprigs.targetY[i];
-            let vx = sprigs.vx[i];
-            let vy = sprigs.vy[i];
 
-            let steeringStrength = 10.0; // Default for Haulers
-
-            // 0. Environmental Steering (Scent + Road Magnetism)
-            if (sprigs.cargo[i] === 0) {
+            // 1. Scent Force
+            let scentAx = 0;
+            let scentAy = 0;
+            if (sprigs.cargo[i] === 0) { // Only Haulers seeking food follow scent/rail usually? Or all?
+                // Assuming cargo=0 follows scent/rail to source. Cargo=1 returns to nest.
+                // The prompt didn't specify cargo logic change, so I'll keep existing Scent context.
                 const tileX = Math.floor(px / CONFIG.TILE_SIZE);
                 const tileY = Math.floor(py / CONFIG.TILE_SIZE);
                 
-                // 1. Scent Gradient
                 const leftScent = world.map.getScent(tileX - 1, tileY);
                 const rightScent = world.map.getScent(tileX + 1, tileY);
                 const upScent = world.map.getScent(tileX, tileY - 1);
@@ -41,48 +41,98 @@ export class NavigationSystem {
 
                 let scentGradX = rightScent - leftScent;
                 let scentGradY = downScent - upScent;
-
+                
+                // Nest Repulsion
                 const dxNest = px - nestX;
                 const dyNest = py - nestY;
-                const distToNest = Math.sqrt(dxNest*dxNest + dyNest*dyNest);
-
-                if (distToNest < 100) {
-                    // Nest Repulsion: Invert Scents
+                if (dxNest*dxNest + dyNest*dyNest < 10000) {
                     scentGradX *= -1;
                     scentGradY *= -1;
-                    steeringStrength = 5.0; 
-                } else {
-                    steeringStrength = 2.0;
                 }
 
-                // 3. Apply Forces (Scent Only)
                 const scentLen = Math.sqrt(scentGradX*scentGradX + scentGradY*scentGradY);
                 if (scentLen > 0.01) {
-                    vx += (scentGradX / scentLen) * (CONFIG.SCENT_STRENGTH * 0.1) * dt;
-                    vy += (scentGradY / scentLen) * (CONFIG.SCENT_STRENGTH * 0.1) * dt;
+                    scentAx = (scentGradX / scentLen) * (CONFIG.SCENT_STRENGTH * 0.1); // 90% Nerf
+                    scentAy = (scentGradY / scentLen) * (CONFIG.SCENT_STRENGTH * 0.1);
                 }
             }
 
-            // 1. Steering (Seek Target)
-            const dx = tx - px;
-            const dy = ty - py;
-            const distToTarget = Math.sqrt(dx*dx + dy*dy);
+            // 2. Rail Force (The Blender)
+            let railAx = 0;
+            let railAy = 0;
+            let railActive = false;
 
-            // Interaction Buffer Check: Stop pushing if close enough
-            if (distToTarget > CONFIG.INTERACTION_BUFFER) {
-                const desiredX = (dx / distToTarget) * CONFIG.MAX_SPEED;
-                const desiredY = (dy / distToTarget) * CONFIG.MAX_SPEED;
-                vx += (desiredX - vx) * steeringStrength * dt;
-                vy += (desiredY - vy) * steeringStrength * dt;
+            if (world.rail && world.rail.length > 1) {
+                // Find closest point
+                // Optimization: In a full system, we'd cache the index.
+                let minDistSq = Infinity;
+                let closestIdx = -1;
+                
+                // Scan a subset or full? Full for robustness in prototype.
+                for (let j = 0; j < world.rail.length; j += 2) {
+                    const r = world.rail[j];
+                    const rdx = r.x - px;
+                    const rdy = r.y - py;
+                    const dSq = rdx*rdx + rdy*rdy;
+                    if (dSq < minDistSq) {
+                        minDistSq = dSq;
+                        closestIdx = j;
+                    }
+                }
+
+                if (minDistSq < 1600) { // 40px range
+                    railActive = true;
+                    // Attraction
+                    const r = world.rail[closestIdx];
+                    const attrX = (r.x - px) * CONFIG.RAIL_MAGNET_STRENGTH * 2; // Boosted
+                    const attrY = (r.y - py) * CONFIG.RAIL_MAGNET_STRENGTH * 2;
+
+                    // Tangent
+                    let nextIdx = closestIdx;
+                    if (sprigs.cargo[i] === 0) {
+                         nextIdx = Math.min(closestIdx + 5, world.rail.length - 1);
+                    } else {
+                         nextIdx = Math.max(closestIdx - 5, 0);
+                    }
+                    
+                    let tanX = 0, tanY = 0;
+                    if (nextIdx !== closestIdx) {
+                        const nextR = world.rail[nextIdx];
+                        const tdx = nextR.x - px;
+                        const tdy = nextR.y - py;
+                        const tLen = Math.sqrt(tdx*tdx + tdy*tdy);
+                        if (tLen > 0.01) {
+                            const speed = 400.0;
+                            tanX = (tdx / tLen) * speed;
+                            tanY = (tdy / tLen) * speed;
+                        }
+                    }
+
+                    railAx = attrX + tanX;
+                    railAy = attrY + tanY;
+                }
+            }
+
+            // Blend
+            if (railActive) {
+                ax += railAx * 0.8 + scentAx * 0.2;
+                ay += railAy * 0.8 + scentAy * 0.2;
             } else {
-                // Arrived: Dampen velocity
-                vx *= 0.9;
-                vy *= 0.9;
+                ax += scentAx;
+                ay += scentAy;
+                
+                // Add Seek Target if not on rail (Goal Steering)
+                const dx = tx - px;
+                const dy = ty - py;
+                const distToTarget = Math.sqrt(dx*dx + dy*dy);
+                if (distToTarget > CONFIG.INTERACTION_BUFFER) {
+                    ax += (dx / distToTarget) * 100.0;
+                    ay += (dy / distToTarget) * 100.0;
+                }
             }
 
             // 1.5 Separation
-            // Inline random sampling for speed/simplicity
-            for (let k = 0; k < 10; k++) {
+            for (let k = 0; k < 5; k++) { // Reduced samples for perf
                 const neighborIdx = Math.floor(Math.random() * CONFIG.MAX_SPRIGS);
                 if (neighborIdx === i || sprigs.active[neighborIdx] === 0) continue;
                 
@@ -93,14 +143,18 @@ export class NavigationSystem {
                 if (sepDistSq < 225) { // 15px
                     const sepDist = Math.sqrt(sepDistSq);
                     if (sepDist > 0.001) {
-                        const force = 200.0 * dt;
-                        vx += (sepDx / sepDist) * force;
-                        vy += (sepDy / sepDist) * force;
+                        const force = 500.0;
+                        ax += (sepDx / sepDist) * force;
+                        ay += (sepDy / sepDist) * force;
                     }
                 }
             }
 
-            // 2. Hard Collision (The Slide)
+            // Hard Collision (Direct Position/Velocity Correction)
+            // This modifies Position directly, which is distinct from Acceleration.
+            let vx = sprigs.vx[i];
+            let vy = sprigs.vy[i];
+            
             for (const s of world.structures) {
                 if (s.type === StructureType.ROCK) {
                     const rdx = px - s.x;
@@ -133,6 +187,8 @@ export class NavigationSystem {
 
             sprigs.vx[i] = vx;
             sprigs.vy[i] = vy;
+            sprigs.ax[i] = ax;
+            sprigs.ay[i] = ay;
         }
     }
 }

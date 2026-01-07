@@ -118,15 +118,14 @@ export class RailSystem {
         g.clear();
         if (rail.length < 2) return;
 
-        // Dashed Tan Line (Circles every 8px)
-        // Iterate through rail segments
+        // Dashed Tan Line: Circles every 12px
         for (let i = 0; i < rail.length - 1; i++) {
             const p1 = rail[i];
             const p2 = rail[i+1];
             const dx = p2.x - p1.x;
             const dy = p2.y - p1.y;
             const dist = Math.sqrt(dx*dx + dy*dy);
-            const steps = Math.ceil(dist / 8);
+            const steps = Math.ceil(dist / 12);
             
             for (let j = 0; j < steps; j++) {
                 const t = j / steps;
