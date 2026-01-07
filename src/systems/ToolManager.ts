@@ -1,7 +1,7 @@
-import { Tool } from './tools/Tool';
-import { RockTool } from './tools/RockTool';
-import { EraserTool } from './tools/EraserTool';
-import { ScentTool } from './tools/ScentTool';
+import { Tool } from '../core/tools/Tool';
+import { RockTool } from '../core/tools/RockTool';
+import { EraserTool } from '../core/tools/EraserTool';
+import { ScentTool } from '../core/tools/ScentTool';
 import { WorldState } from '../core/WorldState';
 import { InputState } from '../core/InputState';
 
