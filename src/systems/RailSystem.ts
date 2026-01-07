@@ -10,6 +10,8 @@ export class RailSystem {
     private container: Container;
     private graphics: Graphics;
     private needsRedraw: boolean = true; // Default ON
+    private isEnabled: boolean = true;
+    private toggleRequest: boolean = false;
     private statusDiv: HTMLDivElement;
 
     constructor(app: Application) {
@@ -33,14 +35,28 @@ export class RailSystem {
 
         window.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 't') {
-                this.needsRedraw = true;
-                this.statusDiv.innerText = '[T] RAIL PATHING: REFRESHING...';
+                this.toggleRequest = true;
             }
         });
     }
 
     public update(world: WorldState) {
-        if (this.needsRedraw) {
+        if (this.toggleRequest) {
+            this.isEnabled = !this.isEnabled;
+            this.toggleRequest = false;
+
+            if (this.isEnabled) {
+                this.needsRedraw = true;
+                this.statusDiv.innerText = '[T] RAIL PATHING: REFRESHING...';
+            } else {
+                world.rail = []; // Clear rail to disable physics
+                this.graphics.clear(); // Clear visuals
+                this.statusDiv.innerText = '[T] RAIL PATHING: OFF';
+                this.needsRedraw = false;
+            }
+        }
+
+        if (this.isEnabled && this.needsRedraw) {
             const nest = world.structures.find(s => s.type === StructureType.NEST);
             const cookie = world.structures.find(s => s.type === StructureType.COOKIE);
 
