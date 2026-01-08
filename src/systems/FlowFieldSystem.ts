@@ -25,7 +25,9 @@ export class FlowFieldSystem {
             }
         }
         
-        // The Decay: Trail duration controlled via config
-        world.flowField.decay(CONFIG.TRAIL_DECAY);
+        // The Decay: Calculate rate to reach ~0.01 after TRAIL_DECAY ms
+        const durationSec = CONFIG.TRAIL_DECAY / 1000;
+        const decayRate = Math.pow(0.01, dt / durationSec);
+        world.flowField.decay(decayRate);
     }
 }
