@@ -14,6 +14,11 @@ export const CONFIG = {
     SCENT_WEIGHT: 0.1,
     // wandering
     WANDER_COOLDOWN: 5.0,
+    WANDER_INTERVAL: 5000,
+    LEASH_RADIUS: 200,
+    WANDER_SPEED: 50,
+    RAIL_MAGNET_STRENGTH: 5.0,
+    RAIL_WEIGHT: 0.8,
     // hauling
     HAULER_DRAG: 1,
     HAULER_STEEP: 4,

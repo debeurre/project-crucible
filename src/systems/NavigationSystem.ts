@@ -6,6 +6,15 @@ export class NavigationSystem {
     public update(world: WorldState, dt: number) {
         const sprigs = world.sprigs;
         const count = CONFIG.MAX_SPRIGS;
+        
+        let nestX = 0, nestY = 0;
+        for (const s of world.structures) {
+            if (s.type === StructureType.NEST) {
+                nestX = s.x;
+                nestY = s.y;
+                break;
+            }
+        }
 
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
@@ -76,7 +85,6 @@ export class NavigationSystem {
                 }
 
                 if (mostThreatening) {
-                    // Re-calculate closest point for most threatening
                     const toSphereX = mostThreatening.x - px;
                     const toSphereY = mostThreatening.y - py;
                     const t = (toSphereX * rayDirX + toSphereY * rayDirY);
@@ -88,10 +96,8 @@ export class NavigationSystem {
                     const normalX = closeX - mostThreatening.x;
                     const normalY = closeY - mostThreatening.y; 
                     
-                    // Normal Force (Push Out)
                     safeAdd(normalX, normalY, CONFIG.AVOID_FORCE);
                     
-                    // Tangent Force (Slide)
                     let tanX = -normalY;
                     let tanY = normalX;
                     if (vx * tanX + vy * tanY < 0) {
@@ -110,14 +116,40 @@ export class NavigationSystem {
                     hasFlow = true;
                     forceX += flow.x * CONFIG.MAX_SPEED * CONFIG.FLOW_WEIGHT;
                     forceY += flow.y * CONFIG.MAX_SPEED * CONFIG.FLOW_WEIGHT;
+                    
+                    // Reduced Wander (Visual Noise)
+                    forceX += (Math.random() - 0.5) * 100 * (CONFIG.WANDER_WEIGHT * 0.2);
+                    forceY += (Math.random() - 0.5) * 100 * (CONFIG.WANDER_WEIGHT * 0.2);
                 }
             }
 
-            // 4. Wander (Empty + No Flow)
+            // 4. Wander (Empty + No Flow) - Leashed
             if (sprigs.cargo[i] === 0 && !hasFlow) {
-                const wx = (Math.random() - 0.5);
-                const wy = (Math.random() - 0.5);
-                safeAdd(wx, wy, 300.0 * CONFIG.WANDER_WEIGHT);
+                sprigs.wanderTimer[i] -= dt * 1000;
+                
+                if (sprigs.wanderTimer[i] <= 0) {
+                    sprigs.wanderTimer[i] = CONFIG.WANDER_INTERVAL;
+                    
+                    const dx = px - nestX;
+                    const dy = py - nestY;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const angleToNest = Math.atan2(-dy, -dx);
+                    
+                    let targetAngle = 0;
+                    if (dist > CONFIG.LEASH_RADIUS) {
+                        // Too far: Go towards nest (+/- 45 deg)
+                        targetAngle = angleToNest + (Math.random() - 0.5) * 1.5;
+                    } else {
+                        // Close: Go away from nest (+/- 135 deg)
+                        targetAngle = angleToNest + Math.PI + (Math.random() - 0.5) * 4.5;
+                    }
+                    
+                    sprigs.wanderVx[i] = Math.cos(targetAngle) * CONFIG.WANDER_SPEED;
+                    sprigs.wanderVy[i] = Math.sin(targetAngle) * CONFIG.WANDER_SPEED;
+                }
+                
+                forceX += sprigs.wanderVx[i];
+                forceY += sprigs.wanderVy[i];
             }
 
             // 5. Seek (Haulers Only)
@@ -131,7 +163,6 @@ export class NavigationSystem {
                 if (dist > CONFIG.INTERACTION_BUFFER) {
                     safeAdd(dx, dy, 500.0);
                 } else {
-                    // Arrive / Brake
                     forceX -= vx * 5.0;
                     forceY -= vy * 5.0;
                 }
