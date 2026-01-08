@@ -3,7 +3,7 @@ import { RailNode } from './Pathfinder';
 export class Spline {
     // Catmull-Rom Spline
     // Based on standard implementation ensuring curve passes through control points
-    public static generateSmoothPath(points: RailNode[], segmentsPerNode: number = 10): RailNode[] {
+    public static smoothPath(points: RailNode[], segmentsPerNode: number = 10): RailNode[] {
         if (points.length < 2) return points;
 
         const smoothPath: RailNode[] = [];
