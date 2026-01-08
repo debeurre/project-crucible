@@ -1,4 +1,4 @@
-import { Texture, Application } from 'pixi.js';
+import { Texture, Application, ImageSource } from 'pixi.js';
 
 export class TextureManager {
     public static sootTexture: Texture;
@@ -28,6 +28,7 @@ export class TextureManager {
 
         await loadPromise;
 
-        this.sootTexture = Texture.from(img);
+        const source = new ImageSource({ resource: img });
+        this.sootTexture = new Texture({ source });
     }
 }
