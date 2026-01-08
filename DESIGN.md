@@ -1,28 +1,21 @@
-# PROJECT CRUCIBLE: DESIGN SPEC (LIVING)
+## **TRAILFIELD REWRITE**
 
-## Current Goal: Discrete A* Rail Fields
-We are transitioning from fluid, pheromone-based movement to high-efficiency, discrete rail networks. Sprigs should not wander aimlessly; they should commute.
+### **1. Context & Rationale**
+This project has undergone three distinct evolutionary phases regarding unit navigation, each attempting to solve the balance between **Scale (500+ performant units)** and **Organic Feel ("Garden Fantasy")**.
 
-## Data Structure: The Rail
-A **Rail** is a physical path represented as an array of discrete `{ x, y }` coordinates (nodes).
-- **Generation:** Rails are generated using A* pathfinding between high-interest points (e.g., Nest and a Resource).
-- **Format:** `Rail = Array<{ x: number, y: number }>`.
+* **Phase A: Scalar Pheromones (The Smell).**
+* *Approach:* Units deposited intensity values (0.0–1.0) on a grid.
+* *Result:* Good for general attraction, but lacked directional precision. Units would "swim" up gradients rather than commute efficiently.
 
-## Agent Logic: Commuting
-Sprigs transition from "Wander/Scent" mode to "Rail" mode when near a high-strength path.
-- **Acquisition:** A Sprig finds the closest node on a rail.
-- **Traversing:** The Sprig moves linearly along the array index (incremental or decremental based on target).
-- **Fluidity:** Sprigs can "derail" if they encounter a higher-priority signal (e.g., fresh food nearby) or a blockage.
+* **Phase B: Discrete Rails (The Metro).**
+* *Approach:* Global A* pathfinding generated static, spline-smoothed highways.
+* *Result:* Highly efficient but visually rigid. Created "SimCity" artifacts (wiggly staircases) and struggled with dynamic obstacles. The "Global Brain" approach felt robotic.
 
-## Persistence: The Metabolic Loop
-Rails are not permanent infrastructure but biological pathways.
-- **Metabolism:** Rails have a `strength` value (0.0 to 1.0).
-- **Decay:** Strength decays over time if unused.
-- **Reinforcement:** High traffic (Sprigs passing over a node) reinforces the strength.
-- **Visuals:** High-strength rails appear as solid packed dirt; low-strength rails appear as faint paths.
+* **Phase C: Flow Fields (The Trailfield).**
+* *Trigger:* The realization that "Desire Paths" (Ant Colony Optimization) produce superior organic results than pre-calculated Splines.
+* *The Shift:* We are moving from **Pathfinding** (calculating a route beforehand) to **Pathforming** (emerging a route through behavior).
 
-## Architectural Hierarchy
-We enforce a strict three-tier logic hierarchy to ensure ECS purity and maintainable physics:
-1. **HiveMind (State):** Determines *What* to do. Sets entity states (Idle, Seeking) and targets. Handles high-level logic and arrival triggers.
-2. **Navigation (Vectors):** Determines *Where* to go. Calculates forces and desired vectors (Scent, Rail, Separation). Outputs acceleration (`ax`, `ay`).
-3. **Movement (Physics):** Determines *How* to get there. Pure integration of velocity and position (`vx += ax * dt`, `x += vx * dt`). Handles friction and basic speed limits.
+### **2. Codebase Flush and Rewrite**
+A short-lived attempt at migrating to the flow fields ran into a series of subtle bugs, necessitating a deep purge of built up code cruft, followed by a rewrite from primitives.
+
+The target remains a 'flow field' architecture. This document will be updated as the rewrite progresses.

@@ -1,7 +1,7 @@
-# PROJECT CRUCIBLE: CONTEXT & RULES
+# PROJECT GARDENREALM: CONTEXT & RULES
 
-## CURRENT PHASE: RAIL FIELDS
-As of JAN-06-2026: Moving from Pheromones to Rail Fields.
+## CURRENT PHASE: TRAILFIELD REWRITE
+As of JAN-08-2026: Purging codebase of artifacts before rebuilding primitives.
 
 ## 1. THE DEVELOPER (CRITICAL)
 - **Input Constraints:** Developer MOSTLY uses a mouse/touchscreen (Tap/Drag). 
@@ -10,23 +10,20 @@ As of JAN-06-2026: Moving from Pheromones to Rail Fields.
 - **Workflow:** Developer uses 4-6 hour energy blocks. Code must be modular, easy to "pick up and put down."
 - **Preference for User Edits:** When there is ambiguity about whether a tweak is from the user or the agent, PREFER THE USER'S EDITS. Ask if unsure.
 
-## 2. THE GAME: "Garden Realms"
-- **Genre:** Garden Colony Logistics Sim (*SimAnt* + *Pikmin* + *Dwarf Fortress*).
+## 2. THE GAME: "Gardenrealm"
+- **Genre:** Garden Eusocial Colony Sim (*SimAnt* + *Pikmin* + *Dwarf Fortress*).
 - **Core Loop:** Manage a swarm of "Sprigs", small garden sprites, via direct and indirect control.
     - **Input:** Player can micromanage or leave signals.
     - **Output:** Sprigs autonomously Scavenge, Haul, Fight, Build and Explore based on signals/need.
-- **Economy:** "The Metabolic Loop." Source -> Food -> Nest -> More Sprigs.
 - **Vibe:** "Garden Fantasy." Organic, biological, insectoid behavior wrapped in a cute/fairy-tale aesthetic.
 - **Key Mechanics:**
     - **Autonomous Survival:** An empty Sprig looks for work; a full Sprig looks for home. Emergent equilibriums without player intervention.
     - **Adaptive Evolution:** No preset classes. Sprigs specialize as they work and engage with their environment.
-    - **Physical Resources:** Resources are physical items on the map, not abstract numbers.
-    - **Railfields:** Sprigs wander naturally but are tethered to the Nest or magnetic paths to points of interest.
+    - **Physical Resources:** Resources are physical items on the map, not only abstract numbers.
 
 ## 3. CODING GUIDELINES
 - **Strict TypeScript:** No `any`. Use interfaces.
 - **Config-Driven:** All "magic numbers" (speed, colors, spawn rates) go into `src/config.ts`.
-- **Spectacle First:** Visual feedback (squash/stretch, tints, particles) is essential.
 - **Shell Safety:** DO NOT chain shell commands with `&&`. Run them sequentially.
 - **Code Bonsai:** Do not exceed 300 LOC per file. If unavoidable, report to developer and/or run `npm run janitor` to monitor health.
 
