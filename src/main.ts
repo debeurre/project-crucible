@@ -10,6 +10,7 @@ import { UISystem } from './systems/UISystem';
 import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
+import { FlowFieldSystem } from './systems/FlowFieldSystem';
 
 async function init() {
     const app = new Application();
@@ -38,6 +39,7 @@ async function init() {
     const toolManager = new ToolManager(world);
     const ecologySystem = new EcologySystem();
     const uiSystem = new UISystem(app);
+    const flowFieldSystem = new FlowFieldSystem();
 
     // Toolbar UI
     const toolButtons: Record<string, HTMLDivElement> = {};
@@ -111,6 +113,7 @@ async function init() {
         toolManager.update(world);
         ecologySystem.update(world, dt);
         hiveMindSystem.update(world);
+        flowFieldSystem.update(world, dt);
         navigationSystem.update(world, dt);
         movementSystem.update(world, dt);
         renderSystem.update();

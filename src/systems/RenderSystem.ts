@@ -12,9 +12,11 @@ export class RenderSystem {
     private scentGraphics: Graphics;
     private structureGraphics: Graphics;
     private obstacleDebugGraphics: Graphics;
+    private flowGraphics: Graphics;
     private spriteContainer: Container;
     private container: Container;
     private needsRedraw: boolean = true;
+    private showFlowField: boolean = false;
     private lastStructureCount: number = 0;
     private sprites: Map<number, Sprite> = new Map();
 
@@ -27,15 +29,23 @@ export class RenderSystem {
         this.scentGraphics = new Graphics(); 
         this.structureGraphics = new Graphics();
         this.obstacleDebugGraphics = new Graphics();
+        this.flowGraphics = new Graphics();
         this.spriteContainer = new Container();
         
         this.container.addChild(this.gridGraphics);
         this.container.addChild(this.roadGraphics);
         this.container.addChild(this.structureGraphics);
         this.container.addChild(this.obstacleDebugGraphics); // Debug overlay above structures
+        this.container.addChild(this.flowGraphics); // Flow Field Debug
         this.container.addChild(this.scentGraphics);
         this.container.addChild(this.spriteContainer); // Add sprites above floor/scents
         this.app.stage.addChild(this.container);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 't') {
+                this.showFlowField = !this.showFlowField;
+            }
+        });
     }
 
     public update() {
@@ -55,7 +65,39 @@ export class RenderSystem {
         this.drawRoads();
         this.drawScents();
         this.drawObstacleGrid();
+        
+        if (this.showFlowField) {
+            this.drawFlowField();
+        } else {
+            this.flowGraphics.clear();
+        }
+
         this.updateSprigs();
+    }
+
+    private drawFlowField() {
+        const g = this.flowGraphics;
+        g.clear();
+        const field = this.world.flowField;
+        if (!field) return;
+        const res = field.resolution;
+        
+        for (let y = 0; y < field.height; y++) {
+            for (let x = 0; x < field.width; x++) {
+                const idx = (y * field.width + x) * 2;
+                const vx = field.field[idx];
+                const vy = field.field[idx+1];
+                const len = Math.sqrt(vx*vx + vy*vy);
+                
+                if (len > 0.1) {
+                    const cx = x * res + res/2;
+                    const cy = y * res + res/2;
+                    g.moveTo(cx, cy);
+                    g.lineTo(cx + vx * 8, cy + vy * 8);
+                }
+            }
+        }
+        g.stroke({ width: 1, color: 0x00FFFF, alpha: 0.5 });
     }
 
     private drawObstacleGrid() {

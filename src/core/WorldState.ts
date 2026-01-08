@@ -3,12 +3,14 @@ import { CONFIG } from './Config';
 import { EntityData } from '../data/EntityData';
 import { Structure, StructureType } from '../data/StructureData';
 import { Grid } from './Grid';
+import { FlowField } from './FlowField';
 
 export class WorldState {
     public map: MapData;
     public sprigs: EntityData;
     public structures: Structure[];
     public grid: Grid;
+    public flowField: FlowField;
     public foodStored: number = 0;
 
     constructor() {
@@ -16,6 +18,7 @@ export class WorldState {
         this.sprigs = new EntityData();
         this.structures = [];
         this.grid = new Grid(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
+        this.flowField = new FlowField(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
 
         const cx = (CONFIG.WORLD_WIDTH * CONFIG.TILE_SIZE) / 2;
         const cy = (CONFIG.WORLD_HEIGHT * CONFIG.TILE_SIZE) / 2;
