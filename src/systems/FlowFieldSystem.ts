@@ -25,7 +25,7 @@ export class FlowFieldSystem {
             }
         }
         
-        // The Decay: Slower decay for ~30s duration (0.997^1800 frames ~= 0.004)
-        world.flowField.decay(0.997);
+        // The Decay: Trail duration controlled via config
+        world.flowField.decay(CONFIG.TRAIL_DECAY);
     }
 }
