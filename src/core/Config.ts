@@ -14,12 +14,14 @@ export const CONFIG = {
     SCENT_WEIGHT: 0.1,
     // wandering
     WANDER_COOLDOWN: 5.0,
-    RAIL_MAGNET_STRENGTH: 5.0,
-    RAIL_WEIGHT: 0.8,
     // hauling
     HAULER_DRAG: 1,
     HAULER_STEEP: 4,
-    HAULER_STEP_DURATION: 1000
+    HAULER_STEP_DURATION: 1000,
+    // avoidance
+    WHISKER_LENGTH: 40,
+    AVOID_FORCE: 300,
+    WALL_FOLLOW_FORCE: 200,
 };
 
 export const SCREEN_WIDTH = CONFIG.TILE_SIZE * CONFIG.WORLD_WIDTH;

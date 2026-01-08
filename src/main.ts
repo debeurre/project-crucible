@@ -11,8 +11,6 @@ import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 
-import { RailSystem } from './systems/RailSystem';
-
 async function init() {
     const app = new Application();
     
@@ -37,7 +35,6 @@ async function init() {
     const movementSystem = new MovementSystem();
     const hiveMindSystem = new HiveMindSystem();
     const navigationSystem = new NavigationSystem();
-    const railSystem = new RailSystem(app);
     const toolManager = new ToolManager(world);
     const ecologySystem = new EcologySystem();
     const uiSystem = new UISystem(app);
@@ -115,7 +112,6 @@ async function init() {
         ecologySystem.update(world, dt);
         hiveMindSystem.update(world);
         navigationSystem.update(world, dt);
-        railSystem.update(world);
         movementSystem.update(world, dt);
         renderSystem.update();
         uiSystem.update(world);

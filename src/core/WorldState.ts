@@ -9,7 +9,6 @@ export class WorldState {
     public sprigs: EntityData;
     public structures: Structure[];
     public grid: Grid;
-    public rail: {x: number, y: number}[] = [];
     public foodStored: number = 0;
 
     constructor() {

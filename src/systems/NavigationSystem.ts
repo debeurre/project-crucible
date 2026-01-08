@@ -6,178 +6,129 @@ export class NavigationSystem {
     public update(world: WorldState, dt: number) {
         const sprigs = world.sprigs;
         const count = CONFIG.MAX_SPRIGS;
-        
-        let nestX = 0, nestY = 0;
-        for (const s of world.structures) {
-            if (s.type === StructureType.NEST) {
-                nestX = s.x;
-                nestY = s.y;
-                break;
-            }
-        }
 
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
 
-            // Reset acceleration
-            let ax = 0;
-            let ay = 0;
-            
             const px = sprigs.x[i];
             const py = sprigs.y[i];
+            const vx = sprigs.vx[i];
+            const vy = sprigs.vy[i];
+            
+            let ax = 0;
+            let ay = 0;
+
+            // Step 1: Seek Target
             const tx = sprigs.targetX[i];
             const ty = sprigs.targetY[i];
+            const dx = tx - px;
+            const dy = ty - py;
+            const distToTarget = Math.sqrt(dx*dx + dy*dy);
 
-            // 1. Scent Force
-            let scentAx = 0;
-            let scentAy = 0;
-            if (sprigs.cargo[i] === 0) { // Only Haulers seeking food follow scent/rail usually? Or all?
-                // Assuming cargo=0 follows scent/rail to source. Cargo=1 returns to nest.
-                // The prompt didn't specify cargo logic change, so I'll keep existing Scent context.
-                const tileX = Math.floor(px / CONFIG.TILE_SIZE);
-                const tileY = Math.floor(py / CONFIG.TILE_SIZE);
+            if (distToTarget > CONFIG.INTERACTION_BUFFER) {
+                // Seek force (Proportional to distance logic or Max Speed logic)
+                // Reynolds Seek: Desired - Velocity
+                const desiredSpeed = CONFIG.MAX_SPEED;
+                const desiredVx = (dx / distToTarget) * desiredSpeed;
+                const desiredVy = (dy / distToTarget) * desiredSpeed;
                 
-                const leftScent = world.map.getScent(tileX - 1, tileY);
-                const rightScent = world.map.getScent(tileX + 1, tileY);
-                const upScent = world.map.getScent(tileX, tileY - 1);
-                const downScent = world.map.getScent(tileX, tileY + 1);
-
-                let scentGradX = rightScent - leftScent;
-                let scentGradY = downScent - upScent;
+                const steerX = desiredVx - vx;
+                const steerY = desiredVy - vy;
                 
-                // Nest Repulsion
-                const dxNest = px - nestX;
-                const dyNest = py - nestY;
-                if (dxNest*dxNest + dyNest*dyNest < 10000) {
-                    scentGradX *= -1;
-                    scentGradY *= -1;
-                }
-
-                const scentLen = Math.sqrt(scentGradX*scentGradX + scentGradY*scentGradY);
-                if (scentLen > 0.01) {
-                    scentAx = (scentGradX / scentLen) * (CONFIG.SCENT_STRENGTH * CONFIG.SCENT_WEIGHT);
-                    scentAy = (scentGradY / scentLen) * (CONFIG.SCENT_STRENGTH * CONFIG.SCENT_WEIGHT);
-                }
+                // Steering strength
+                ax += steerX * 5.0; 
+                ay += steerY * 5.0;
+            } else {
+                // Arrive / Stop
+                ax -= vx * 5.0;
+                ay -= vy * 5.0;
             }
 
-            // 2. Rail Force (The Blender)
-            let railAx = 0;
-            let railAy = 0;
-            let railActive = false;
+            // Step 2: Whisker Raycast (Avoidance)
+            const speed = Math.sqrt(vx*vx + vy*vy);
+            if (speed > 1.0) {
+                const lookAhead = CONFIG.WHISKER_LENGTH;
+                const rayDirX = vx / speed;
+                const rayDirY = vy / speed;
+                const rayEndX = px + rayDirX * lookAhead;
+                const rayEndY = py + rayDirY * lookAhead;
 
-            if (world.rail && world.rail.length > 1) {
-                // Find closest point
-                let minDistSq = Infinity;
-                let closestIdx = -1;
-                
-                for (let j = 0; j < world.rail.length; j += 2) {
-                    const r = world.rail[j];
-                    const rdx = r.x - px;
-                    const rdy = r.y - py;
-                    const dSq = rdx*rdx + rdy*rdy;
-                    if (dSq < minDistSq) {
-                        minDistSq = dSq;
-                        closestIdx = j;
-                    }
-                }
+                let mostThreatening = null;
+                let minDist = Infinity;
 
-                if (minDistSq < 1600) { // 40px range
-                    railActive = true;
-                    // Attraction
-                    const r = world.rail[closestIdx];
-                    const attrX = (r.x - px) * CONFIG.RAIL_MAGNET_STRENGTH * 2; 
-                    const attrY = (r.y - py) * CONFIG.RAIL_MAGNET_STRENGTH * 2;
-
-                    // Tangent (Push)
-                    let nextIdx = closestIdx;
-                    if (sprigs.cargo[i] === 0) {
-                         nextIdx = Math.min(closestIdx + 5, world.rail.length - 1);
-                    } else {
-                         nextIdx = Math.max(closestIdx - 5, 0);
-                    }
-                    
-                    let tanX = 0, tanY = 0;
-                    if (nextIdx !== closestIdx) {
-                        const nextR = world.rail[nextIdx];
-                        const tdx = nextR.x - px;
-                        const tdy = nextR.y - py;
-                        const tLen = Math.sqrt(tdx*tdx + tdy*tdy);
+                // Check Rocks
+                for (const s of world.structures) {
+                    if (s.type === StructureType.ROCK) {
+                        // Vector from RayStart to SphereCenter
+                        const toSphereX = s.x - px;
+                        const toSphereY = s.y - py;
                         
-                        if (tLen > 0.01) {
-                            // Radius Check (Bank into turns)
-                            let curveFactor = 1.0;
-                            // Look ahead another 5 steps to see if the path turns
-                            let farIdx = nextIdx;
-                            if (sprigs.cargo[i] === 0) farIdx = Math.min(nextIdx + 5, world.rail.length - 1);
-                            else farIdx = Math.max(nextIdx - 5, 0);
-                            
-                            if (farIdx !== nextIdx) {
-                                const farR = world.rail[farIdx];
-                                const fdx = farR.x - nextR.x;
-                                const fdy = farR.y - nextR.y;
-                                const fLen = Math.sqrt(fdx*fdx + fdy*fdy);
-                                if (fLen > 0.01) {
-                                    // Dot product of current dir and future dir
-                                    const dot = (tdx/tLen)*(fdx/fLen) + (tdy/tLen)*(fdy/fLen);
-                                    // If angle > ~25 deg (dot < 0.9), slow down
-                                    if (dot < 0.9) curveFactor = 0.6;
-                                    if (dot < 0.7) curveFactor = 0.3; // Sharp turn
-                                }
+                        // Project SphereCenter onto Ray
+                        const t = (toSphereX * rayDirX + toSphereY * rayDirY);
+                        
+                        // Closest point on ray
+                        let closeX = px + rayDirX * t;
+                        let closeY = py + rayDirY * t;
+                        
+                        // Clamp
+                        if (t <= 0) { closeX = px; closeY = py; }
+                        else if (t >= lookAhead) { closeX = rayEndX; closeY = rayEndY; }
+                        
+                        const distX = s.x - closeX;
+                        const distY = s.y - closeY;
+                        const distSq = distX*distX + distY*distY;
+                        
+                        const r = s.radius + CONFIG.SPRIG_RADIUS;
+                        
+                        if (distSq < r*r) {
+                            if (distSq < minDist) {
+                                minDist = distSq;
+                                mostThreatening = s;
                             }
-
-                            const speed = 400.0 * curveFactor;
-                            tanX = (tdx / tLen) * speed;
-                            tanY = (tdy / tLen) * speed;
                         }
                     }
-
-                    railAx = attrX + tanX;
-                    railAy = attrY + tanY;
                 }
-            }
 
-            // Blend
-            if (railActive) {
-                ax += railAx * CONFIG.RAIL_WEIGHT + scentAx * CONFIG.SCENT_WEIGHT;
-                ay += railAy * CONFIG.RAIL_WEIGHT + scentAy * CONFIG.SCENT_WEIGHT;
-            } else {
-                ax += scentAx;
-                ay += scentAy;
-                
-                // Add Seek Target if not on rail (Goal Steering)
-                const dx = tx - px;
-                const dy = ty - py;
-                const distToTarget = Math.sqrt(dx*dx + dy*dy);
-                if (distToTarget > CONFIG.INTERACTION_BUFFER) {
-                    ax += (dx / distToTarget) * 100.0;
-                    ay += (dy / distToTarget) * 100.0;
-                }
-            }
+                if (mostThreatening) {
+                    // Re-calculate closest point for most threatening
+                    const toSphereX = mostThreatening.x - px;
+                    const toSphereY = mostThreatening.y - py;
+                    const t = (toSphereX * rayDirX + toSphereY * rayDirY);
+                    let closeX = px + rayDirX * t;
+                    let closeY = py + rayDirY * t;
+                    if (t <= 0) { closeX = px; closeY = py; }
+                    else if (t >= lookAhead) { closeX = rayEndX; closeY = rayEndY; }
 
-            // 1.5 Separation
-            for (let k = 0; k < 5; k++) { // Reduced samples for perf
-                const neighborIdx = Math.floor(Math.random() * CONFIG.MAX_SPRIGS);
-                if (neighborIdx === i || sprigs.active[neighborIdx] === 0) continue;
-                
-                const sepDx = px - sprigs.x[neighborIdx];
-                const sepDy = py - sprigs.y[neighborIdx];
-                const sepDistSq = sepDx*sepDx + sepDy*sepDy;
-                
-                if (sepDistSq < 225) { // 15px
-                    const sepDist = Math.sqrt(sepDistSq);
-                    if (sepDist > 0.001) {
-                        const force = 500.0;
-                        ax += (sepDx / sepDist) * force;
-                        ay += (sepDy / sepDist) * force;
+                    // Normal: From Rock to ClosestPoint (pushes away)
+                    let normalX = closeX - mostThreatening.x;
+                    let normalY = closeY - mostThreatening.y;
+                    const normalLen = Math.sqrt(normalX*normalX + normalY*normalY);
+                    
+                    if (normalLen > 0.001) {
+                        normalX /= normalLen;
+                        normalY /= normalLen;
+                        
+                        // Apply AVOID_FORCE along Normal
+                        ax += normalX * CONFIG.AVOID_FORCE;
+                        ay += normalY * CONFIG.AVOID_FORCE;
+                        
+                        // Apply WALL_FOLLOW_FORCE along Tangent
+                        let tanX = -normalY;
+                        let tanY = normalX;
+                        
+                        // Align tangent with velocity
+                        if (vx * tanX + vy * tanY < 0) {
+                            tanX = -tanX;
+                            tanY = -tanY;
+                        }
+                        
+                        ax += tanX * CONFIG.WALL_FOLLOW_FORCE;
+                        ay += tanY * CONFIG.WALL_FOLLOW_FORCE;
                     }
                 }
             }
 
-            // Hard Collision (Direct Position/Velocity Correction)
-            // This modifies Position directly, which is distinct from Acceleration.
-            let vx = sprigs.vx[i];
-            let vy = sprigs.vy[i];
-            
+            // Hard Collision (Safety)
             for (const s of world.structures) {
                 if (s.type === StructureType.ROCK) {
                     const rdx = px - s.x;
@@ -198,18 +149,16 @@ export class NavigationSystem {
                         const overlap = minDist - dist;
                         sprigs.x[i] += nx * overlap;
                         sprigs.y[i] += ny * overlap;
-
-                        const dotProduct = vx * nx + vy * ny;
-                        if (dotProduct < 0) {
-                            vx -= dotProduct * nx;
-                            vy -= dotProduct * ny;
+                        
+                        const dot = sprigs.vx[i] * nx + sprigs.vy[i] * ny;
+                        if (dot < 0) {
+                            sprigs.vx[i] -= dot * nx;
+                            sprigs.vy[i] -= dot * ny;
                         }
                     }
                 }
             }
 
-            sprigs.vx[i] = vx;
-            sprigs.vy[i] = vy;
             sprigs.ax[i] = ax;
             sprigs.ay[i] = ay;
         }
