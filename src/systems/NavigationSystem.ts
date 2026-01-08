@@ -15,91 +15,62 @@ export class NavigationSystem {
             const vx = sprigs.vx[i];
             const vy = sprigs.vy[i];
             
-            let ax = 0;
-            let ay = 0;
+            let forceX = 0;
+            let forceY = 0;
 
-            // Step 1: Steering Logic
-            const tx = sprigs.targetX[i];
-            const ty = sprigs.targetY[i];
-            const dx = tx - px;
-            const dy = ty - py;
-            const distToTarget = Math.sqrt(dx*dx + dy*dy);
-
-            if (sprigs.cargo[i] === 0) {
-                // Empty: Flow or Wander
-                const flow = world.flowField.getVector(px, py);
-                if (Math.abs(flow.x) > 0.1 || Math.abs(flow.y) > 0.1) {
-                    // Found a trail!
-                    ax += flow.x * CONFIG.MAX_SPEED * CONFIG.FLOW_WEIGHT;
-                    ay += flow.y * CONFIG.MAX_SPEED * CONFIG.FLOW_WEIGHT;
-                    
-                    // Reduced Wander
-                    ax += (Math.random() - 0.5) * 100 * (CONFIG.WANDER_WEIGHT * 0.2);
-                    ay += (Math.random() - 0.5) * 100 * (CONFIG.WANDER_WEIGHT * 0.2);
-                } else {
-                    // No trail: Wander aimlessly
-                    ax += (Math.random() - 0.5) * 300 * CONFIG.WANDER_WEIGHT;
-                    ay += (Math.random() - 0.5) * 300 * CONFIG.WANDER_WEIGHT;
+            // Helper: Safe Normalize and Add Force
+            const safeAdd = (x: number, y: number, scale: number) => {
+                const len = Math.sqrt(x*x + y*y);
+                if (len > 0.001) {
+                    forceX += (x / len) * scale;
+                    forceY += (y / len) * scale;
                 }
-            } else {
-                // Hauler: Seek Target (Home)
-                if (distToTarget > CONFIG.INTERACTION_BUFFER) {
-                    const desiredSpeed = CONFIG.MAX_SPEED;
-                    const desiredVx = (dx / distToTarget) * desiredSpeed;
-                    const desiredVy = (dy / distToTarget) * desiredSpeed;
-                    
-                    const steerX = desiredVx - vx;
-                    const steerY = desiredVy - vy;
-                    
-                    ax += steerX * 5.0; 
-                    ay += steerY * 5.0;
-                } else {
-                    ax -= vx * 5.0;
-                    ay -= vy * 5.0;
+            };
+
+            // 1. Separation (CRITICAL)
+            for (let k = 0; k < 5; k++) { 
+                const neighborIdx = Math.floor(Math.random() * CONFIG.MAX_SPRIGS);
+                if (neighborIdx === i || sprigs.active[neighborIdx] === 0) continue;
+                
+                const sepDx = px - sprigs.x[neighborIdx];
+                const sepDy = py - sprigs.y[neighborIdx];
+                const sepDistSq = sepDx*sepDx + sepDy*sepDy;
+                
+                if (sepDistSq < 225) { // 15px radius
+                    safeAdd(sepDx, sepDy, 500.0);
                 }
             }
 
-            // Step 2: Whisker Raycast (Avoidance)
+            // 2. Avoidance (Rocks Only)
             const speed = Math.sqrt(vx*vx + vy*vy);
             if (speed > 1.0) {
                 const lookAhead = CONFIG.WHISKER_LENGTH;
                 const rayDirX = vx / speed;
                 const rayDirY = vy / speed;
-                const rayEndX = px + rayDirX * lookAhead;
-                const rayEndY = py + rayDirY * lookAhead;
-
+                
                 let mostThreatening = null;
                 let minDist = Infinity;
 
-                // Check Rocks (Ignore NEST and COOKIE)
                 for (const s of world.structures) {
                     if (s.type === StructureType.ROCK) {
-                        // Vector from RayStart to SphereCenter
                         const toSphereX = s.x - px;
                         const toSphereY = s.y - py;
-                        
-                        // Project SphereCenter onto Ray
                         const t = (toSphereX * rayDirX + toSphereY * rayDirY);
                         
-                        // Closest point on ray
                         let closeX = px + rayDirX * t;
                         let closeY = py + rayDirY * t;
                         
-                        // Clamp
                         if (t <= 0) { closeX = px; closeY = py; }
-                        else if (t >= lookAhead) { closeX = rayEndX; closeY = rayEndY; }
+                        else if (t >= lookAhead) { closeX = px + rayDirX * lookAhead; closeY = py + rayDirY * lookAhead; }
                         
                         const distX = s.x - closeX;
                         const distY = s.y - closeY;
                         const distSq = distX*distX + distY*distY;
-                        
                         const r = s.radius + CONFIG.SPRIG_RADIUS;
                         
-                        if (distSq < r*r) {
-                            if (distSq < minDist) {
-                                minDist = distSq;
-                                mostThreatening = s;
-                            }
+                        if (distSq < r*r && distSq < minDist) {
+                            minDist = distSq;
+                            mostThreatening = s;
                         }
                     }
                 }
@@ -112,70 +83,62 @@ export class NavigationSystem {
                     let closeX = px + rayDirX * t;
                     let closeY = py + rayDirY * t;
                     if (t <= 0) { closeX = px; closeY = py; }
-                    else if (t >= lookAhead) { closeX = rayEndX; closeY = rayEndY; }
+                    else if (t >= lookAhead) { closeX = px + rayDirX * lookAhead; closeY = py + rayDirY * lookAhead; }
 
-                    // Normal: From Rock to ClosestPoint (pushes away)
-                    let normalX = closeX - mostThreatening.x;
-                    let normalY = closeY - mostThreatening.y;
-                    const normalLen = Math.sqrt(normalX*normalX + normalY*normalY);
+                    const normalX = closeX - mostThreatening.x;
+                    const normalY = closeY - mostThreatening.y; 
                     
-                    if (normalLen > 0.001) {
-                        normalX /= normalLen;
-                        normalY /= normalLen;
-                        
-                        // Apply AVOID_FORCE along Normal
-                        ax += normalX * CONFIG.AVOID_FORCE;
-                        ay += normalY * CONFIG.AVOID_FORCE;
-                        
-                        // Apply WALL_FOLLOW_FORCE along Tangent
-                        let tanX = -normalY;
-                        let tanY = normalX;
-                        
-                        // Align tangent with velocity
-                        if (vx * tanX + vy * tanY < 0) {
-                            tanX = -tanX;
-                            tanY = -tanY;
-                        }
-                        
-                        ax += tanX * CONFIG.WALL_FOLLOW_FORCE;
-                        ay += tanY * CONFIG.WALL_FOLLOW_FORCE;
+                    // Normal Force (Push Out)
+                    safeAdd(normalX, normalY, CONFIG.AVOID_FORCE);
+                    
+                    // Tangent Force (Slide)
+                    let tanX = -normalY;
+                    let tanY = normalX;
+                    if (vx * tanX + vy * tanY < 0) {
+                        tanX = -tanX;
+                        tanY = -tanY;
                     }
+                    safeAdd(tanX, tanY, CONFIG.WALL_FOLLOW_FORCE);
                 }
             }
 
-            // Hard Collision (Safety - Rocks Only)
-            for (const s of world.structures) {
-                if (s.type === StructureType.ROCK) {
-                    const rdx = px - s.x;
-                    const rdy = py - s.y;
-                    const distSqr = rdx*rdx + rdy*rdy;
-                    const minDist = s.radius + CONFIG.SPRIG_RADIUS;
-
-                    if (distSqr < minDist * minDist) {
-                        const dist = Math.sqrt(distSqr);
-                        let nx = 0, ny = 0;
-                        if (dist > 0.001) {
-                            nx = rdx / dist;
-                            ny = rdy / dist;
-                        } else {
-                            nx = 1; ny = 0;
-                        }
-
-                        const overlap = minDist - dist;
-                        sprigs.x[i] += nx * overlap;
-                        sprigs.y[i] += ny * overlap;
-                        
-                        const dot = sprigs.vx[i] * nx + sprigs.vy[i] * ny;
-                        if (dot < 0) {
-                            sprigs.vx[i] -= dot * nx;
-                            sprigs.vy[i] -= dot * ny;
-                        }
-                    }
+            // 3. Flow (Empty Sprigs)
+            let hasFlow = false;
+            if (sprigs.cargo[i] === 0) {
+                const flow = world.flowField.getVector(px, py);
+                if (Math.abs(flow.x) > 0.01 || Math.abs(flow.y) > 0.01) {
+                    hasFlow = true;
+                    forceX += flow.x * CONFIG.MAX_SPEED * CONFIG.FLOW_WEIGHT;
+                    forceY += flow.y * CONFIG.MAX_SPEED * CONFIG.FLOW_WEIGHT;
                 }
             }
 
-            sprigs.ax[i] = ax;
-            sprigs.ay[i] = ay;
+            // 4. Wander (Empty + No Flow)
+            if (sprigs.cargo[i] === 0 && !hasFlow) {
+                const wx = (Math.random() - 0.5);
+                const wy = (Math.random() - 0.5);
+                safeAdd(wx, wy, 300.0 * CONFIG.WANDER_WEIGHT);
+            }
+
+            // 5. Seek (Haulers Only)
+            if (sprigs.cargo[i] === 1) {
+                const tx = sprigs.targetX[i];
+                const ty = sprigs.targetY[i];
+                const dx = tx - px;
+                const dy = ty - py;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist > CONFIG.INTERACTION_BUFFER) {
+                    safeAdd(dx, dy, 500.0);
+                } else {
+                    // Arrive / Brake
+                    forceX -= vx * 5.0;
+                    forceY -= vy * 5.0;
+                }
+            }
+
+            sprigs.ax[i] = forceX;
+            sprigs.ay[i] = forceY;
         }
     }
 }

@@ -89,15 +89,15 @@ export class RenderSystem {
                 const vy = field.field[idx+1];
                 const len = Math.sqrt(vx*vx + vy*vy);
                 
-                if (len > 0.1) {
+                if (len > 0.01) { // Show weak trails
                     const cx = x * res + res/2;
                     const cy = y * res + res/2;
                     g.moveTo(cx, cy);
-                    g.lineTo(cx + vx * 8, cy + vy * 8);
+                    g.lineTo(cx + vx * 20, cy + vy * 20); // Scale 20 for visibility
                 }
             }
         }
-        g.stroke({ width: 1, color: 0x00FFFF, alpha: 0.5 });
+        g.stroke({ width: 1, color: 0xFF0000, alpha: 0.5 }); // Red
     }
 
     private drawObstacleGrid() {

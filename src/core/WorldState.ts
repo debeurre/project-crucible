@@ -38,7 +38,7 @@ export class WorldState {
         
         for (let i = 0; i < 30; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const dist = 40 + Math.random() * 20; // Outside 30px nest radius
+            const dist = nest.radius + 50 + Math.random() * 20;
             const x = nest.x + Math.cos(angle) * dist;
             const y = nest.y + Math.sin(angle) * dist;
             this.sprigs.spawn(x, y);
