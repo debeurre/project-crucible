@@ -7,7 +7,7 @@ export const CONFIG = {
     INTERACTION_BUFFER: 5,
     // sprigs
     MAX_SPRIGS: 2000,
-    MAX_SPEED: 50.0,    // Pixels per second
+    MAX_SPEED: 100.0,    // Pixels per second
     SPRIG_RADIUS: 5.0,
     // tools
     SCENT_STRENGTH: 500.0,
@@ -22,6 +22,8 @@ export const CONFIG = {
     WHISKER_LENGTH: 40,
     AVOID_FORCE: 300,
     WALL_FOLLOW_FORCE: 200,
+    FLOW_WEIGHT: 2.0,
+    WANDER_WEIGHT: 0.5,
 };
 
 export const SCREEN_WIDTH = CONFIG.TILE_SIZE * CONFIG.WORLD_WIDTH;

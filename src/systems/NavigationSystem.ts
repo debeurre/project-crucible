@@ -18,30 +18,45 @@ export class NavigationSystem {
             let ax = 0;
             let ay = 0;
 
-            // Step 1: Seek Target
+            // Step 1: Steering Logic
             const tx = sprigs.targetX[i];
             const ty = sprigs.targetY[i];
             const dx = tx - px;
             const dy = ty - py;
             const distToTarget = Math.sqrt(dx*dx + dy*dy);
 
-            if (distToTarget > CONFIG.INTERACTION_BUFFER) {
-                // Seek force (Proportional to distance logic or Max Speed logic)
-                // Reynolds Seek: Desired - Velocity
-                const desiredSpeed = CONFIG.MAX_SPEED;
-                const desiredVx = (dx / distToTarget) * desiredSpeed;
-                const desiredVy = (dy / distToTarget) * desiredSpeed;
-                
-                const steerX = desiredVx - vx;
-                const steerY = desiredVy - vy;
-                
-                // Steering strength
-                ax += steerX * 5.0; 
-                ay += steerY * 5.0;
+            if (sprigs.cargo[i] === 0) {
+                // Empty: Flow or Wander
+                const flow = world.flowField.getVector(px, py);
+                if (Math.abs(flow.x) > 0.1 || Math.abs(flow.y) > 0.1) {
+                    // Found a trail!
+                    ax += flow.x * CONFIG.MAX_SPEED * CONFIG.FLOW_WEIGHT;
+                    ay += flow.y * CONFIG.MAX_SPEED * CONFIG.FLOW_WEIGHT;
+                    
+                    // Reduced Wander
+                    ax += (Math.random() - 0.5) * 100 * (CONFIG.WANDER_WEIGHT * 0.2);
+                    ay += (Math.random() - 0.5) * 100 * (CONFIG.WANDER_WEIGHT * 0.2);
+                } else {
+                    // No trail: Wander aimlessly
+                    ax += (Math.random() - 0.5) * 300 * CONFIG.WANDER_WEIGHT;
+                    ay += (Math.random() - 0.5) * 300 * CONFIG.WANDER_WEIGHT;
+                }
             } else {
-                // Arrive / Stop
-                ax -= vx * 5.0;
-                ay -= vy * 5.0;
+                // Hauler: Seek Target (Home)
+                if (distToTarget > CONFIG.INTERACTION_BUFFER) {
+                    const desiredSpeed = CONFIG.MAX_SPEED;
+                    const desiredVx = (dx / distToTarget) * desiredSpeed;
+                    const desiredVy = (dy / distToTarget) * desiredSpeed;
+                    
+                    const steerX = desiredVx - vx;
+                    const steerY = desiredVy - vy;
+                    
+                    ax += steerX * 5.0; 
+                    ay += steerY * 5.0;
+                } else {
+                    ax -= vx * 5.0;
+                    ay -= vy * 5.0;
+                }
             }
 
             // Step 2: Whisker Raycast (Avoidance)
