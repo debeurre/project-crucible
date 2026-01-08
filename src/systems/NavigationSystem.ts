@@ -71,7 +71,7 @@ export class NavigationSystem {
                 let mostThreatening = null;
                 let minDist = Infinity;
 
-                // Check Rocks
+                // Check Rocks (Ignore NEST and COOKIE)
                 for (const s of world.structures) {
                     if (s.type === StructureType.ROCK) {
                         // Vector from RayStart to SphereCenter
@@ -143,7 +143,7 @@ export class NavigationSystem {
                 }
             }
 
-            // Hard Collision (Safety)
+            // Hard Collision (Safety - Rocks Only)
             for (const s of world.structures) {
                 if (s.type === StructureType.ROCK) {
                     const rdx = px - s.x;

@@ -32,15 +32,23 @@ export class WorldState {
         this.structures.push({ id: 3, type: StructureType.ROCK, x: cx + 90, y: cy - 50, radius: 40 });
         this.structures.push({ id: 4, type: StructureType.ROCK, x: cx - 90, y: cy + 25, radius: 25 });
 
-        // Spawn Test Swarm
-        // Spawn at Nest
-        const startX = cx - 150;
-        const startY = cy;
+        // Spawn Test Swarm (Explosive Ring)
+        const nest = this.structures.find(s => s.type === StructureType.NEST)!;
+        const cookie = this.structures.find(s => s.type === StructureType.COOKIE)!;
         
-        for (let i = 0; i < 10; i++) {
-            const x = startX + (Math.random() - 0.5) * 50;
-            const y = startY + (Math.random() - 0.5) * 50;
+        for (let i = 0; i < 30; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 40 + Math.random() * 20; // Outside 30px nest radius
+            const x = nest.x + Math.cos(angle) * dist;
+            const y = nest.y + Math.sin(angle) * dist;
             this.sprigs.spawn(x, y);
+        }
+
+        // The Seeder
+        const seederIdx = this.sprigs.spawn(cookie.x, cookie.y);
+        if (seederIdx !== -1) {
+            this.sprigs.cargo[seederIdx] = 1; // Already has food
+            this.sprigs.state[seederIdx] = 2; // MOVING_TO_SINK
         }
         
         this.refreshGrid();
