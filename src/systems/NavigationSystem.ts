@@ -6,6 +6,11 @@ export class NavigationSystem {
     public update(world: WorldState, dt: number) {
         const sprigs = world.sprigs;
         const count = CONFIG.MAX_SPRIGS;
+        
+        // Cache Nest position for Leashed Wander
+        const nest = world.structures.find(s => s.type === StructureType.NEST);
+        const nestX = nest ? nest.x : 0;
+        const nestY = nest ? nest.y : 0;
 
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
@@ -63,7 +68,7 @@ export class NavigationSystem {
                         let closeY = py + rayDirY * t;
                         
                         if (t <= 0) { closeX = px; closeY = py; }
-                        else if (t >= lookAhead) { closeX = rayEndX; closeY = rayEndY; }
+                        else if (t >= lookAhead) { closeX = px + rayDirX * lookAhead; closeY = py + rayDirY * lookAhead; }
                         
                         const distX = s.x - closeX;
                         const distY = s.y - closeY;
@@ -85,7 +90,7 @@ export class NavigationSystem {
                     let closeX = px + rayDirX * t;
                     let closeY = py + rayDirY * t;
                     if (t <= 0) { closeX = px; closeY = py; }
-                    else if (t >= lookAhead) { closeX = rayEndX; closeY = rayEndY; }
+                    else if (t >= lookAhead) { closeX = px + rayDirX * lookAhead; closeY = py + rayDirY * lookAhead; }
 
                     let normalX = closeX - mostThreatening.x;
                     let normalY = closeY - mostThreatening.y; 
@@ -95,16 +100,13 @@ export class NavigationSystem {
                         normalX /= len;
                         normalY /= len;
                         
-                        // Velocity Projection: Remove component into wall
                         const dot = vx * normalX + vy * normalY;
                         const slideVx = vx - (dot * normalX);
                         const slideVy = vy - (dot * normalY);
                         
-                        // Safety Push (out of wall)
                         const pushVx = normalX * 10;
                         const pushVy = normalY * 10;
                         
-                        // Overwrite Velocity directly
                         sprigs.vx[i] = slideVx + pushVx;
                         sprigs.vy[i] = slideVy + pushVy;
                     }
@@ -129,32 +131,13 @@ export class NavigationSystem {
                 }
             }
 
-            // 4. Wander
+            // 4. Wander (Empty + No Flow)
             if (sprigs.cargo[i] === 0 && !hasFlow) {
                 sprigs.wanderTimer[i] -= dt * 1000;
                 if (sprigs.wanderTimer[i] <= 0) {
                     sprigs.wanderTimer[i] = CONFIG.WANDER_INTERVAL;
-                    // ... (Wander logic from Phase 4 is preserved? Or simplified?)
-                    // The prompt didn't ask to change wander logic, but "Wander (The Fallback)" logic was simple random in previous "Fix Stuck" instructions.
-                    // But in Phase 4 "Leashed Wander", I implemented robust logic.
-                    // I should preserve Leashed Wander logic here.
                     
-                    // Re-implementing Leashed Wander Logic inline or reusing
-                    // Since I'm overwriting the file, I need to put it back.
-                    // Copying logic from previous turn.
-                    
-                    // Need nestX/Y (already computed at top)
-                    // Wait, nestX/Y is computed at start of update.
-                    
-                    // Find Nest (Iterate structures if not cached?)
-                    // It's cached at top of update.
-                    // But `update` function scope has access.
-                    
-                    const dxNest = px - nestX; // Using nestX from closure?
-                    // Wait, nestX is defined in the loop at the top. It's available.
-                    // But I need to ensure it's available.
-                    // Yes, I kept the top loop.
-                    
+                    const dxNest = px - nestX;
                     const dyNest = py - nestY;
                     const distToNest = Math.sqrt(dxNest*dxNest + dyNest*dyNest);
                     const angleToNest = Math.atan2(-dyNest, -dxNest);
@@ -172,7 +155,7 @@ export class NavigationSystem {
                 forceY += sprigs.wanderVy[i];
             }
 
-            // 5. Seek
+            // 5. Seek (Haulers Only)
             if (sprigs.cargo[i] === 1) {
                 const tx = sprigs.targetX[i];
                 const ty = sprigs.targetY[i];
