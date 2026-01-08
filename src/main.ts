@@ -10,8 +10,7 @@ import { UISystem } from './systems/UISystem';
 import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
-
-import { RailSystem } from './systems/RailSystem';
+import { FlowFieldSystem } from './systems/FlowFieldSystem';
 
 async function init() {
     const app = new Application();
@@ -37,10 +36,10 @@ async function init() {
     const movementSystem = new MovementSystem();
     const hiveMindSystem = new HiveMindSystem();
     const navigationSystem = new NavigationSystem();
-    const railSystem = new RailSystem(app);
     const toolManager = new ToolManager(world);
     const ecologySystem = new EcologySystem();
     const uiSystem = new UISystem(app);
+    const flowFieldSystem = new FlowFieldSystem();
 
     // Toolbar UI
     const toolButtons: Record<string, HTMLDivElement> = {};
@@ -83,9 +82,7 @@ async function init() {
 
     function updateButtons() {
         const active = toolManager.getActiveToolName();
-        // Only touch the DOM if the tool changed
         if (active === lastActiveTool) return;
-        
         lastActiveTool = active;
 
         tools.forEach(name => {
@@ -102,7 +99,6 @@ async function init() {
 
     createToolbar();
 
-    // Keybinds
     window.addEventListener('keydown', (e) => {
         if (e.key === '1') toolManager.setTool('SCENT');
         if (e.key === '2') toolManager.setTool('ROCK');
@@ -114,8 +110,8 @@ async function init() {
         toolManager.update(world);
         ecologySystem.update(world, dt);
         hiveMindSystem.update(world);
+        flowFieldSystem.update();
         navigationSystem.update(world, dt);
-        railSystem.update(world);
         movementSystem.update(world, dt);
         renderSystem.update();
         uiSystem.update(world);

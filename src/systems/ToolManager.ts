@@ -1,9 +1,14 @@
 import { Tool } from '../core/tools/Tool';
-import { RockTool } from '../core/tools/RockTool';
-import { EraserTool } from '../core/tools/EraserTool';
-import { ScentTool } from '../core/tools/ScentTool';
 import { WorldState } from '../core/WorldState';
 import { InputState } from '../core/InputState';
+
+class DummyTool implements Tool {
+    onDown(_world: WorldState, _x: number, _y: number): void {
+        console.log("Tool Down");
+    }
+    onDrag(_world: WorldState, _x: number, _y: number): void {}
+    onUp(_world: WorldState, _x: number, _y: number): void {}
+}
 
 export class ToolManager {
     private tools: Record<string, Tool>;
@@ -11,14 +16,14 @@ export class ToolManager {
     private activeToolName: string;
     private wasDown: boolean = false;
 
-    constructor(_world: WorldState) { // World needed for initialization? No, just logic.
+    constructor(_world: WorldState) {
         this.tools = {
-            'ROCK': new RockTool(),
-            'ERASER': new EraserTool(),
-            'SCENT': new ScentTool()
+            'ROCK': new DummyTool(),
+            'ERASER': new DummyTool(),
+            'SCENT': new DummyTool()
         };
         this.activeToolName = 'SCENT';
-        this.activeTool = this.tools['SCENT']; // Default
+        this.activeTool = this.tools['SCENT'];
     }
 
     public setTool(name: string) {

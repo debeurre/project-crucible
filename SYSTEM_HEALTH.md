@@ -1,7 +1,7 @@
 # 🧹 System Health Report
 
-**Generated:** 1/7/2026, 9:50:55 PM
-**Total Source Files:** 25
+**Generated:** 1/8/2026, 6:11:38 PM
+**Total Source Files:** 20
 
 ### Legend
 - 🟢 Healthy (< 200 LOC)
@@ -10,28 +10,23 @@
 
 | File | LOC | Status | Issues |
 | :--- | :---: | :---: | :--- |
-| `src/systems/NavigationSystem.ts` | 217 | 🟡 WARNING |  |
 | `src/systems/RenderSystem.ts` | 213 | 🟡 WARNING |  |
-| `src/main.ts` | 127 | 🟢 HEALTHY |  |
-| `src/systems/RailSystem.ts` | 121 | 🟢 HEALTHY |  |
-| `src/logic/Pathfinder.ts` | 112 | 🟢 HEALTHY |  |
+| `src/main.ts` | 122 | 🟢 HEALTHY |  |
 | `src/systems/HiveMindSystem.ts` | 93 | 🟢 HEALTHY |  |
-| `src/logic/Spline.ts` | 84 | 🟢 HEALTHY |  |
-| `src/systems/MovementSystem.ts` | 71 | 🟢 HEALTHY |  |
 | `src/core/Grid.ts` | 64 | 🟢 HEALTHY |  |
-| `src/data/EntityData.ts` | 57 | 🟢 HEALTHY |  |
-| `src/core/WorldState.ts` | 50 | 🟢 HEALTHY |  |
+| `src/systems/ToolManager.ts` | 54 | 🟢 HEALTHY |  |
+| `src/data/EntityData.ts` | 53 | 🟢 HEALTHY |  |
 | `src/data/MapData.ts` | 50 | 🟢 HEALTHY |  |
-| `src/systems/ToolManager.ts` | 50 | 🟢 HEALTHY |  |
 | `src/systems/EcologySystem.ts` | 44 | 🟢 HEALTHY |  |
 | `src/core/InputState.ts` | 43 | 🟢 HEALTHY |  |
-| `src/core/tools/RockTool.ts` | 37 | 🟢 HEALTHY |  |
+| `src/core/WorldState.ts` | 40 | 🟢 HEALTHY |  |
 | `src/systems/UISystem.ts` | 37 | 🟢 HEALTHY |  |
-| `src/core/TextureManager.ts` | 34 | 🟢 HEALTHY |  |
-| `src/core/tools/EraserTool.ts` | 28 | 🟢 HEALTHY |  |
-| `src/core/tools/ScentTool.ts` | 28 | 🟢 HEALTHY |  |
-| `src/core/Config.ts` | 27 | 🟢 HEALTHY |  |
+| `src/core/TextureManager.ts` | 35 | 🟢 HEALTHY |  |
 | `src/systems/InteractionSystem.ts` | 21 | 🟢 HEALTHY |  |
+| `src/systems/MovementSystem.ts` | 18 | 🟢 HEALTHY |  |
+| `src/core/Config.ts` | 15 | 🟢 HEALTHY |  |
 | `src/data/StructureData.ts` | 14 | 🟢 HEALTHY |  |
 | `src/core/tools/Tool.ts` | 8 | 🟢 HEALTHY |  |
+| `src/systems/NavigationSystem.ts` | 8 | 🟢 HEALTHY |  |
+| `src/systems/FlowFieldSystem.ts` | 4 | 🟢 HEALTHY |  |
 | `src/vite-env.d.ts` | 2 | 🟢 HEALTHY |  |

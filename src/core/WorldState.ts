@@ -1,7 +1,7 @@
 import { MapData } from '../data/MapData';
-import { CONFIG } from './Config';
+import { CONFIG, SCREEN_WIDTH, SCREEN_HEIGHT } from './Config';
 import { EntityData } from '../data/EntityData';
-import { Structure, StructureType } from '../data/StructureData';
+import { Structure } from '../data/StructureData';
 import { Grid } from './Grid';
 
 export class WorldState {
@@ -9,42 +9,31 @@ export class WorldState {
     public sprigs: EntityData;
     public structures: Structure[];
     public grid: Grid;
-    public rail: {x: number, y: number}[] = [];
     public foodStored: number = 0;
 
     constructor() {
         this.map = new MapData(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
         this.sprigs = new EntityData();
-        this.structures = [];
+        this.structures = []; // Cleared
         this.grid = new Grid(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
 
-        const cx = (CONFIG.WORLD_WIDTH * CONFIG.TILE_SIZE) / 2;
-        const cy = (CONFIG.WORLD_HEIGHT * CONFIG.TILE_SIZE) / 2;
-
-        // Structures
-        this.structures.push({ id: 0, type: StructureType.NEST, x: cx - 200, y: cy, radius: 30 });
-        this.structures.push({ id: 1, type: StructureType.COOKIE, x: cx + 200, y: cy, radius: 30 });
+        // Spawn centered with offset
+        const cx = SCREEN_WIDTH / 2;
+        const cy = SCREEN_HEIGHT / 2;
         
-        // Obstacles
-        this.structures.push({ id: 2, type: StructureType.ROCK, x: cx, y: cy, radius: 30 });
-        this.structures.push({ id: 3, type: StructureType.ROCK, x: cx + 90, y: cy - 50, radius: 40 });
-        this.structures.push({ id: 4, type: StructureType.ROCK, x: cx - 90, y: cy + 25, radius: 25 });
-
-        // Spawn Test Swarm
-        // Spawn at Nest
-        const startX = cx - 150;
-        const startY = cy;
-        
-        for (let i = 0; i < 10; i++) {
-            const x = startX + (Math.random() - 0.5) * 50;
-            const y = startY + (Math.random() - 0.5) * 50;
+        for (let i = 0; i < CONFIG.START_SPRIGS; i++) {
+            const x = cx + (Math.random() - 0.5) * 50;
+            const y = cy + (Math.random() - 0.5) * 50;
             this.sprigs.spawn(x, y);
         }
         
-        this.refreshGrid();
+        // No bake logic needed yet as structures is empty
     }
 
     public refreshGrid() {
-        this.grid.bake(this.structures);
+        // Placeholder
+        if (this.structures.length > 0) {
+            this.grid.bake(this.structures);
+        }
     }
 }
