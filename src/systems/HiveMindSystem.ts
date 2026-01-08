@@ -8,7 +8,6 @@ export class HiveMindSystem {
         const structures = world.structures;
         
         if (!structures) {
-            // console.error("HiveMindSystem: world.structures is undefined!");
             return;
         }
 
