@@ -16,7 +16,7 @@ export class RenderSystem {
     private spriteContainer: Container;
     private container: Container;
     private needsRedraw: boolean = true;
-    private showFlowField: boolean = false;
+    private showFlowField: boolean = true; // Force render for debug
     private lastStructureCount: number = 0;
     private sprites: Map<number, Sprite> = new Map();
 
