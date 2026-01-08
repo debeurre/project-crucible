@@ -102,10 +102,30 @@ export class NavigationSystem {
                         const tdx = nextR.x - px;
                         const tdy = nextR.y - py;
                         const tLen = Math.sqrt(tdx*tdx + tdy*tdy);
+                        
                         if (tLen > 0.01) {
-                            const speed = 400.0;
-                            // Rail Push: If aligned, boost speed? 
-                            // For now, tangent force IS the push.
+                            // Radius Check (Bank into turns)
+                            let curveFactor = 1.0;
+                            // Look ahead another 5 steps to see if the path turns
+                            let farIdx = nextIdx;
+                            if (sprigs.cargo[i] === 0) farIdx = Math.min(nextIdx + 5, world.rail.length - 1);
+                            else farIdx = Math.max(nextIdx - 5, 0);
+                            
+                            if (farIdx !== nextIdx) {
+                                const farR = world.rail[farIdx];
+                                const fdx = farR.x - nextR.x;
+                                const fdy = farR.y - nextR.y;
+                                const fLen = Math.sqrt(fdx*fdx + fdy*fdy);
+                                if (fLen > 0.01) {
+                                    // Dot product of current dir and future dir
+                                    const dot = (tdx/tLen)*(fdx/fLen) + (tdy/tLen)*(fdy/fLen);
+                                    // If angle > ~25 deg (dot < 0.9), slow down
+                                    if (dot < 0.9) curveFactor = 0.6;
+                                    if (dot < 0.7) curveFactor = 0.3; // Sharp turn
+                                }
+                            }
+
+                            const speed = 400.0 * curveFactor;
                             tanX = (tdx / tLen) * speed;
                             tanY = (tdy / tLen) * speed;
                         }

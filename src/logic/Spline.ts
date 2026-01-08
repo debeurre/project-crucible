@@ -1,19 +1,17 @@
 import { RailNode } from './Pathfinder';
 
 export class Spline {
-    // Catmull-Rom Spline
-    // Based on standard implementation ensuring curve passes through control points
+    // Catmull-Rom Spline with RDP simplification
     public static smoothPath(points: RailNode[], segmentsPerNode: number = 10): RailNode[] {
         if (points.length < 2) return points;
 
+        // Decimate first to remove staircase artifacts
+        const simplified = this.decimatePath(points, 2.0);
+
         const smoothPath: RailNode[] = [];
         
-        // Add start/end padding for Catmull-Rom (duplicate start/end points)
-        // Or handle indices carefully.
-        // Let's use the 4-point formulation: P0, P1, P2, P3. Curve is between P1 and P2.
-        
         // Pad the points array to handle start/end segments
-        const paddedPoints = [points[0], ...points, points[points.length - 1]];
+        const paddedPoints = [simplified[0], ...simplified, simplified[simplified.length - 1]];
 
         for (let i = 0; i < paddedPoints.length - 3; i++) {
             const p0 = paddedPoints[i];
@@ -28,7 +26,7 @@ export class Spline {
         }
         
         // Ensure the very last point is added
-        smoothPath.push(points[points.length - 1]);
+        smoothPath.push(simplified[simplified.length - 1]);
 
         return smoothPath;
     }
@@ -46,5 +44,41 @@ export class Spline {
         const y = p0.y * f1 + p1.y * f2 + p2.y * f3 + p3.y * f4;
 
         return { x, y };
+    }
+
+    private static decimatePath(points: RailNode[], epsilon: number): RailNode[] {
+        if (points.length < 3) return points;
+
+        let dmax = 0;
+        let index = 0;
+        const end = points.length - 1;
+
+        for (let i = 1; i < end; i++) {
+            const d = this.perpendicularDistance(points[i], points[0], points[end]);
+            if (d > dmax) {
+                index = i;
+                dmax = d;
+            }
+        }
+
+        if (dmax > epsilon) {
+            const res1 = this.decimatePath(points.slice(0, index + 1), epsilon);
+            const res2 = this.decimatePath(points.slice(index), epsilon);
+            return res1.slice(0, res1.length - 1).concat(res2);
+        } else {
+            return [points[0], points[end]];
+        }
+    }
+
+    private static perpendicularDistance(p: RailNode, p1: RailNode, p2: RailNode): number {
+        let dx = p2.x - p1.x;
+        let dy = p2.y - p1.y;
+        if (dx === 0 && dy === 0) {
+            return Math.sqrt(Math.pow(p.x - p1.x, 2) + Math.pow(p.y - p1.y, 2));
+        }
+
+        const numerator = Math.abs(dy * p.x - dx * p.y + p2.x * p1.y - p2.y * p1.x);
+        const denominator = Math.sqrt(dy * dy + dx * dx);
+        return numerator / denominator;
     }
 }

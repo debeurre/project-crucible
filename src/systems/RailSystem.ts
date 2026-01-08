@@ -82,7 +82,7 @@ export class RailSystem {
                 const rawPath = Pathfinder.findPath(startX, startY, endX, endY, grid);
                 
                 if (rawPath.length > 0) {
-                     const smoothPath = Spline.smoothPath(rawPath, 10);
+                     const smoothPath = Spline.smoothPath(rawPath, 20);
                      world.rail = smoothPath;
                      this.drawRail(world.rail);
                      this.statusDiv.innerText = '[T] RAIL PATHING: ON';
