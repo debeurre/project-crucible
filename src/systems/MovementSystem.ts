@@ -47,11 +47,18 @@ export class MovementSystem {
                 vy *= scale;
             }
 
-            // 5. Heavy Hauler Oscillation
+            // 5. Heavy Hauler Step (Lunge and Recover)
             if (sprigs.cargo[i] === 1) {
-                const oscillation = 1.0 + Math.sin(performance.now() * 0.01 * CONFIG.HAULER_OSCILLATION_FREQ) * CONFIG.HAULER_OSCILLATION_AMP;
-                vx *= oscillation;
-                vy *= oscillation;
+                const now = performance.now();
+                const stepProgress = ((now + sprigs.stepOffset[i]) % CONFIG.HAULER_STEP_DURATION) / CONFIG.HAULER_STEP_DURATION;
+                
+                // Ease-Out Burst: 1.0 -> 0.0
+                const speedFactor = 1.0 - Math.pow(stepProgress, CONFIG.HAULER_STEEP);
+                
+                // Apply Drag + Burst Logic
+                // Note: This is a heavy per-frame multiplication, creating a strong stop-go rhythm.
+                vx *= CONFIG.HAULER_DRAG * speedFactor;
+                vy *= CONFIG.HAULER_DRAG * speedFactor;
             }
 
             // Store State
