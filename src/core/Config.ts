@@ -20,7 +20,7 @@ export const CONFIG = {
     HAULER_DRAG: 1,
     HAULER_STEEP: 4,
     HAULER_STEP_DURATION: 1000,
-    TRAIL_DECAY: 30000, // ms duration
+    TRAIL_DECAY: 60000, // ms duration
     // avoidance
     WHISKER_LENGTH: 40,
     AVOID_FORCE: 300,
