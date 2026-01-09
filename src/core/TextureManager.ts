@@ -1,9 +1,9 @@
-import { Texture, Application, ImageSource } from 'pixi.js';
+import { Texture, Application, CanvasSource } from 'pixi.js';
 
 export class TextureManager {
     public static sootTexture: Texture;
 
-    public static async init(app: Application): Promise<void> {
+    public static async init(_app: Application): Promise<void> {
         const svgContent = `
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <defs>
@@ -28,7 +28,15 @@ export class TextureManager {
 
         await loadPromise;
 
-        const source = new ImageSource({ resource: img });
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.drawImage(img, 0, 0);
+        }
+
+        const source = new CanvasSource({ resource: canvas });
         this.sootTexture = new Texture({ source });
     }
 }

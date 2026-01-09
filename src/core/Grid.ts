@@ -7,13 +7,25 @@ export class Grid {
     public data: Uint8Array;
 
     constructor(worldWidth: number, worldHeight: number) {
-        const pxWidth = worldWidth * CONFIG.TILE_SIZE;
-        const pxHeight = worldHeight * CONFIG.TILE_SIZE;
+        const pxWidth = worldWidth * CONFIG.GRID_SIZE;
+        const pxHeight = worldHeight * CONFIG.GRID_SIZE;
         
         this.cols = Math.ceil(pxWidth / CONFIG.GRID_SIZE);
         this.rows = Math.ceil(pxHeight / CONFIG.GRID_SIZE);
         
         this.data = new Uint8Array(this.cols * this.rows);
+    }
+
+    public getCol(x: number): number {
+        return Math.floor(x / CONFIG.GRID_SIZE);
+    }
+
+    public getRow(y: number): number {
+        return Math.floor(y / CONFIG.GRID_SIZE);
+    }
+
+    public isValid(col: number, row: number): boolean {
+        return col >= 0 && col < this.cols && row >= 0 && row < this.rows;
     }
 
     public bake(structures: Structure[]): void {

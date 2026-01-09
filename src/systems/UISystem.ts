@@ -1,5 +1,6 @@
 import { Application, Text, TextStyle } from 'pixi.js';
 import { WorldState } from '../core/WorldState';
+import { InputState } from '../core/InputState';
 
 export class UISystem {
     private app: Application;
@@ -31,6 +32,11 @@ export class UISystem {
         }
         
         const fps = Math.round(this.app.ticker.FPS);
-        this.statsText.text = `FPS: ${fps} | Sprigs: ${activeCount} | Food: ${world.foodStored}`;
+        const mx = InputState.x;
+        const my = InputState.y;
+        const gx = world.grid.getCol(mx);
+        const gy = world.grid.getRow(my);
+
+        this.statsText.text = `FPS: ${fps} | Sprigs: ${activeCount} | Food: ${world.foodStored}\nWorld: ${mx.toFixed(0)}, ${my.toFixed(0)}\nGrid: [${gx}, ${gy}]`;
     }
 }

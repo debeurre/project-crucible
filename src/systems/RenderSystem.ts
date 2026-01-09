@@ -3,6 +3,7 @@ import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
 import { StructureType } from '../data/StructureData';
 import { TextureManager } from '../core/TextureManager';
+import { InputState } from '../core/InputState';
 
 export class RenderSystem {
     private app: Application;
@@ -12,6 +13,7 @@ export class RenderSystem {
     private scentGraphics: Graphics;
     private structureGraphics: Graphics;
     private obstacleDebugGraphics: Graphics;
+    private hoverGraphics: Graphics;
     private spriteContainer: Container;
     private container: Container;
     private needsRedraw: boolean = true;
@@ -27,6 +29,7 @@ export class RenderSystem {
         this.scentGraphics = new Graphics(); 
         this.structureGraphics = new Graphics();
         this.obstacleDebugGraphics = new Graphics();
+        this.hoverGraphics = new Graphics();
         this.spriteContainer = new Container();
         
         this.container.addChild(this.gridGraphics);
@@ -34,6 +37,7 @@ export class RenderSystem {
         this.container.addChild(this.structureGraphics);
         this.container.addChild(this.obstacleDebugGraphics); 
         this.container.addChild(this.scentGraphics);
+        this.container.addChild(this.hoverGraphics);
         this.container.addChild(this.spriteContainer); 
         this.app.stage.addChild(this.container);
     }
@@ -50,7 +54,26 @@ export class RenderSystem {
             this.drawStructures();
             this.lastStructureCount = this.world.structures.length;
         }
+
+        this.drawHover();
         this.updateSprigs();
+    }
+
+    private drawHover() {
+        const g = this.hoverGraphics;
+        g.clear();
+
+        const x = InputState.x;
+        const y = InputState.y;
+        
+        const col = this.world.grid.getCol(x);
+        const row = this.world.grid.getRow(y);
+
+        if (this.world.grid.isValid(col, row)) {
+            const size = CONFIG.GRID_SIZE;
+            g.rect(col * size, row * size, size, size)
+             .stroke({ width: 2, color: 0x00FF00 });
+        }
     }
 
     private updateSprigs() {
@@ -80,7 +103,10 @@ export class RenderSystem {
                      sprite.rotation = Math.atan2(sprigs.vy[i], sprigs.vx[i]) + 1.57;
                 }
                 sprite.tint = sprigs.cargo[i] === 1 ? 0xFF69B4 : 0x00FF00;
-                sprite.scale.set(0.6);
+                
+                // Calculate scale: Target Diameter / Texture Visual Diameter (36px)
+                const scale = (CONFIG.SPRIG_RADIUS * 2) / 36;
+                sprite.scale.set(scale);
             }
         }
     }
@@ -88,7 +114,7 @@ export class RenderSystem {
     private drawGrid() {
         const g = this.gridGraphics;
         g.clear();
-        const tileSize = CONFIG.TILE_SIZE;
+        const tileSize = CONFIG.GRID_SIZE;
         const width = this.world.map.width * tileSize;
         const height = this.world.map.height * tileSize;
         g.rect(0, 0, width, height).fill(0x1a1a1a); // Dark background

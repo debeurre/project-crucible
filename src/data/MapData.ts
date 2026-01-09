@@ -26,8 +26,8 @@ export class MapData {
     }
 
     public addScent(worldX: number, worldY: number, amount: number) {
-        const gx = Math.floor(worldX / CONFIG.TILE_SIZE);
-        const gy = Math.floor(worldY / CONFIG.TILE_SIZE);
+        const gx = Math.floor(worldX / CONFIG.GRID_SIZE);
+        const gy = Math.floor(worldY / CONFIG.GRID_SIZE);
         
         if (gx >= 0 && gx < this.width && gy >= 0 && gy < this.height) {
             const index = this.getIndex(gx, gy);
@@ -41,8 +41,8 @@ export class MapData {
     }
 
     public getRoad(worldX: number, worldY: number): number {
-        const gx = Math.floor(worldX / CONFIG.TILE_SIZE);
-        const gy = Math.floor(worldY / CONFIG.TILE_SIZE);
+        const gx = Math.floor(worldX / CONFIG.GRID_SIZE);
+        const gy = Math.floor(worldY / CONFIG.GRID_SIZE);
         if (gx < 0 || gx >= this.width || gy < 0 || gy >= this.height) return 0;
         return this.roads[this.getIndex(gx, gy)] || 0;
     }

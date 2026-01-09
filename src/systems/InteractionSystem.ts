@@ -7,8 +7,8 @@ export class InteractionSystem {
         // Paint Scent (Any Click/Drag)
         if (InputState.isDown || InputState.isRightDown) {
             if (world.map.scents) {
-                const gx = Math.floor(InputState.x / CONFIG.TILE_SIZE);
-                const gy = Math.floor(InputState.y / CONFIG.TILE_SIZE);
+                const gx = Math.floor(InputState.x / CONFIG.GRID_SIZE);
+                const gy = Math.floor(InputState.y / CONFIG.GRID_SIZE);
                 
                 if (gx >= 0 && gx < world.map.width && gy >= 0 && gy < world.map.height) {
                     const index = gy * world.map.width + gx;
