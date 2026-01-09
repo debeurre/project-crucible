@@ -1,7 +1,7 @@
 import { MapData } from '../data/MapData';
 import { CONFIG, SCREEN_WIDTH, SCREEN_HEIGHT } from './Config';
 import { EntityData } from '../data/EntityData';
-import { Structure } from '../data/StructureData';
+import { Structure, StructureType } from '../data/StructureData';
 import { Grid } from './Grid';
 
 export class WorldState {
@@ -16,6 +16,15 @@ export class WorldState {
         this.sprigs = new EntityData();
         this.structures = []; // Cleared
         this.grid = new Grid(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
+
+        // Spawn Rock
+        this.structures.push({ 
+            id: 1, 
+            type: StructureType.ROCK, 
+            x: CONFIG.WORLD_WIDTH * CONFIG.GRID_SIZE / 2, 
+            y: CONFIG.WORLD_HEIGHT * CONFIG.GRID_SIZE / 2, 
+            radius: 40 
+        });
 
         // Spawn centered with offset
         const cx = SCREEN_WIDTH / 2;
