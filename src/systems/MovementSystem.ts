@@ -6,13 +6,36 @@ export class MovementSystem {
     public update(world: WorldState, dt: number) {
         const sprigs = world.sprigs;
         const count = CONFIG.MAX_SPRIGS;
+        const map = world.map;
 
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
 
-            // Simple Physics
-            sprigs.x[i] += sprigs.vx[i] * dt;
-            sprigs.y[i] += sprigs.vy[i] * dt;
+            // Terrain Logic
+            // Calculate potential next position
+            const nextX = sprigs.x[i] + sprigs.vx[i] * dt;
+            const nextY = sprigs.y[i] + sprigs.vy[i] * dt;
+            
+            const nextCol = Math.floor(nextX / CONFIG.GRID_SIZE);
+            const nextRow = Math.floor(nextY / CONFIG.GRID_SIZE);
+
+            // Check if blocked (Hardcoded canSwim = false)
+            if (map.isBlocked(nextCol, nextRow, false)) {
+                // Hit a wall/water - Stop completely for now
+                sprigs.vx[i] = 0;
+                sprigs.vy[i] = 0;
+            } else {
+                // Apply Terrain Speed Modifier
+                const speedMod = map.getSpeed(nextCol, nextRow);
+                
+                // We apply speed modifier by scaling the velocity integration
+                // NOTE: This assumes vx/vy are "desired velocity". 
+                // If vx/vy are "current physical momentum", this acts like friction.
+                // For this primitive phase, we'll scale the step.
+                
+                sprigs.x[i] += sprigs.vx[i] * dt * speedMod;
+                sprigs.y[i] += sprigs.vy[i] * dt * speedMod;
+            }
 
             // Collision with Rocks
             for (const s of world.structures) {

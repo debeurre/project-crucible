@@ -4,6 +4,7 @@ import { CONFIG } from '../core/Config';
 import { StructureType } from '../data/StructureData';
 import { TextureManager } from '../core/TextureManager';
 import { InputState } from '../core/InputState';
+import { Terrain } from '../data/MapData';
 
 export class RenderSystem {
     private app: Application;
@@ -43,7 +44,7 @@ export class RenderSystem {
 
     public update() {
         if (this.needsRedraw) {
-            this.drawGrid();
+            this.drawTerrain();
             this.needsRedraw = false;
         }
 
@@ -107,19 +108,34 @@ export class RenderSystem {
         }
     }
 
-    private drawGrid() {
+    private drawTerrain() {
         const g = this.gridGraphics;
         g.clear();
         const tileSize = CONFIG.GRID_SIZE;
-        const width = this.world.map.width * tileSize;
-        const height = this.world.map.height * tileSize;
-        g.rect(0, 0, width, height).fill(0x1a1a1a); // Dark background
-        const lineColor = 0x2e2e2e;
-        for (let x = 0; x <= this.world.map.width; x++) {
-            g.moveTo(x * tileSize, 0).lineTo(x * tileSize, height);
+        const width = this.world.map.width;
+        const height = this.world.map.height;
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const terrain = this.world.map.terrain[this.world.map.getIndex(x, y)];
+                let color = 0x000000;
+                if (terrain === Terrain.GRASS) color = 0x1a472a;
+                if (terrain === Terrain.MUD) color = 0x5d4037;
+                if (terrain === Terrain.WATER) color = 0x2196f3;
+                
+                g.rect(x * tileSize, y * tileSize, tileSize, tileSize).fill(color);
+            }
         }
-        for (let y = 0; y <= this.world.map.height; y++) {
-            g.moveTo(0, y * tileSize).lineTo(width, y * tileSize);
+
+        // Grid Lines
+        const pxWidth = width * tileSize;
+        const pxHeight = height * tileSize;
+        const lineColor = 0x2e2e2e;
+        for (let x = 0; x <= width; x++) {
+            g.moveTo(x * tileSize, 0).lineTo(x * tileSize, pxHeight);
+        }
+        for (let y = 0; y <= height; y++) {
+            g.moveTo(0, y * tileSize).lineTo(pxWidth, y * tileSize);
         }
         g.stroke({ width: 1, color: lineColor });
     }
