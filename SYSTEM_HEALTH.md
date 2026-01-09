@@ -1,6 +1,6 @@
 # 🧹 System Health Report
 
-**Generated:** 1/9/2026, 5:26:16 PM
+**Generated:** 1/9/2026, 5:27:47 PM
 **Total Source Files:** 21
 
 ### Legend
@@ -10,17 +10,17 @@
 
 | File | LOC | Status | Issues |
 | :--- | :---: | :---: | :--- |
-| `src/systems/RenderSystem.ts` | 138 | 🟢 HEALTHY |  |
+| `src/systems/RenderSystem.ts` | 154 | 🟢 HEALTHY |  |
 | `src/main.ts` | 125 | 🟢 HEALTHY |  |
 | `src/systems/HiveMindSystem.ts` | 92 | 🟢 HEALTHY |  |
 | `src/core/Grid.ts` | 76 | 🟢 HEALTHY |  |
+| `src/data/MapData.ts` | 76 | 🟢 HEALTHY |  |
+| `src/systems/MovementSystem.ts` | 70 | 🟢 HEALTHY |  |
+| `src/core/WorldState.ts` | 66 | 🟢 HEALTHY |  |
 | `src/data/EntityData.ts` | 66 | 🟢 HEALTHY |  |
 | `src/core/tools/DragTool.ts` | 61 | 🟢 HEALTHY |  |
 | `src/core/InputState.ts` | 60 | 🟢 HEALTHY |  |
 | `src/systems/ToolManager.ts` | 56 | 🟢 HEALTHY |  |
-| `src/data/MapData.ts` | 50 | 🟢 HEALTHY |  |
-| `src/core/WorldState.ts` | 49 | 🟢 HEALTHY |  |
-| `src/systems/MovementSystem.ts` | 47 | 🟢 HEALTHY |  |
 | `src/systems/EcologySystem.ts` | 44 | 🟢 HEALTHY |  |
 | `src/core/TextureManager.ts` | 43 | 🟢 HEALTHY |  |
 | `src/systems/UISystem.ts` | 43 | 🟢 HEALTHY |  |
