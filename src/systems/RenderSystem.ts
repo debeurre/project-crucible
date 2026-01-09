@@ -50,29 +50,7 @@ export class RenderSystem {
             this.drawStructures();
             this.lastStructureCount = this.world.structures.length;
         }
-
-        this.drawRoads();
-        this.drawScents();
-        this.drawObstacleGrid();
         this.updateSprigs();
-    }
-
-    private drawObstacleGrid() {
-        const g = this.obstacleDebugGraphics;
-        g.clear();
-        const grid = this.world.grid;
-        if (!grid || !grid.data) return;
-
-        const gridSize = (CONFIG as any).GRID_SIZE || 16;
-
-        for (let y = 0; y < grid.rows; y++) {
-            for (let x = 0; x < grid.cols; x++) {
-                if (grid.data[y * grid.cols + x] === 1) {
-                    g.rect(x * gridSize, y * gridSize, gridSize, gridSize)
-                     .fill({ color: 0xFF0000, alpha: 0.3 });
-                }
-            }
-        }
     }
 
     private updateSprigs() {
@@ -103,42 +81,6 @@ export class RenderSystem {
                 }
                 sprite.tint = sprigs.cargo[i] === 1 ? 0xFF69B4 : 0x00FF00;
                 sprite.scale.set(0.6);
-            }
-        }
-    }
-
-    private drawRoads() {
-        const g = this.roadGraphics;
-        g.clear();
-        if (!this.world.map.roads) return;
-        const roads = this.world.map.roads;
-        const width = this.world.map.width;
-        const height = this.world.map.height;
-        const tileSize = CONFIG.TILE_SIZE;
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const i = y * width + x;
-                if (roads[i] > 0.1) {
-                    g.rect(x * tileSize, y * tileSize, tileSize, tileSize).fill({ color: 0x8B4513, alpha: roads[i] });
-                }
-            }
-        }
-    }
-
-    private drawScents() {
-        const g = this.scentGraphics;
-        g.clear();
-        if (!this.world.map.scents) return;
-        const scents = this.world.map.scents;
-        const width = this.world.map.width;
-        const height = this.world.map.height;
-        const tileSize = CONFIG.TILE_SIZE;
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const i = y * width + x;
-                if (scents[i] > 0.05) {
-                    g.rect(x * tileSize, y * tileSize, tileSize, tileSize).fill({ color: 0x00FF00, alpha: scents[i] * 0.5 });
-                }
             }
         }
     }
