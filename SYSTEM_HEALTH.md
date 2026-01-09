@@ -1,7 +1,7 @@
 # 🧹 System Health Report
 
-**Generated:** 1/8/2026, 11:13:04 PM
-**Total Source Files:** 20
+**Generated:** 1/9/2026, 12:21:10 AM
+**Total Source Files:** 21
 
 ### Legend
 - 🟢 Healthy (< 200 LOC)
@@ -14,14 +14,15 @@
 | `src/main.ts` | 122 | 🟢 HEALTHY |  |
 | `src/systems/HiveMindSystem.ts` | 92 | 🟢 HEALTHY |  |
 | `src/core/Grid.ts` | 76 | 🟢 HEALTHY |  |
-| `src/systems/ToolManager.ts` | 54 | 🟢 HEALTHY |  |
-| `src/data/EntityData.ts` | 53 | 🟢 HEALTHY |  |
+| `src/data/EntityData.ts` | 66 | 🟢 HEALTHY |  |
+| `src/core/InputState.ts` | 60 | 🟢 HEALTHY |  |
+| `src/systems/ToolManager.ts` | 56 | 🟢 HEALTHY |  |
 | `src/data/MapData.ts` | 50 | 🟢 HEALTHY |  |
 | `src/systems/EcologySystem.ts` | 44 | 🟢 HEALTHY |  |
-| `src/core/InputState.ts` | 43 | 🟢 HEALTHY |  |
 | `src/core/TextureManager.ts` | 43 | 🟢 HEALTHY |  |
 | `src/systems/UISystem.ts` | 43 | 🟢 HEALTHY |  |
 | `src/core/WorldState.ts` | 40 | 🟢 HEALTHY |  |
+| `src/core/tools/DragTool.ts` | 34 | 🟢 HEALTHY |  |
 | `src/systems/InteractionSystem.ts` | 21 | 🟢 HEALTHY |  |
 | `src/systems/MovementSystem.ts` | 18 | 🟢 HEALTHY |  |
 | `src/core/Config.ts` | 15 | 🟢 HEALTHY |  |
