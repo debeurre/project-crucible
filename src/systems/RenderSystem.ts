@@ -17,7 +17,6 @@ export class RenderSystem {
     private spriteContainer: Container;
     private container: Container;
     private needsRedraw: boolean = true;
-    private lastStructureCount: number = 0;
     private sprites: Map<number, Sprite> = new Map();
 
     constructor(app: Application, world: WorldState) {
@@ -45,16 +44,13 @@ export class RenderSystem {
     public update() {
         if (this.needsRedraw) {
             this.drawGrid();
-            this.drawStructures(); 
             this.needsRedraw = false;
-            this.lastStructureCount = this.world.structures.length;
         }
 
-        if (this.world.structures.length !== this.lastStructureCount) {
-            this.drawStructures();
-            this.lastStructureCount = this.world.structures.length;
-        }
-
+        // WARNING: Redrawing all structures via Graphics.clear() every frame is O(N) 
+        // and scales poorly. If the number of structures exceeds ~50, migrate 
+        // to a Container-based Sprite system or use a dirty-flag per-structure.
+        this.drawStructures();
         this.drawHover();
         this.updateSprigs();
     }
