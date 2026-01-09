@@ -19,3 +19,6 @@ This project has undergone three distinct evolutionary phases regarding unit nav
 A short-lived attempt at migrating to the flow fields ran into a series of subtle bugs, necessitating a deep purge of built up code cruft, followed by a rewrite from primitives.
 
 The target remains a 'flow field' architecture. This document will be updated as the rewrite progresses.
+
+### **3. Rebuilding from Primitives**
+We cleaned the codebase and are now restoring tooling in tandem with entities, layer by layer. The near term target is being able to construct and manipulate a (hardcoded) 'level' live, even if all entities are inert.
