@@ -14,25 +14,24 @@ export class HiveMindSystem {
         const count = CONFIG.MAX_SPRIGS;
 
                         // Cache positions
-
                         let nestX = 0, nestY = 0, nestR = 30;
-
                         let cookieX = 0, cookieY = 0, cookieR = 30;
-
-                        
+                        let hasNest = false;
+                        let hasCookie = false;
 
                         for (const s of structures) {
-
-                            if (s.type === StructureType.NEST) { nestX = s.x; nestY = s.y; nestR = s.radius; }
-
-                            if (s.type === StructureType.COOKIE) { cookieX = s.x; cookieY = s.y; cookieR = s.radius; }
-
+                            if (s.type === StructureType.NEST) { 
+                                nestX = s.x; nestY = s.y; nestR = s.radius; 
+                                hasNest = true;
+                            }
+                            if (s.type === StructureType.COOKIE) { 
+                                cookieX = s.x; cookieY = s.y; cookieR = s.radius; 
+                                hasCookie = true;
+                            }
                         }
 
-                
-
                         // Spawning Logic (The Queen)
-                        if (world.foodStored >= 10) {
+                        if (hasNest && world.foodStored >= 10) {
                             if (world.sprigs.spawn(nestX, nestY) !== -1) {
                                 world.foodStored -= 10;
                             }
@@ -44,12 +43,12 @@ export class HiveMindSystem {
                             // 1. Assign Job (if IDLE)
                             if (sprigs.state[i] === 0) {
                                 const cargo = sprigs.cargo[i];
-                                if (cargo === 0) {
+                                if (cargo === 0 && hasCookie) {
                                     // Go to Cookie
                                     sprigs.targetX[i] = cookieX;
                                     sprigs.targetY[i] = cookieY;
                                     sprigs.state[i] = 1; // MOVING_TO_SOURCE
-                                } else {
+                                } else if (cargo === 1 && hasNest) {
                                     // Go to Nest
                                     sprigs.targetX[i] = nestX;
                                     sprigs.targetY[i] = nestY;
@@ -77,13 +76,14 @@ export class HiveMindSystem {
 
                                 if (distSq < minDist * minDist) {
                                     // Arrived
-                                    if (sprigs.state[i] === 1) {
+                                    if (sprigs.state[i] === 1 && hasCookie) {
                                         sprigs.cargo[i] = 1; // Pick up
-                                    } else {
+                                        sprigs.state[i] = 0; // Set to IDLE
+                                    } else if (sprigs.state[i] === 2 && hasNest) {
                                         sprigs.cargo[i] = 0; // Drop off
                                         world.foodStored++;
+                                        sprigs.state[i] = 0; // Set to IDLE
                                     }
-                                    sprigs.state[i] = 0; // Set to IDLE
                                 }
                             }
                         }
