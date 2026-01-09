@@ -50,4 +50,17 @@ export class EntityData {
         }
         return -1;
     }
+
+    public getSprigAt(x: number, y: number, radius: number): number {
+        const rSq = radius * radius;
+        for (let i = 0; i < this.active.length; i++) {
+            if (this.active[i] === 0) continue;
+            const dx = this.x[i] - x;
+            const dy = this.y[i] - y;
+            if (dx * dx + dy * dy < rSq) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }

@@ -1,6 +1,7 @@
 import { Tool } from '../core/tools/Tool';
 import { WorldState } from '../core/WorldState';
 import { InputState } from '../core/InputState';
+import { DragTool } from '../core/tools/DragTool';
 
 class DummyTool implements Tool {
     onDown(_world: WorldState, _x: number, _y: number): void {
@@ -18,12 +19,13 @@ export class ToolManager {
 
     constructor(_world: WorldState) {
         this.tools = {
+            'HAND': new DragTool(),
             'ROCK': new DummyTool(),
             'ERASER': new DummyTool(),
             'SCENT': new DummyTool()
         };
-        this.activeToolName = 'SCENT';
-        this.activeTool = this.tools['SCENT'];
+        this.activeToolName = 'HAND';
+        this.activeTool = this.tools['HAND'];
     }
 
     public setTool(name: string) {

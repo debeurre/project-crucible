@@ -5,6 +5,9 @@ export class InputState {
     public static isRightDown: boolean = false;
 
     public static init(canvas: HTMLCanvasElement) {
+        // Prevent default touch actions (scrolling/zooming)
+        canvas.style.touchAction = 'none';
+
         // Prevent context menu on right click
         canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
@@ -17,14 +20,29 @@ export class InputState {
             } else {
                 this.isDown = true;
             }
+            canvas.setPointerCapture(e.pointerId);
         });
 
         canvas.addEventListener('pointermove', (e) => {
             this.updateCoordinates(e, canvas);
         });
 
+        canvas.addEventListener('pointerup', (e) => {
+            if (e.button === 2) {
+                this.isRightDown = false;
+            } else {
+                this.isDown = false;
+            }
+            canvas.releasePointerCapture(e.pointerId);
+        });
+
+        canvas.addEventListener('pointerout', (_e) => {
+             // Optional: Handle out if needed, but capture usually handles it
+             // keeping existing behavior of global up listener being removed
+        });
+
+        // Use window listener for up as a fallback for safety
         window.addEventListener('pointerup', (e) => {
-            // Window listener ensures we catch release even if mouse leaves canvas
             if (e.button === 2) {
                 this.isRightDown = false;
             } else {
@@ -37,6 +55,5 @@ export class InputState {
         const rect = canvas.getBoundingClientRect();
         this.x = e.clientX - rect.left;
         this.y = e.clientY - rect.top;
-        // In the future, apply camera transform here
     }
 }
