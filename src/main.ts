@@ -43,15 +43,16 @@ async function init() {
 
     // Toolbar UI
     const toolButtons: Record<string, HTMLDivElement> = {};
-    const tools = ['SCENT', 'ROCK', 'ERASER'];
+    const tools = ['HAND', 'SCENT', 'ROCK', 'ERASER'];
 
     function createToolbar() {
         const container = document.createElement('div');
         container.style.position = 'absolute';
-        container.style.bottom = '20px';
-        container.style.left = '50%';
-        container.style.transform = 'translateX(-50%)';
+        container.style.top = '50%';
+        container.style.left = '20px';
+        container.style.transform = 'translateY(-50%)';
         container.style.display = 'flex';
+        container.style.flexDirection = 'column';
         container.style.gap = '10px';
         container.style.zIndex = '100';
         document.body.appendChild(container);
@@ -67,6 +68,7 @@ async function init() {
             btn.style.cursor = 'pointer';
             btn.style.fontFamily = 'monospace';
             btn.style.userSelect = 'none';
+            btn.style.textAlign = 'center';
             
             btn.addEventListener('pointerdown', (e) => {
                 e.stopPropagation(); // Prevent map interaction
@@ -100,9 +102,10 @@ async function init() {
     createToolbar();
 
     window.addEventListener('keydown', (e) => {
-        if (e.key === '1') toolManager.setTool('SCENT');
-        if (e.key === '2') toolManager.setTool('ROCK');
-        if (e.key === '3') toolManager.setTool('ERASER');
+        if (e.key === '1') toolManager.setTool('HAND');
+        if (e.key === '2') toolManager.setTool('SCENT');
+        if (e.key === '3') toolManager.setTool('ROCK');
+        if (e.key === '4') toolManager.setTool('ERASER');
     });
 
     app.ticker.add(() => {
