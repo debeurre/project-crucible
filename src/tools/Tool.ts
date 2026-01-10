@@ -1,4 +1,10 @@
-import { WorldState } from '../../core/WorldState';
+import { WorldState } from '../core/WorldState';
+
+export interface ToolOption {
+    value: number;
+    name: string;
+    color: string; // Hex string e.g. '#ffffff'
+}
 
 export interface Tool {
     onDown(world: WorldState, x: number, y: number): void;
@@ -7,4 +13,5 @@ export interface Tool {
     cycleOption?(): void;
     setOption?(value: number): void;
     getOptionName?(): string;
+    getAvailableOptions?(): ToolOption[];
 }

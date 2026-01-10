@@ -1,7 +1,7 @@
-import { Tool } from './Tool';
-import { WorldState } from '../../core/WorldState';
-import { Terrain } from '../../data/MapData';
-import { CONFIG } from '../Config';
+import { Tool, ToolOption } from './Tool';
+import { WorldState } from '../core/WorldState';
+import { Terrain } from '../data/MapData';
+import { CONFIG } from '../core/Config';
 
 export class TerrainTool implements Tool {
     private brush: number = Terrain.GRASS;
@@ -60,5 +60,14 @@ export class TerrainTool implements Tool {
             case Terrain.WATER: return 'WATER';
             default: return 'UNKNOWN';
         }
+    }
+
+    public getAvailableOptions(): ToolOption[] {
+        return [
+            { value: Terrain.GRASS, name: 'GRASS', color: '#1a472a' },
+            { value: Terrain.MUD,   name: 'MUD',   color: '#5d4037' },
+            { value: Terrain.WATER, name: 'WATER', color: '#2196f3' },
+            { value: Terrain.VOID,  name: 'VOID',  color: '#000000' }
+        ];
     }
 }

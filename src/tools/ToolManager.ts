@@ -1,11 +1,12 @@
-import { Tool } from '../core/tools/Tool';
+import { Tool, ToolOption } from './Tool';
 import { WorldState } from '../core/WorldState';
 import { InputState } from '../core/InputState';
-import { DragTool } from '../core/tools/DragTool';
-import { TerrainTool } from '../core/tools/TerrainTool';
-import { SpawnTool } from '../core/tools/SpawnTool';
-import { BuildTool } from '../core/tools/BuildTool';
-import { EraserTool } from '../core/tools/EraserTool';
+import { DragTool } from './DragTool';
+import { TerrainTool } from './TerrainTool';
+import { SpawnTool } from './SpawnTool';
+import { BuildTool } from './BuildTool';
+import { EraserTool } from './EraserTool';
+import { TOOL_NAMES } from './ToolConfig';
 
 export class ToolManager {
     private tools: Record<string, Tool>;
@@ -15,14 +16,14 @@ export class ToolManager {
 
     constructor(_world: WorldState) {
         this.tools = {
-            'HAND': new DragTool(),
-            'PAINT': new TerrainTool(),
-            'SPAWN': new SpawnTool(),
-            'BUILD': new BuildTool(),
-            'ERASER': new EraserTool()
+            [TOOL_NAMES.HAND]: new DragTool(),
+            [TOOL_NAMES.PAINT]: new TerrainTool(),
+            [TOOL_NAMES.SPAWN]: new SpawnTool(),
+            [TOOL_NAMES.BUILD]: new BuildTool(),
+            [TOOL_NAMES.ERASER]: new EraserTool()
         };
-        this.activeToolName = 'HAND';
-        this.activeTool = this.tools['HAND'];
+        this.activeToolName = TOOL_NAMES.HAND;
+        this.activeTool = this.tools[TOOL_NAMES.HAND];
     }
 
     public setTool(name: string) {
@@ -56,6 +57,13 @@ export class ToolManager {
             return this.tools[name].getOptionName!();
         }
         return '';
+    }
+
+    public getToolAvailableOptions(name: string): ToolOption[] {
+        if (this.tools[name] && this.tools[name].getAvailableOptions) {
+            return this.tools[name].getAvailableOptions!();
+        }
+        return [];
     }
 
     public update(world: WorldState) {

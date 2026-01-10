@@ -34,6 +34,10 @@ As of JAN-09-2026: Primitives rebuilt. Level editor and other devtooling enhance
 - **Raw Math Only:** Do NOT use `PIXI.Point` methods for physics. Use raw `x/y` numbers to avoid garbage collection pauses.
 - **Spatial Optimization:** Use Spatial Hash Grids for neighbor lookups.
 
+- **UI Architecture:** 
+    - **World Overlay (Cursors, Indicators):** Rendered in **PixiJS** via `RenderSystem`. Must live in World Space to support future camera transforms.
+    - **Controls (Toolbar, Menus):** Rendered in **DOM (HTML/CSS)** via `src/ui`. This allows for rapid iteration of layout and native accessibility/input features.
+
 ## 5. PIXIJS V8 SPECIFICS
 - **Initialization:** Use `await app.init({ resizeTo: window })`.
 - **Graphics API:** Use `stroke({ width, color })` instead of deprecated `lineStyle`.

@@ -1,7 +1,7 @@
 import { Tool } from './Tool';
-import { WorldState } from '../../core/WorldState';
-import { CONFIG } from '../Config';
-import { getStructureStats } from '../../data/StructureData';
+import { WorldState } from '../core/WorldState';
+import { CONFIG } from '../core/Config';
+import { getStructureStats } from '../data/StructureData';
 
 export class DragTool implements Tool {
     private draggedID: number = -1;

@@ -1,5 +1,5 @@
 import { Tool } from './Tool';
-import { WorldState } from '../../core/WorldState';
+import { WorldState } from '../core/WorldState';
 
 export class SpawnTool implements Tool {
     public onDown(world: WorldState, x: number, y: number): void {

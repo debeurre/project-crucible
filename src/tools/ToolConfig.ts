@@ -1,0 +1,15 @@
+export const TOOL_NAMES = {
+    HAND: 'HAND',
+    PAINT: 'PAINT',
+    BUILD: 'BUILD',
+    SPAWN: 'SPAWN',
+    ERASER: 'ERASER'
+};
+
+export const TOOL_ORDER = [
+    TOOL_NAMES.HAND,
+    TOOL_NAMES.PAINT,
+    TOOL_NAMES.BUILD,
+    TOOL_NAMES.SPAWN,
+    TOOL_NAMES.ERASER
+];
