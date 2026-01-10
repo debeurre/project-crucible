@@ -2,14 +2,10 @@ import { Tool } from '../core/tools/Tool';
 import { WorldState } from '../core/WorldState';
 import { InputState } from '../core/InputState';
 import { DragTool } from '../core/tools/DragTool';
-
-class DummyTool implements Tool {
-    onDown(_world: WorldState, _x: number, _y: number): void {
-        console.log("Tool Down");
-    }
-    onDrag(_world: WorldState, _x: number, _y: number): void {}
-    onUp(_world: WorldState, _x: number, _y: number): void {}
-}
+import { TerrainTool } from '../core/tools/TerrainTool';
+import { SpawnTool } from '../core/tools/SpawnTool';
+import { BuildTool } from '../core/tools/BuildTool';
+import { EraserTool } from '../core/tools/EraserTool';
 
 export class ToolManager {
     private tools: Record<string, Tool>;
@@ -20,9 +16,10 @@ export class ToolManager {
     constructor(_world: WorldState) {
         this.tools = {
             'HAND': new DragTool(),
-            'ROCK': new DummyTool(),
-            'ERASER': new DummyTool(),
-            'SCENT': new DummyTool()
+            'PAINT': new TerrainTool(),
+            'SPAWN': new SpawnTool(),
+            'BUILD': new BuildTool(),
+            'ERASER': new EraserTool()
         };
         this.activeToolName = 'HAND';
         this.activeTool = this.tools['HAND'];
@@ -38,6 +35,19 @@ export class ToolManager {
 
     public getActiveToolName(): string {
         return this.activeToolName;
+    }
+
+    public cycleToolOption(name: string) {
+        if (this.tools[name] && this.tools[name].cycleOption) {
+            this.tools[name].cycleOption!();
+        }
+    }
+
+    public getToolOption(name: string): string {
+        if (this.tools[name] && this.tools[name].getOptionName) {
+            return this.tools[name].getOptionName!();
+        }
+        return '';
     }
 
     public update(world: WorldState) {

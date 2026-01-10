@@ -43,7 +43,8 @@ async function init() {
 
     // Toolbar UI
     const toolButtons: Record<string, HTMLDivElement> = {};
-    const tools = ['HAND', 'SCENT', 'ROCK', 'ERASER'];
+    const optionButtons: Record<string, HTMLDivElement> = {};
+    const tools = ['HAND', 'PAINT', 'BUILD', 'SPAWN', 'ERASER'];
 
     function createToolbar() {
         const container = document.createElement('div');
@@ -58,6 +59,11 @@ async function init() {
         document.body.appendChild(container);
 
         tools.forEach(name => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.gap = '5px';
+
+            // Main Tool Button
             const btn = document.createElement('div');
             btn.textContent = name;
             btn.style.backgroundColor = '#444';
@@ -69,14 +75,49 @@ async function init() {
             btn.style.fontFamily = 'monospace';
             btn.style.userSelect = 'none';
             btn.style.textAlign = 'center';
+            btn.style.flexGrow = '1';
             
             btn.addEventListener('pointerdown', (e) => {
                 e.stopPropagation(); // Prevent map interaction
                 toolManager.setTool(name);
             });
 
-            container.appendChild(btn);
+            row.appendChild(btn);
             toolButtons[name] = btn;
+
+            // Option Pip
+            const optName = toolManager.getToolOption(name);
+            if (optName) {
+                const optBtn = document.createElement('div');
+                optBtn.textContent = optName;
+                optBtn.style.backgroundColor = '#2196F3';
+                optBtn.style.color = 'white';
+                optBtn.style.padding = '10px 10px';
+                optBtn.style.border = '1px solid #1976D2';
+                optBtn.style.borderRadius = '5px';
+                optBtn.style.cursor = 'pointer';
+                optBtn.style.fontFamily = 'monospace';
+                optBtn.style.userSelect = 'none';
+                optBtn.style.textAlign = 'center';
+                optBtn.style.minWidth = '60px';
+                optBtn.style.fontSize = '12px';
+                optBtn.style.display = 'flex';
+                optBtn.style.alignItems = 'center';
+                optBtn.style.justifyContent = 'center';
+
+                optBtn.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    toolManager.cycleToolOption(name);
+                    optBtn.textContent = toolManager.getToolOption(name);
+                    // Also select tool when cycling option
+                    toolManager.setTool(name);
+                });
+
+                row.appendChild(optBtn);
+                optionButtons[name] = optBtn;
+            }
+
+            container.appendChild(row);
         });
     }
     
@@ -103,9 +144,10 @@ async function init() {
 
     window.addEventListener('keydown', (e) => {
         if (e.key === '1') toolManager.setTool('HAND');
-        if (e.key === '2') toolManager.setTool('SCENT');
-        if (e.key === '3') toolManager.setTool('ROCK');
-        if (e.key === '4') toolManager.setTool('ERASER');
+        if (e.key === '2') toolManager.setTool('PAINT');
+        if (e.key === '3') toolManager.setTool('BUILD');
+        if (e.key === '4') toolManager.setTool('SPAWN');
+        if (e.key === '5') toolManager.setTool('ERASER');
     });
 
     app.ticker.add(() => {
@@ -116,7 +158,10 @@ async function init() {
         flowFieldSystem.update();
         navigationSystem.update(world, dt);
         movementSystem.update(world, dt);
+        
+        renderSystem.activeTool = toolManager.getActiveToolName();
         renderSystem.update();
+        
         uiSystem.update(world);
         updateButtons();
     });

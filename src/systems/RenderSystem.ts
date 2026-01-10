@@ -19,6 +19,7 @@ export class RenderSystem {
     private container: Container;
     private needsRedraw: boolean = true;
     private sprites: Map<number, Sprite> = new Map();
+    public activeTool: string = '';
 
     constructor(app: Application, world: WorldState) {
         this.app = app;
@@ -43,9 +44,10 @@ export class RenderSystem {
     }
 
     public update() {
-        if (this.needsRedraw) {
+        if (this.needsRedraw || this.world.terrainDirty) {
             this.drawTerrain();
             this.needsRedraw = false;
+            this.world.terrainDirty = false;
         }
 
         // WARNING: Redrawing all structures via Graphics.clear() every frame is O(N) 
@@ -62,14 +64,20 @@ export class RenderSystem {
 
         const x = InputState.x;
         const y = InputState.y;
-        
-        const col = this.world.grid.getCol(x);
-        const row = this.world.grid.getRow(y);
 
-        if (this.world.grid.isValid(col, row)) {
-            const size = CONFIG.GRID_SIZE;
-            g.rect(col * size, row * size, size, size)
-             .stroke({ width: 2, color: 0x00FF00 });
+        if (this.activeTool === 'PAINT') {
+            // Draw Paint Brush Indicator (Radius 50)
+            g.circle(x, y, 50).stroke({ width: 2, color: 0xFFFFFF });
+        } else {
+            // Draw Grid Highlight
+            const col = this.world.grid.getCol(x);
+            const row = this.world.grid.getRow(y);
+
+            if (this.world.grid.isValid(col, row)) {
+                const size = CONFIG.GRID_SIZE;
+                g.rect(col * size, row * size, size, size)
+                 .stroke({ width: 2, color: 0x00FF00 });
+            }
         }
     }
 
