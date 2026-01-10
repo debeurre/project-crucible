@@ -21,4 +21,11 @@ A short-lived attempt at migrating to the flow fields ran into a series of subtl
 The target remains a 'flow field' architecture. This document will be updated as the rewrite progresses.
 
 ### **3. Rebuilding from Primitives**
-We cleaned the codebase and are now restoring tooling in tandem with entities, layer by layer. The near term target is being able to construct and manipulate a (hardcoded) 'level' live, even if all entities are inert.
+We cleaned the codebase and are now restoring tooling in tandem with entities, layer by layer. The near term target is being able to construct and manipulate a 'hardcoded level' live, even if all entities are inert.
+
+Devtools were greatly expanded during this pass to smoothly manipulate levels, included a rudimentary serializer and loader.
+
+### **4. Naive Steering and Robustness Tests**
+We are restoring autonomous function gradually with the simplest behaviors like seeking, boids, collision avoidance, interaction buffer, etc. Short term target is iterating towards a metabolic loop (spawn -> find cookie -> haul to nest -> spawn...).
+
+Sprig behavior should withstand user interruption and automatially reconfigure to adapt to a changing landscape.
