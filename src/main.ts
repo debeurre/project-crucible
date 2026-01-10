@@ -13,6 +13,7 @@ import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { Terrain } from './data/MapData';
 import { STRUCTURE_STATS, StructureType } from './data/StructureData';
+import { DEFAULT_LEVEL } from './data/LevelData';
 
 async function init() {
     const app = new Application();
@@ -30,6 +31,7 @@ async function init() {
     InputState.init(app.canvas);
 
     const world = new WorldState();
+    world.load(JSON.stringify(DEFAULT_LEVEL));
 
     // Initialize TextureManager before RenderSystem
     await TextureManager.init(app);
