@@ -8,8 +8,8 @@ export const TOOL_NAMES = {
 
 export const TOOL_ORDER = [
     TOOL_NAMES.HAND,
+    TOOL_NAMES.SPAWN,
     TOOL_NAMES.PAINT,
     TOOL_NAMES.BUILD,
-    TOOL_NAMES.SPAWN,
     TOOL_NAMES.ERASER
 ];
