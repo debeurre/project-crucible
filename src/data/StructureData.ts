@@ -16,8 +16,8 @@ export interface StructureStats {
 // THE BLUEPRINT
 export const STRUCTURE_STATS: Record<StructureType, StructureStats> = {
     [StructureType.NEST]:   { name: 'Nest',   radius: 30, color: 0xFFD700, solid: false, shape: 'CIRCLE' },
-    [StructureType.CRUMB]:  { name: 'Crumb',  radius: 10,  color: 0xFFD6A7, solid: false, shape: 'DIAMOND' },
-    [StructureType.COOKIE]: { name: 'Cookie', radius: 45, color: 0xFFD6A7, solid: false, shape: 'CIRCLE' },
+    [StructureType.CRUMB]:  { name: 'Crumb',  radius: 10,  color: 0xB8860B, solid: false, shape: 'DIAMOND' },
+    [StructureType.COOKIE]: { name: 'Cookie', radius: 45, color: 0xDAA520, solid: false, shape: 'CIRCLE' },
     [StructureType.ROCK]:   { name: 'Rock',   radius: 40, color: 0x808080, solid: true,  shape: 'CIRCLE' }
 };
 
