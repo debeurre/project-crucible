@@ -11,6 +11,8 @@ import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
+import { Terrain } from './data/MapData';
+import { STRUCTURE_STATS, StructureType } from './data/StructureData';
 
 async function init() {
     const app = new Application();
@@ -43,7 +45,7 @@ async function init() {
 
     // Toolbar UI
     const toolButtons: Record<string, HTMLDivElement> = {};
-    const optionButtons: Record<string, HTMLDivElement> = {};
+    const toolOptionIcons: Record<string, { val: number, el: HTMLDivElement }[]> = {};
     const tools = ['HAND', 'PAINT', 'BUILD', 'SPAWN', 'ERASER'];
 
     function createToolbar() {
@@ -62,82 +64,174 @@ async function init() {
             const row = document.createElement('div');
             row.style.display = 'flex';
             row.style.gap = '5px';
+            row.style.alignItems = 'center';
 
             // Main Tool Button
             const btn = document.createElement('div');
             btn.textContent = name;
             btn.style.backgroundColor = '#444';
             btn.style.color = 'white';
-            btn.style.padding = '10px 20px';
+            btn.style.padding = '10px 0';
             btn.style.border = '1px solid #555';
             btn.style.borderRadius = '5px';
             btn.style.cursor = 'pointer';
             btn.style.fontFamily = 'monospace';
             btn.style.userSelect = 'none';
             btn.style.textAlign = 'center';
-            btn.style.flexGrow = '1';
+            btn.style.width = '80px'; // Fixed Width
             
             btn.addEventListener('pointerdown', (e) => {
-                e.stopPropagation(); // Prevent map interaction
+                e.stopPropagation();
                 toolManager.setTool(name);
             });
 
             row.appendChild(btn);
             toolButtons[name] = btn;
 
-            // Option Pip
-            const optName = toolManager.getToolOption(name);
-            if (optName) {
-                const optBtn = document.createElement('div');
-                optBtn.textContent = optName;
-                optBtn.style.backgroundColor = '#2196F3';
-                optBtn.style.color = 'white';
-                optBtn.style.padding = '10px 10px';
-                optBtn.style.border = '1px solid #1976D2';
-                optBtn.style.borderRadius = '5px';
-                optBtn.style.cursor = 'pointer';
-                optBtn.style.fontFamily = 'monospace';
-                optBtn.style.userSelect = 'none';
-                optBtn.style.textAlign = 'center';
-                optBtn.style.minWidth = '60px';
-                optBtn.style.fontSize = '12px';
-                optBtn.style.display = 'flex';
-                optBtn.style.alignItems = 'center';
-                optBtn.style.justifyContent = 'center';
+            // Options
+            if (name === 'PAINT') {
+                const optionsDiv = document.createElement('div');
+                optionsDiv.style.display = 'flex';
+                optionsDiv.style.gap = '2px';
+                toolOptionIcons[name] = [];
+                
+                const paints = [
+                    { val: Terrain.GRASS, color: '#1a472a' },
+                    { val: Terrain.MUD,   color: '#5d4037' },
+                    { val: Terrain.WATER, color: '#2196f3' },
+                    { val: Terrain.VOID,  color: '#000000' }
+                ];
 
-                optBtn.addEventListener('pointerdown', (e) => {
-                    e.stopPropagation();
-                    toolManager.cycleToolOption(name);
-                    optBtn.textContent = toolManager.getToolOption(name);
-                    // Also select tool when cycling option
-                    toolManager.setTool(name);
+                paints.forEach(p => {
+                    const icon = document.createElement('div');
+                    icon.style.width = '20px';
+                    icon.style.height = '20px';
+                    icon.style.backgroundColor = p.color;
+                    icon.style.border = '1px solid #fff';
+                    icon.style.cursor = 'pointer';
+                    icon.addEventListener('pointerdown', (e) => {
+                        e.stopPropagation();
+                        toolManager.setTool(name);
+                        toolManager.setToolOption(name, p.val);
+                    });
+                    optionsDiv.appendChild(icon);
+                    toolOptionIcons[name].push({ val: p.val, el: icon });
                 });
+                row.appendChild(optionsDiv);
+            } else if (name === 'BUILD') {
+                const optionsDiv = document.createElement('div');
+                optionsDiv.style.display = 'flex';
+                optionsDiv.style.gap = '2px';
+                toolOptionIcons[name] = [];
 
-                row.appendChild(optBtn);
-                optionButtons[name] = optBtn;
+                // Order: Nest, Crumb, Cookie, Rock
+                const builds = [StructureType.NEST, StructureType.CRUMB, StructureType.COOKIE, StructureType.ROCK];
+
+                builds.forEach(type => {
+                    const stats = STRUCTURE_STATS[type];
+                    const icon = document.createElement('div');
+                    icon.style.width = '20px';
+                    icon.style.height = '20px';
+                    icon.style.backgroundColor = '#' + stats.color.toString(16).padStart(6, '0');
+                    icon.style.borderRadius = '50%'; // Circle
+                    icon.style.border = '1px solid #fff';
+                    icon.style.cursor = 'pointer';
+                    icon.title = stats.name; // Tooltip
+                    icon.addEventListener('pointerdown', (e) => {
+                        e.stopPropagation();
+                        toolManager.setTool(name);
+                        toolManager.setToolOption(name, type);
+                    });
+                    optionsDiv.appendChild(icon);
+                    toolOptionIcons[name].push({ val: type, el: icon });
+                });
+                row.appendChild(optionsDiv);
             }
 
             container.appendChild(row);
         });
+
+        // Copy Level Button
+        const copyBtn = document.createElement('div');
+        copyBtn.textContent = 'COPY JSON';
+        copyBtn.style.backgroundColor = '#2196F3';
+        copyBtn.style.color = 'white';
+        copyBtn.style.padding = '10px 0';
+        copyBtn.style.border = '1px solid #1976D2';
+        copyBtn.style.borderRadius = '5px';
+        copyBtn.style.cursor = 'pointer';
+        copyBtn.style.fontFamily = 'monospace';
+        copyBtn.style.userSelect = 'none';
+        copyBtn.style.textAlign = 'center';
+        copyBtn.style.width = '80px';
+        copyBtn.style.marginTop = '10px'; // Spacing
+
+        copyBtn.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            const data = world.serialize();
+            console.log(data);
+            navigator.clipboard.writeText(data).then(() => {
+                alert("Level JSON copied!");
+            }).catch(err => {
+                console.error("Failed to copy", err);
+            });
+        });
+
+        container.appendChild(copyBtn);
     }
     
     let lastActiveTool = '';
 
     function updateButtons() {
         const active = toolManager.getActiveToolName();
-        if (active === lastActiveTool) return;
-        lastActiveTool = active;
+        
+        // Update Main Buttons
+        if (active !== lastActiveTool) {
+            lastActiveTool = active;
+            tools.forEach(name => {
+                const btn = toolButtons[name];
+                if (name === active) {
+                    btn.style.backgroundColor = '#4CAF50';
+                    btn.style.borderColor = '#66BB6A';
+                } else {
+                    btn.style.backgroundColor = '#444';
+                    btn.style.borderColor = '#555';
+                }
+            });
+        }
 
-        tools.forEach(name => {
-            const btn = toolButtons[name];
-            if (name === active) {
-                btn.style.backgroundColor = '#4CAF50';
-                btn.style.borderColor = '#66BB6A';
-            } else {
-                btn.style.backgroundColor = '#444';
-                btn.style.borderColor = '#555';
-            }
-        });
+        // Update Option Icons (Highlight selected)
+        const currentOptionName = toolManager.getToolOption(active); 
+        
+        if (toolOptionIcons[active]) {
+            toolOptionIcons[active].forEach(item => {
+                let match = false;
+                if (active === 'PAINT') {
+                    // TerrainTool names: VOID, GRASS, MUD, WATER
+                    let name = 'UNKNOWN';
+                    switch(item.val) {
+                        case Terrain.VOID: name = 'VOID'; break;
+                        case Terrain.GRASS: name = 'GRASS'; break;
+                        case Terrain.MUD: name = 'MUD'; break;
+                        case Terrain.WATER: name = 'WATER'; break;
+                    }
+                    if (name === currentOptionName) match = true;
+                } else if (active === 'BUILD') {
+                    const stats = STRUCTURE_STATS[item.val as StructureType];
+                    if (stats.name === currentOptionName) match = true;
+                }
+
+                if (match) {
+                    item.el.style.borderColor = '#FFFF00'; // Yellow Highlight
+                    item.el.style.transform = 'scale(1.2)';
+                    item.el.style.zIndex = '10';
+                } else {
+                    item.el.style.borderColor = '#fff';
+                    item.el.style.transform = 'scale(1.0)';
+                    item.el.style.zIndex = '0';
+                }
+            });
+        }
     }
 
     createToolbar();
@@ -148,6 +242,16 @@ async function init() {
         if (e.key === '3') toolManager.setTool('BUILD');
         if (e.key === '4') toolManager.setTool('SPAWN');
         if (e.key === '5') toolManager.setTool('ERASER');
+
+        if (e.key === 'p' || e.key === 'P') {
+            const data = world.serialize();
+            console.log(data); // Backup in console
+            navigator.clipboard.writeText(data).then(() => {
+                alert("Level JSON copied to clipboard!");
+            }).catch(err => {
+                console.error("Failed to copy", err);
+            });
+        }
     });
 
     app.ticker.add(() => {

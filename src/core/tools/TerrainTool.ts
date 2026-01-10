@@ -48,6 +48,10 @@ export class TerrainTool implements Tool {
         if (this.brush > 3) this.brush = 0;
     }
 
+    public setOption(value: number): void {
+        this.brush = value;
+    }
+
     public getOptionName(): string {
         switch (this.brush) {
             case Terrain.VOID: return 'VOID';

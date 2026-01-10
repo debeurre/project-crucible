@@ -5,5 +5,6 @@ export interface Tool {
     onDrag(world: WorldState, x: number, y: number): void;
     onUp(world: WorldState, x: number, y: number): void;
     cycleOption?(): void;
+    setOption?(value: number): void;
     getOptionName?(): string;
 }

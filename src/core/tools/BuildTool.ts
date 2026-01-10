@@ -26,6 +26,10 @@ export class BuildTool implements Tool {
         }
     }
 
+    public setOption(value: number): void {
+        this.currentType = value;
+    }
+
     public getOptionName(): string {
         return getStructureStats(this.currentType).name;
     }

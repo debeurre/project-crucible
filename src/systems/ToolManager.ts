@@ -43,6 +43,14 @@ export class ToolManager {
         }
     }
 
+    public setToolOption(name: string, value: number) {
+        if (this.tools[name] && this.tools[name].setOption) {
+            this.tools[name].setOption!(value);
+        } else {
+            console.warn(`Tool ${name} does not support setOption`);
+        }
+    }
+
     public getToolOption(name: string): string {
         if (this.tools[name] && this.tools[name].getOptionName) {
             return this.tools[name].getOptionName!();
