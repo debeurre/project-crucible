@@ -22,8 +22,8 @@ export class ToolManager {
             [TOOL_NAMES.BUILD]: new BuildTool(),
             [TOOL_NAMES.ERASER]: new EraserTool()
         };
-        this.activeToolName = TOOL_NAMES.HAND;
-        this.activeTool = this.tools[TOOL_NAMES.HAND];
+        this.activeToolName = TOOL_NAMES.SPAWN;
+        this.activeTool = this.tools[TOOL_NAMES.SPAWN];
     }
 
     public setTool(name: string) {
