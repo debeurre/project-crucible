@@ -8,6 +8,11 @@ export const CONFIG = {
     MAX_SPRIGS: 500,
     START_SPRIGS: 10,
     MAX_SPEED: 100.0,
+    WANDER_SPEED: 40.0,
+    LEASH_RADIUS: 150.0,
+    WANDER_MIN: 2.0,
+    WANDER_MAX: 5.0,
+    WANDER_DIST: 60.0,
     SPRIG_RADIUS: 15.0,
 };
 
