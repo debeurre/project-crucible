@@ -1,5 +1,5 @@
 import { WorldState } from '../core/WorldState';
-import { StructureType } from '../data/StructureData';
+import { StructureType, getStructureStats } from '../data/StructureData';
 import { CONFIG } from '../core/Config';
 
 export class HiveMindSystem {
@@ -13,79 +13,80 @@ export class HiveMindSystem {
 
         const count = CONFIG.MAX_SPRIGS;
 
-                        // Cache positions
-                        let nestX = 0, nestY = 0, nestR = 30;
-                        let cookieX = 0, cookieY = 0, cookieR = 30;
-                        let hasNest = false;
-                        let hasCookie = false;
+        // Cache positions
+        let nestX = 0, nestY = 0, nestR = 30;
+        let cookieX = 0, cookieY = 0, cookieR = 30;
+        let hasNest = false;
+        let hasCookie = false;
 
-                        for (const s of structures) {
-                            if (s.type === StructureType.NEST) { 
-                                nestX = s.x; nestY = s.y; nestR = s.radius; 
-                                hasNest = true;
-                            }
-                            if (s.type === StructureType.COOKIE) { 
-                                cookieX = s.x; cookieY = s.y; cookieR = s.radius; 
-                                hasCookie = true;
-                            }
-                        }
+        for (const s of structures) {
+            const stats = getStructureStats(s.type);
+            if (s.type === StructureType.NEST) { 
+                nestX = s.x; nestY = s.y; nestR = stats.radius; 
+                hasNest = true;
+            }
+            if (s.type === StructureType.COOKIE) { 
+                cookieX = s.x; cookieY = s.y; cookieR = stats.radius; 
+                hasCookie = true;
+            }
+        }
 
-                        // Spawning Logic (The Queen)
-                        if (hasNest && world.foodStored >= 10) {
-                            if (world.sprigs.spawn(nestX, nestY) !== -1) {
-                                world.foodStored -= 10;
-                            }
-                        }
+        // Spawning Logic (The Queen)
+        if (hasNest && world.foodStored >= 10) {
+            if (world.sprigs.spawn(nestX, nestY) !== -1) {
+                world.foodStored -= 10;
+            }
+        }
 
-                        for (let i = 0; i < count; i++) {
-                            if (sprigs.active[i] === 0) continue;
+        for (let i = 0; i < count; i++) {
+            if (sprigs.active[i] === 0) continue;
 
-                            // 1. Assign Job (if IDLE)
-                            if (sprigs.state[i] === 0) {
-                                const cargo = sprigs.cargo[i];
-                                if (cargo === 0 && hasCookie) {
-                                    // Go to Cookie
-                                    sprigs.targetX[i] = cookieX;
-                                    sprigs.targetY[i] = cookieY;
-                                    sprigs.state[i] = 1; // MOVING_TO_SOURCE
-                                } else if (cargo === 1 && hasNest) {
-                                    // Go to Nest
-                                    sprigs.targetX[i] = nestX;
-                                    sprigs.targetY[i] = nestY;
-                                    sprigs.state[i] = 2; // MOVING_TO_SINK
-                                }
-                            }
+            // 1. Assign Job (if IDLE)
+            if (sprigs.state[i] === 0) {
+                const cargo = sprigs.cargo[i];
+                if (cargo === 0 && hasCookie) {
+                    // Go to Cookie
+                    sprigs.targetX[i] = cookieX;
+                    sprigs.targetY[i] = cookieY;
+                    sprigs.state[i] = 1; // MOVING_TO_SOURCE
+                } else if (cargo === 1 && hasNest) {
+                    // Go to Nest
+                    sprigs.targetX[i] = nestX;
+                    sprigs.targetY[i] = nestY;
+                    sprigs.state[i] = 2; // MOVING_TO_SINK
+                }
+            }
 
-                            // 2. Arrival Check (if SEEKING)
-                            if (sprigs.state[i] === 1 || sprigs.state[i] === 2) {
-                                const px = sprigs.x[i];
-                                const py = sprigs.y[i];
-                                const tx = sprigs.targetX[i];
-                                const ty = sprigs.targetY[i];
-                                
-                                const dx = px - tx;
-                                const dy = py - ty;
-                                const distSq = dx*dx + dy*dy;
-                                
-                                // Determine radius
-                                let targetR = 30;
-                                if (sprigs.state[i] === 1) targetR = cookieR;
-                                if (sprigs.state[i] === 2) targetR = nestR;
+            // 2. Arrival Check (if SEEKING)
+            if (sprigs.state[i] === 1 || sprigs.state[i] === 2) {
+                const px = sprigs.x[i];
+                const py = sprigs.y[i];
+                const tx = sprigs.targetX[i];
+                const ty = sprigs.targetY[i];
+                
+                const dx = px - tx;
+                const dy = py - ty;
+                const distSq = dx*dx + dy*dy;
+                
+                // Determine radius
+                let targetR = 30;
+                if (sprigs.state[i] === 1) targetR = cookieR;
+                if (sprigs.state[i] === 2) targetR = nestR;
 
-                                const minDist = targetR + 10; // Interaction Buffer
+                const minDist = targetR + 10; // Interaction Buffer
 
-                                if (distSq < minDist * minDist) {
-                                    // Arrived
-                                    if (sprigs.state[i] === 1 && hasCookie) {
-                                        sprigs.cargo[i] = 1; // Pick up
-                                        sprigs.state[i] = 0; // Set to IDLE
-                                    } else if (sprigs.state[i] === 2 && hasNest) {
-                                        sprigs.cargo[i] = 0; // Drop off
-                                        world.foodStored++;
-                                        sprigs.state[i] = 0; // Set to IDLE
-                                    }
-                                }
-                            }
-                        }
+                if (distSq < minDist * minDist) {
+                    // Arrived
+                    if (sprigs.state[i] === 1 && hasCookie) {
+                        sprigs.cargo[i] = 1; // Pick up
+                        sprigs.state[i] = 0; // Set to IDLE
+                    } else if (sprigs.state[i] === 2 && hasNest) {
+                        sprigs.cargo[i] = 0; // Drop off
+                        world.foodStored++;
+                        sprigs.state[i] = 0; // Set to IDLE
+                    }
+                }
+            }
+        }
     }
 }

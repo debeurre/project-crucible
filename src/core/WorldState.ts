@@ -39,8 +39,31 @@ export class WorldState {
             id: 1, 
             type: StructureType.ROCK, 
             x: CONFIG.WORLD_WIDTH * CONFIG.GRID_SIZE / 2, 
-            y: CONFIG.WORLD_HEIGHT * CONFIG.GRID_SIZE / 2, 
-            radius: 40 
+            y: CONFIG.WORLD_HEIGHT * CONFIG.GRID_SIZE / 2
+        });
+
+        // Spawn Nest
+        this.structures.push({
+            id: 2,
+            type: StructureType.NEST,
+            x: 100,
+            y: 100
+        });
+
+        // Spawn Cookie
+        this.structures.push({
+            id: 3,
+            type: StructureType.COOKIE,
+            x: 500,
+            y: 100
+        });
+
+        // Spawn Crumb
+        this.structures.push({
+            id: 5,
+            type: StructureType.CRUMB,
+            x: 250,
+            y: CONFIG.WORLD_HEIGHT * CONFIG.GRID_SIZE / 2 + 50
         });
 
         // Spawn centered with offset

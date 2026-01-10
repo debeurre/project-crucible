@@ -1,4 +1,4 @@
-import { Structure, StructureType } from '../data/StructureData';
+import { Structure, StructureType, getStructureStats } from '../data/StructureData';
 import { CONFIG } from './Config';
 
 export class Grid {
@@ -32,15 +32,12 @@ export class Grid {
         this.data.fill(0);
 
         for (const s of structures) {
+            const stats = getStructureStats(s.type);
             // Include Nest and Cookie as obstacles for now? Or just Rocks?
-            // "You should see your grey rocks covered..."
-            // Usually pathfinding avoids rocks. Nest/Cookie might be walkable destinations?
-            // Previous code included Nest/Cookie. I'll stick to Rocks for "Blocked" unless specified.
-            // But usually units can't walk *through* the nest center.
             if (s.type === StructureType.ROCK || s.type === StructureType.NEST || s.type === StructureType.COOKIE) {
                 const cx = Math.floor(s.x / CONFIG.GRID_SIZE);
                 const cy = Math.floor(s.y / CONFIG.GRID_SIZE);
-                const r = Math.ceil(s.radius / CONFIG.GRID_SIZE);
+                const r = Math.ceil(stats.radius / CONFIG.GRID_SIZE);
 
                 for (let y = cy - r; y <= cy + r; y++) {
                     for (let x = cx - r; x <= cx + r; x++) {
@@ -50,7 +47,7 @@ export class Grid {
                             const dx = tileCenterX - s.x;
                             const dy = tileCenterY - s.y;
                             
-                            if (dx*dx + dy*dy < s.radius*s.radius) {
+                            if (dx*dx + dy*dy < stats.radius * stats.radius) {
                                 this.data[y * this.cols + x] = 1;
                             }
                         }

@@ -1,6 +1,7 @@
 import { Tool } from './Tool';
 import { WorldState } from '../../core/WorldState';
 import { CONFIG } from '../Config';
+import { getStructureStats } from '../../data/StructureData';
 
 export class DragTool implements Tool {
     private draggedID: number = -1;
@@ -22,9 +23,10 @@ export class DragTool implements Tool {
         // 2. Try to grab a Structure
         for (let i = 0; i < world.structures.length; i++) {
             const s = world.structures[i];
+            const stats = getStructureStats(s.type);
             const dx = s.x - x;
             const dy = s.y - y;
-            if (dx * dx + dy * dy < s.radius * s.radius) {
+            if (dx * dx + dy * dy < stats.radius * stats.radius) {
                 this.draggedID = s.id;
                 this.structureIndex = i;
                 this.draggedType = 'STRUCTURE';

@@ -1,7 +1,7 @@
 import { Application, Graphics, Container, Sprite } from 'pixi.js';
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
-import { StructureType } from '../data/StructureData';
+import { getStructureStats } from '../data/StructureData';
 import { TextureManager } from '../core/TextureManager';
 import { InputState } from '../core/InputState';
 import { Terrain } from '../data/MapData';
@@ -144,11 +144,20 @@ export class RenderSystem {
         const g = this.structureGraphics;
         g.clear();
         for (const s of this.world.structures) {
-            let color = 0xFFFFFF;
-            if (s.type === StructureType.NEST) color = 0xFFD700;
-            if (s.type === StructureType.COOKIE) color = 0xD2B48C;
-            if (s.type === StructureType.ROCK) color = 0x808080;
-            g.circle(s.x, s.y, s.radius).fill(color);
+            const stats = getStructureStats(s.type);
+            const color = stats.color;
+            const radius = stats.radius;
+            
+            if (stats.shape === 'DIAMOND') {
+                g.moveTo(s.x, s.y - radius) // Top
+                 .lineTo(s.x + radius, s.y) // Right
+                 .lineTo(s.x, s.y + radius) // Bottom
+                 .lineTo(s.x - radius, s.y) // Left
+                 .closePath()
+                 .fill(color);
+            } else {
+                g.circle(s.x, s.y, radius).fill(color);
+            }
         }
     }
 }

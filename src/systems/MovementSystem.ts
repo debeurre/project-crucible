@@ -1,6 +1,6 @@
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
-import { StructureType } from '../data/StructureData';
+import { getStructureStats } from '../data/StructureData';
 
 export class MovementSystem {
     public update(world: WorldState, dt: number) {
@@ -12,7 +12,7 @@ export class MovementSystem {
             if (sprigs.active[i] === 0) continue;
 
             // Terrain Logic
-            // Calculate potential next position
+            // ... (keeping existing logic) ...
             const nextX = sprigs.x[i] + sprigs.vx[i] * dt;
             const nextY = sprigs.y[i] + sprigs.vy[i] * dt;
             
@@ -27,23 +27,18 @@ export class MovementSystem {
             } else {
                 // Apply Terrain Speed Modifier
                 const speedMod = map.getSpeed(nextCol, nextRow);
-                
-                // We apply speed modifier by scaling the velocity integration
-                // NOTE: This assumes vx/vy are "desired velocity". 
-                // If vx/vy are "current physical momentum", this acts like friction.
-                // For this primitive phase, we'll scale the step.
-                
                 sprigs.x[i] += sprigs.vx[i] * dt * speedMod;
                 sprigs.y[i] += sprigs.vy[i] * dt * speedMod;
             }
 
-            // Collision with Rocks
+            // Collision with Solid Structures
             for (const s of world.structures) {
-                if (s.type === StructureType.ROCK) {
+                const stats = getStructureStats(s.type);
+                if (stats.solid) {
                     const dx = sprigs.x[i] - s.x;
                     const dy = sprigs.y[i] - s.y;
                     const distSq = dx*dx + dy*dy;
-                    const minDist = s.radius + CONFIG.SPRIG_RADIUS;
+                    const minDist = stats.radius + CONFIG.SPRIG_RADIUS;
                     
                     if (distSq < minDist * minDist) {
                         const dist = Math.sqrt(distSq) || 0.001;
