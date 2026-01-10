@@ -19,7 +19,7 @@ export class NavigationSystem {
             // Step 2: The Pulse
             if (sprigs.timer[i] <= 0) {
                 // Reset Timer
-                sprigs.timer[i] = CONFIG.WANDER_MIN + Math.random() * (CONFIG.WANDER_MAX - CONFIG.WANDER_MIN);
+                sprigs.timer[i] = CONFIG.WANDER_TMIN + Math.random() * (CONFIG.WANDER_TMAX - CONFIG.WANDER_TMIN);
 
                 // Check Home
                 const homeId = sprigs.homeID[i];

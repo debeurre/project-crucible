@@ -3,17 +3,17 @@ export const CONFIG = {
     GRID_SIZE: 32,
     WORLD_WIDTH: 55,
     WORLD_HEIGHT: 30,
-
     // Sprigs
     MAX_SPRIGS: 500,
     START_SPRIGS: 10,
     MAX_SPEED: 100.0,
+    SPRIG_RADIUS: 15.0,
+    // Wander
     WANDER_SPEED: 40.0,
     LEASH_RADIUS: 150.0,
-    WANDER_MIN: 2.0,
-    WANDER_MAX: 5.0,
-    WANDER_DIST: 60.0,
-    SPRIG_RADIUS: 15.0,
+    WANDER_DIST: 100.0,
+    WANDER_TMIN: 3.0,
+    WANDER_TMAX: 5.0,
 };
 
 export const SCREEN_WIDTH = CONFIG.GRID_SIZE * CONFIG.WORLD_WIDTH;
