@@ -1,6 +1,6 @@
 # 🧹 System Health Report
 
-**Generated:** 1/11/2026, 4:22:34 PM
+**Generated:** 1/11/2026, 4:26:52 PM
 **Total Source Files:** 31
 
 ### Legend
@@ -35,7 +35,7 @@
 | `src/components/Stock.ts` | 43 | 🟢 HEALTHY |  |
 | `src/core/TextureManager.ts` | 43 | 🟢 HEALTHY |  |
 | `src/data/StructureData.ts` | 37 | 🟢 HEALTHY |  |
-| `src/core/Config.ts` | 33 | 🟢 HEALTHY |  |
+| `src/core/Config.ts` | 34 | 🟢 HEALTHY |  |
 | `src/tools/Tool.ts` | 18 | 🟢 HEALTHY |  |
 | `src/tools/ToolConfig.ts` | 16 | 🟢 HEALTHY |  |
 | `src/data/LevelData.ts` | 9 | 🟢 HEALTHY |  |

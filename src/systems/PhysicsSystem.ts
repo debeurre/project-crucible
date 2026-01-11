@@ -28,7 +28,7 @@ export class PhysicsSystem {
                 if (terrain === Terrain.MUD) {
                     friction = CONFIG.FRICTION_MUD;
                 } else if (terrain === Terrain.WATER) {
-                     friction = 0.8; 
+                    friction = CONFIG.FRICTION_WATER;
                 }
             }
 
