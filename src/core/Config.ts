@@ -14,6 +14,13 @@ export const CONFIG = {
     WANDER_DIST: 100.0,
     WANDER_TMIN: 3.0,
     WANDER_TMAX: 5.0,
+
+    // Tools
+    TOOLS: {
+        SPAWN_PER_TAP: 1,
+        SPAWN_PER_SEC: 10,
+        TAP_THRESHOLD_MS: 200,
+    }
 };
 
 export const SCREEN_WIDTH = CONFIG.GRID_SIZE * CONFIG.WORLD_WIDTH;

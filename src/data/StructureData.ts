@@ -1,3 +1,5 @@
+import { Stock } from '../components/Stock';
+
 export enum StructureType {
     NEST = 0,
     CRUMB = 1,
@@ -27,6 +29,7 @@ export interface Structure {
     x: number;
     y: number;
     value?: number; // Health or Stock
+    stock?: Stock;
 }
 
 export const getStructureStats = (type: StructureType): StructureStats => {

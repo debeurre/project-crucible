@@ -2,6 +2,8 @@ import { Application, Text, TextStyle } from 'pixi.js';
 import { WorldState } from '../core/WorldState';
 import { InputState } from '../core/InputState';
 
+import { StructureType } from '../data/StructureData';
+
 export class UISystem {
     private app: Application;
     private statsText: Text;
@@ -30,6 +32,14 @@ export class UISystem {
         for (let i = 0; i < len; i++) {
             if (active[i]) activeCount++;
         }
+
+        // Count Total Food in Nests
+        let totalFood = 0;
+        for (const s of world.structures) {
+            if (s.type === StructureType.NEST && s.stock) {
+                totalFood += s.stock.count('FOOD');
+            }
+        }
         
         const fps = Math.round(this.app.ticker.FPS);
         const mx = InputState.x;
@@ -37,6 +47,6 @@ export class UISystem {
         const gx = world.grid.getCol(mx);
         const gy = world.grid.getRow(my);
 
-        this.statsText.text = `FPS: ${fps} | Sprigs: ${activeCount} | Food: ${world.foodStored}\nWorld: ${mx.toFixed(0)}, ${my.toFixed(0)}\nGrid: [${gx}, ${gy}]`;
+        this.statsText.text = `FPS: ${fps} | Sprigs: ${activeCount} | Food: ${totalFood}\nWorld: ${mx.toFixed(0)}, ${my.toFixed(0)}\nGrid: [${gx}, ${gy}]`;
     }
 }

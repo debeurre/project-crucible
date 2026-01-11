@@ -9,7 +9,6 @@ export class WorldState {
     public sprigs: EntityData;
     public structures: Structure[];
     public grid: Grid;
-    public foodStored: number = 0;
     public terrainDirty: boolean = true;
 
     constructor() {
