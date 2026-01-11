@@ -1,6 +1,7 @@
 import { ToolManager } from './ToolManager';
 import { WorldState } from '../core/WorldState';
 import { TOOL_NAMES, TOOL_ORDER } from './ToolConfig';
+import { CONFIG } from '../core/Config';
 
 export class Toolbar {
     private toolManager: ToolManager;
@@ -91,6 +92,36 @@ export class Toolbar {
         });
 
         this.addCopyButton();
+        this.addDebugToggle();
+    }
+
+    private addDebugToggle() {
+        const toggleRow = document.createElement('div');
+        toggleRow.style.display = 'flex';
+        toggleRow.style.alignItems = 'center';
+        toggleRow.style.gap = '5px';
+        toggleRow.style.marginTop = '10px';
+        toggleRow.style.color = 'white';
+        toggleRow.style.fontFamily = 'monospace';
+        toggleRow.style.fontSize = '12px';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = CONFIG.DEBUG_SPRIG_VECTORS;
+        checkbox.style.cursor = 'pointer';
+
+        checkbox.addEventListener('change', (e) => {
+            CONFIG.DEBUG_SPRIG_VECTORS = (e.target as HTMLInputElement).checked;
+        });
+
+        const label = document.createElement('label');
+        label.textContent = 'DEBUG VIZ';
+        label.style.cursor = 'pointer';
+        label.addEventListener('click', () => checkbox.click());
+
+        toggleRow.appendChild(checkbox);
+        toggleRow.appendChild(label);
+        this.container.appendChild(toggleRow);
     }
 
     private addCopyButton() {
