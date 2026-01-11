@@ -121,11 +121,10 @@ export class RenderSystem {
             }
 
             // 4. Target Line - Purple
-            const targetId = sprigs.targetId[i];
-            if (targetId !== -1) {
+            if (sprigs.targetX[i] + sprigs.targetY[i] > 0) {
                 g.moveTo(x, y)
                  .lineTo(sprigs.targetX[i], sprigs.targetY[i])
-                 .stroke({ width: 1, color: 0x800080, alpha: 0.5 });
+                 .stroke({ width: 1, color: 0xFF00FF });
             }
         }
     }
