@@ -10,8 +10,6 @@ export class RenderSystem {
     private app: Application;
     private world: WorldState;
     private gridGraphics: Graphics;
-    private roadGraphics: Graphics;
-    private scentGraphics: Graphics;
     private structureGraphics: Graphics;
     private obstacleDebugGraphics: Graphics;
     private hoverGraphics: Graphics;
@@ -26,18 +24,14 @@ export class RenderSystem {
         this.world = world;
         this.container = new Container();
         this.gridGraphics = new Graphics();
-        this.roadGraphics = new Graphics(); 
-        this.scentGraphics = new Graphics(); 
         this.structureGraphics = new Graphics();
         this.obstacleDebugGraphics = new Graphics();
         this.hoverGraphics = new Graphics();
         this.spriteContainer = new Container();
         
         this.container.addChild(this.gridGraphics);
-        this.container.addChild(this.roadGraphics);
         this.container.addChild(this.structureGraphics);
         this.container.addChild(this.obstacleDebugGraphics); 
-        this.container.addChild(this.scentGraphics);
         this.container.addChild(this.hoverGraphics);
         this.container.addChild(this.spriteContainer); 
         this.app.stage.addChild(this.container);

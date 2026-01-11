@@ -6,7 +6,6 @@ import { SteeringSystem } from './systems/SteeringSystem';
 import { HiveMindSystem } from './systems/HiveMindSystem';
 import { NavigationSystem } from './systems/NavigationSystem';
 import { ToolManager } from './tools/ToolManager';
-import { EcologySystem } from './systems/EcologySystem';
 import { UISystem } from './systems/UISystem';
 import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
@@ -42,7 +41,6 @@ async function init() {
     const hiveMindSystem = new HiveMindSystem();
     const navigationSystem = new NavigationSystem();
     const toolManager = new ToolManager(world);
-    const ecologySystem = new EcologySystem();
     const uiSystem = new UISystem(app);
     const flowFieldSystem = new FlowFieldSystem();
 
@@ -69,7 +67,6 @@ async function init() {
     app.ticker.add(() => {
         const dt = app.ticker.deltaMS / 1000;
         toolManager.update(world);
-        ecologySystem.update(world, dt);
         hiveMindSystem.update(world);
         flowFieldSystem.update();
         navigationSystem.update(world, dt);

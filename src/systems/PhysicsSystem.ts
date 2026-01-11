@@ -56,7 +56,7 @@ export class PhysicsSystem {
             const nextCol = Math.floor(nextX / CONFIG.GRID_SIZE);
             const nextRow = Math.floor(nextY / CONFIG.GRID_SIZE);
 
-            if (map.isBlocked(nextCol, nextRow, false)) {
+            if (map.isBlocked(nextCol, nextRow)) {
                  sprigs.vx[i] = 0;
                  sprigs.vy[i] = 0;
                  // Don't update pos
