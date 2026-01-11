@@ -5,7 +5,7 @@ import { CONFIG } from '../core/Config';
 
 export class TerrainTool implements Tool {
     private brush: number = Terrain.GRASS;
-    private radius: number = 50;
+    private radius: number = CONFIG.BRUSH_RADIUS;
 
     public onDown(world: WorldState, x: number, y: number): void {
         this.paint(world, x, y);

@@ -1,8 +1,9 @@
 import { Tool } from './Tool';
 import { WorldState } from '../core/WorldState';
+import { CONFIG } from '../core/Config';
 
 export class EraserTool implements Tool {
-    private radius: number = 50;
+    private radius: number = CONFIG.ERASER_RADIUS;
 
     public onDown(world: WorldState, x: number, y: number): void {
         this.erase(world, x, y);
