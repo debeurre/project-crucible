@@ -19,9 +19,9 @@ export class SpawnTool implements Tool {
         const dt = (now - this.lastFrameTime) / 1000;
         this.lastFrameTime = now;
 
-        if (duration > CONFIG.TOOLS.TAP_THRESHOLD_MS) {
+        if (duration > CONFIG.TAP_THRESHOLD_MS) {
             // Hold Logic
-            this.accumulator += dt * CONFIG.TOOLS.SPAWN_PER_SEC;
+            this.accumulator += dt * CONFIG.SPAWN_PER_SEC;
             while (this.accumulator >= 1) {
                 world.sprigs.spawn(x, y);
                 this.accumulator -= 1;
@@ -31,9 +31,9 @@ export class SpawnTool implements Tool {
 
     public onUp(world: WorldState, x: number, y: number): void {
         const duration = Date.now() - this.downTime;
-        if (duration <= CONFIG.TOOLS.TAP_THRESHOLD_MS) {
+        if (duration <= CONFIG.TAP_THRESHOLD_MS) {
             // Tap Logic
-            for (let i = 0; i < CONFIG.TOOLS.SPAWN_PER_TAP; i++) {
+            for (let i = 0; i < CONFIG.SPAWN_PER_TAP; i++) {
                 world.sprigs.spawn(x, y);
             }
         }
