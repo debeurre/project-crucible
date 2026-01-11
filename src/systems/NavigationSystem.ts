@@ -11,7 +11,7 @@ export class NavigationSystem {
         
         for (let i = 0; i < sprigs.active.length; i++) {
             if (sprigs.active[i] === 0) continue;
-
+            
             // Step 1: Timer Tick
             sprigs.timer[i] -= dt;
             const currentSpeed = sprigs.speed[i];
@@ -24,7 +24,6 @@ export class NavigationSystem {
                 // Check Home
                 const homeId = sprigs.homeID[i];
                 let home = undefined;
-                
                 // Find home structure if ID is valid
                 if (homeId !== -1) {
                     home = structures.find(s => s.id === homeId);
@@ -36,7 +35,7 @@ export class NavigationSystem {
                     // Case A: Homeless - Scan for Nest
                     let nearestDistSq = Infinity;
                     let nearestNest = null;
-
+    
                     for (const s of structures) {
                         if (s.type === StructureType.NEST) {
                             const dx = s.x - sprigs.x[i];
