@@ -43,13 +43,7 @@ export class MapData {
         return false;
     }
 
-    public getSpeed(col: number, row: number): number {
-        if (col < 0 || col >= this.width || row < 0 || row >= this.height) return 0;
-        const val = this.terrain[this.getIndex(col, row)];
-        if (val === Terrain.MUD) return 0.5;
-        if (val === Terrain.WATER) return 0.5;
-        return 1.0;
-    }
+
 
     public addScent(worldX: number, worldY: number, amount: number) {
         const gx = Math.floor(worldX / CONFIG.GRID_SIZE);
