@@ -34,9 +34,10 @@ export class RenderSystem {
         this.container.addChild(this.gridGraphics);
         this.container.addChild(this.structureGraphics);
         this.container.addChild(this.obstacleDebugGraphics); 
-        this.container.addChild(this.hoverGraphics);
-        this.container.addChild(this.debugGraphics);
-        this.container.addChild(this.spriteContainer); 
+        this.container.addChild(this.spriteContainer); // Sprites below debug vectors
+        this.container.addChild(this.debugGraphics);   // Debug vectors on top
+        this.container.addChild(this.hoverGraphics);   // UI/Cursor on very top
+        
         this.app.stage.addChild(this.container);
     }
 
@@ -48,9 +49,9 @@ export class RenderSystem {
         }
 
         this.drawStructures();
-        this.drawHover();
-        this.drawDebug();
         this.updateSprigs();
+        this.drawDebug();
+        this.drawHover();
     }
 
     private drawHover() {
@@ -117,6 +118,14 @@ export class RenderSystem {
                      .lineTo(home.x, home.y)
                      .stroke({ width: 1, color: color, alpha: 0.5 });
                 }
+            }
+
+            // 4. Target Line - Purple
+            const targetId = sprigs.targetId[i];
+            if (targetId !== -1) {
+                g.moveTo(x, y)
+                 .lineTo(sprigs.targetX[i], sprigs.targetY[i])
+                 .stroke({ width: 1, color: 0x800080, alpha: 0.5 });
             }
         }
     }
