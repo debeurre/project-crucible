@@ -65,9 +65,10 @@ export class RenderSystem {
         const x = InputState.x;
         const y = InputState.y;
 
-        if (this.activeTool === 'PAINT') {
-            // Draw Paint Brush Indicator (Radius 50)
-            g.circle(x, y, 50).stroke({ width: 2, color: 0xFFFFFF });
+        if (this.activeTool === 'PAINT' || this.activeTool === 'ERASER') {
+            // Draw Brush Indicator (Radius 50)
+            const color = this.activeTool === 'ERASER' ? 0xFF0000 : 0xFFFFFF;
+            g.circle(x, y, 50).stroke({ width: 2, color });
         } else {
             // Draw Grid Highlight
             const col = this.world.grid.getCol(x);

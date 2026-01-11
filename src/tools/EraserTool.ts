@@ -2,6 +2,8 @@ import { Tool } from './Tool';
 import { WorldState } from '../core/WorldState';
 
 export class EraserTool implements Tool {
+    private radius: number = 50;
+
     public onDown(world: WorldState, x: number, y: number): void {
         this.erase(world, x, y);
     }
@@ -13,11 +15,18 @@ export class EraserTool implements Tool {
     public onUp(_world: WorldState, _x: number, _y: number): void {}
 
     private erase(world: WorldState, x: number, y: number) {
+        const rSq = this.radius * this.radius;
+
         // Erase Sprigs
-        // We use a small radius for eraser
-        const sprigId = world.sprigs.getSprigAt(x, y, 20);
-        if (sprigId !== -1) {
-            world.sprigs.active[sprigId] = 0;
+        const sprigs = world.sprigs;
+        for (let i = 0; i < sprigs.active.length; i++) {
+            if (sprigs.active[i] === 0) continue;
+            
+            const dx = sprigs.x[i] - x;
+            const dy = sprigs.y[i] - y;
+            if (dx * dx + dy * dy < rSq) {
+                sprigs.active[i] = 0;
+            }
         }
 
         // Erase Structures
@@ -25,7 +34,7 @@ export class EraserTool implements Tool {
             const s = world.structures[i];
             const dx = s.x - x;
             const dy = s.y - y;
-            if (dx * dx + dy * dy < 20 * 20) {
+            if (dx * dx + dy * dy < rSq) {
                 world.structures.splice(i, 1);
             }
         }
