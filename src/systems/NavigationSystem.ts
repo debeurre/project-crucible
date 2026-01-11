@@ -14,7 +14,6 @@ export class NavigationSystem {
             
             // Step 1: Timer Tick
             sprigs.timer[i] -= dt;
-            const currentSpeed = sprigs.speed[i];
 
             // Step 2: The Pulse
             if (sprigs.timer[i] <= 0) {
@@ -92,18 +91,7 @@ export class NavigationSystem {
                 }
             }
 
-            // Step 3: Move (Seek)
-            const dx = sprigs.targetX[i] - sprigs.x[i];
-            const dy = sprigs.targetY[i] - sprigs.y[i];
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist > 1) {
-                sprigs.vx[i] = (dx / dist) * currentSpeed;
-                sprigs.vy[i] = (dy / dist) * currentSpeed;
-            } else {
-                sprigs.vx[i] = 0;
-                sprigs.vy[i] = 0;
-            }
+            // Step 3: Move (Seek) removed - handled by SteeringSystem
         }
     }
 }

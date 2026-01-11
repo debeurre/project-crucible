@@ -3,12 +3,14 @@ import { CONFIG } from './Config';
 import { EntityData } from '../data/EntityData';
 import { Structure } from '../data/StructureData';
 import { Grid } from './Grid';
+import { SpatialHash } from './SpatialHash';
 
 export class WorldState {
     public map: MapData;
     public sprigs: EntityData;
     public structures: Structure[];
     public grid: Grid;
+    public spatialHash: SpatialHash;
     public terrainDirty: boolean = true;
     public nextStructureId: number = 0;
 
@@ -17,6 +19,7 @@ export class WorldState {
         this.sprigs = new EntityData();
         this.structures = [];
         this.grid = new Grid(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
+        this.spatialHash = new SpatialHash(CONFIG.GRID_SIZE * 2);
         
         // Initial Bake
         this.refreshGrid();

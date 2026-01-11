@@ -1,7 +1,8 @@
 import { Application } from 'pixi.js';
 import { WorldState } from './core/WorldState';
 import { RenderSystem } from './systems/RenderSystem';
-import { MovementSystem } from './systems/MovementSystem';
+import { PhysicsSystem } from './systems/PhysicsSystem';
+import { SteeringSystem } from './systems/SteeringSystem';
 import { HiveMindSystem } from './systems/HiveMindSystem';
 import { NavigationSystem } from './systems/NavigationSystem';
 import { ToolManager } from './tools/ToolManager';
@@ -36,7 +37,8 @@ async function init() {
     await TextureManager.init(app);
 
     const renderSystem = new RenderSystem(app, world);
-    const movementSystem = new MovementSystem();
+    const physicsSystem = new PhysicsSystem();
+    const steeringSystem = new SteeringSystem();
     const hiveMindSystem = new HiveMindSystem();
     const navigationSystem = new NavigationSystem();
     const toolManager = new ToolManager(world);
@@ -71,7 +73,8 @@ async function init() {
         hiveMindSystem.update(world);
         flowFieldSystem.update();
         navigationSystem.update(world, dt);
-        movementSystem.update(world, dt);
+        steeringSystem.update(world);
+        physicsSystem.update(world, dt);
         
         renderSystem.activeTool = toolManager.getActiveToolName();
         renderSystem.update();
