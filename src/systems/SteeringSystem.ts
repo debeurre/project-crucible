@@ -1,8 +1,12 @@
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
+import { SpatialHash } from '../core/SpatialHash';
 
 export class SteeringSystem {
     public update(world: WorldState) {
+        if (!world.spatialHash) {
+            world.spatialHash = new SpatialHash(CONFIG.GRID_SIZE * 2);
+        }
         const sprigs = world.sprigs;
         const hash = world.spatialHash;
         
