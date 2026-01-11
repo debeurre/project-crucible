@@ -12,11 +12,15 @@ export class PhysicsSystem {
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
 
+            // Capture Debug Forces (before reset)
+            sprigs.debugAx[i] = sprigs.ax[i];
+            sprigs.debugAy[i] = sprigs.ay[i];
+
             // 1. Integrate Acceleration
             sprigs.vx[i] += sprigs.ax[i] * dt;
             sprigs.vy[i] += sprigs.ay[i] * dt;
 
-            // 2. Determine Friction
+            // 2. Determine Friction & Max Speed
             const gridX = Math.floor(sprigs.x[i] / CONFIG.GRID_SIZE);
             const gridY = Math.floor(sprigs.y[i] / CONFIG.GRID_SIZE);
             
@@ -32,27 +36,26 @@ export class PhysicsSystem {
                 }
             }
 
-            // 3. Apply Friction
-            sprigs.vx[i] *= (1 - friction);
-            sprigs.vy[i] *= (1 - friction);
+            // New Friction Logic: Limit Top Speed
+            const baseMaxSpeed = sprigs.speed[i];
+            const currentMaxSpeed = baseMaxSpeed * (1.0 - friction);
 
-            // 4. Clamp Speed
+            // 3. Clamp Speed (Friction Application)
             const vx = sprigs.vx[i];
             const vy = sprigs.vy[i];
             const speedSq = vx*vx + vy*vy;
-            const maxSpeed = sprigs.speed[i]; // Individual max speed (e.g. wander vs run)
             
-            if (speedSq > maxSpeed * maxSpeed) {
-                const speed = Math.sqrt(speedSq);
-                sprigs.vx[i] = (vx / speed) * maxSpeed;
-                sprigs.vy[i] = (vy / speed) * maxSpeed;
+            if (speedSq > currentMaxSpeed * currentMaxSpeed) {
+                const speed = Math.sqrt(speedSq) || 0.001;
+                sprigs.vx[i] = (vx / speed) * currentMaxSpeed;
+                sprigs.vy[i] = (vy / speed) * currentMaxSpeed;
             }
 
-            // 5. Update Position
+            // 4. Update Position
             const nextX = sprigs.x[i] + sprigs.vx[i] * dt;
             const nextY = sprigs.y[i] + sprigs.vy[i] * dt;
 
-            // 6. Collision Resolution (Wall/Map)
+            // 5. Collision Resolution (Wall/Map)
             const nextCol = Math.floor(nextX / CONFIG.GRID_SIZE);
             const nextRow = Math.floor(nextY / CONFIG.GRID_SIZE);
 
@@ -65,7 +68,7 @@ export class PhysicsSystem {
                  sprigs.y[i] = nextY;
             }
 
-            // 7. Collision with Structures
+            // 6. Collision with Structures
             for (const s of world.structures) {
                 const stats = getStructureStats(s.type);
                 if (stats.solid) {
@@ -94,7 +97,7 @@ export class PhysicsSystem {
                 }
             }
 
-            // 8. Reset Acceleration
+            // 7. Reset Acceleration
             sprigs.ax[i] = 0;
             sprigs.ay[i] = 0;
         }

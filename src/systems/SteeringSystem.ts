@@ -1,8 +1,12 @@
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
+import { SpatialHash } from '../core/SpatialHash';
 
 export class SteeringSystem {
     public update(world: WorldState) {
+        if (!world.spatialHash) {
+            world.spatialHash = new SpatialHash(CONFIG.GRID_SIZE * 2);
+        }
         const sprigs = world.sprigs;
         const hash = world.spatialHash;
         
@@ -34,7 +38,6 @@ export class SteeringSystem {
                 const desireY = (dy / dist) * maxSpeed;
                 
                 // Steer: Desire - Current Velocity
-                // Reynolds Steering = Desired - Velocity
                 const steerX = desireX - sprigs.vx[i];
                 const steerY = desireY - sprigs.vy[i];
 
@@ -62,9 +65,18 @@ export class SteeringSystem {
                 const ndistSq = ndx * ndx + ndy * ndy;
 
                 if (ndistSq > 0 && ndistSq < 40 * 40) {
-                    const ndist = Math.sqrt(ndistSq);
+                    const ndist = Math.sqrt(ndistSq) || 0.001;
                     
-                    // Separation: Push away
+                    // Hard Separation (Anti-Jitter Nudge)
+                    if (ndist < 5.0) {
+                        const nudge = (5.0 - ndist) * 0.5; // Push apart half the overlap
+                        const nx = (ndx / ndist) * nudge;
+                        const ny = (ndy / ndist) * nudge;
+                        sprigs.x[i] += nx;
+                        sprigs.y[i] += ny;
+                    }
+
+                    // Soft Separation: Steering Force
                     // Weight inversely proportional to distance
                     const push = 1.0 / (ndist / 10); 
                     sepX += (ndx / ndist) * push;
@@ -88,8 +100,20 @@ export class SteeringSystem {
                 sepY = (sepY / len) * sprigs.speed[i];
                 
                 // Steer away
-                ax += (sepX - sprigs.vx[i]) * CONFIG.STEER_SEPARATION_WEIGHT;
-                ay += (sepY - sprigs.vy[i]) * CONFIG.STEER_SEPARATION_WEIGHT;
+                let sForceX = (sepX - sprigs.vx[i]);
+                let sForceY = (sepY - sprigs.vy[i]);
+
+                // Clamp Separation Force (Anti-Jitter)
+                const MAX_SEP_FORCE = 100.0;
+                const sForceLenSq = sForceX*sForceX + sForceY*sForceY;
+                if (sForceLenSq > MAX_SEP_FORCE * MAX_SEP_FORCE) {
+                    const sfLen = Math.sqrt(sForceLenSq);
+                    sForceX = (sForceX / sfLen) * MAX_SEP_FORCE;
+                    sForceY = (sForceY / sfLen) * MAX_SEP_FORCE;
+                }
+
+                ax += sForceX * CONFIG.STEER_SEPARATION_WEIGHT;
+                ay += sForceY * CONFIG.STEER_SEPARATION_WEIGHT;
             }
 
             if (cohCount > 0) {

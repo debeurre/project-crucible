@@ -13,6 +13,7 @@ export class RenderSystem {
     private structureGraphics: Graphics;
     private obstacleDebugGraphics: Graphics;
     private hoverGraphics: Graphics;
+    private debugGraphics: Graphics;
     private spriteContainer: Container;
     private container: Container;
     private needsRedraw: boolean = true;
@@ -27,12 +28,14 @@ export class RenderSystem {
         this.structureGraphics = new Graphics();
         this.obstacleDebugGraphics = new Graphics();
         this.hoverGraphics = new Graphics();
+        this.debugGraphics = new Graphics();
         this.spriteContainer = new Container();
         
         this.container.addChild(this.gridGraphics);
         this.container.addChild(this.structureGraphics);
         this.container.addChild(this.obstacleDebugGraphics); 
         this.container.addChild(this.hoverGraphics);
+        this.container.addChild(this.debugGraphics);
         this.container.addChild(this.spriteContainer); 
         this.app.stage.addChild(this.container);
     }
@@ -44,11 +47,9 @@ export class RenderSystem {
             this.world.terrainDirty = false;
         }
 
-        // WARNING: Redrawing all structures via Graphics.clear() every frame is O(N) 
-        // and scales poorly. If the number of structures exceeds ~50, migrate 
-        // to a Container-based Sprite system or use a dirty-flag per-structure.
         this.drawStructures();
         this.drawHover();
+        this.drawDebug();
         this.updateSprigs();
     }
 
@@ -73,6 +74,49 @@ export class RenderSystem {
                 const size = CONFIG.GRID_SIZE;
                 g.rect(col * size, row * size, size, size)
                  .stroke({ width: 2, color: 0x00FF00 });
+            }
+        }
+    }
+
+    private drawDebug() {
+        const g = this.debugGraphics;
+        g.clear();
+        if (!CONFIG.DEBUG_SPRIG_VECTORS) return;
+
+        const sprigs = this.world.sprigs;
+        const count = CONFIG.MAX_SPRIGS;
+
+        for (let i = 0; i < count; i++) {
+            if (sprigs.active[i] === 0) continue;
+
+            const x = sprigs.x[i];
+            const y = sprigs.y[i];
+
+            // 1. Heading (Velocity) - Blue
+            g.moveTo(x, y)
+             .lineTo(x + sprigs.vx[i] * 0.5, y + sprigs.vy[i] * 0.5)
+             .stroke({ width: 2, color: 0x0000FF });
+
+            // 2. Net Force (Acceleration) - Yellow
+            // Scale up for visibility
+            g.moveTo(x, y)
+             .lineTo(x + sprigs.debugAx[i] * 0.5, y + sprigs.debugAy[i] * 0.5)
+             .stroke({ width: 2, color: 0xFFFF00 });
+
+            // 3. Leash Line
+            const homeId = sprigs.homeID[i];
+            if (homeId !== -1) {
+                const home = this.world.structures.find(s => s.id === homeId);
+                if (home) {
+                    const dx = x - home.x;
+                    const dy = y - home.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    const color = dist < CONFIG.LEASH_RADIUS ? 0x00FF00 : 0xFF0000;
+                    g.moveTo(x, y)
+                     .lineTo(home.x, home.y)
+                     .stroke({ width: 1, color: color, alpha: 0.5 });
+                }
             }
         }
     }

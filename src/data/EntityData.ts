@@ -7,6 +7,8 @@ export class EntityData {
     public vy: Float32Array;
     public ax: Float32Array;
     public ay: Float32Array;
+    public debugAx: Float32Array;
+    public debugAy: Float32Array;
     public active: Uint8Array;
     public state: Uint8Array;
     public cargo: Uint8Array;
@@ -26,6 +28,8 @@ export class EntityData {
         this.vy = new Float32Array(size);
         this.ax = new Float32Array(size);
         this.ay = new Float32Array(size);
+        this.debugAx = new Float32Array(size);
+        this.debugAy = new Float32Array(size);
         this.active = new Uint8Array(size);
         this.state = new Uint8Array(size);
         this.cargo = new Uint8Array(size);
