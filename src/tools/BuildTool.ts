@@ -17,7 +17,7 @@ export class BuildTool implements Tool {
         }
 
         world.structures.push({
-            id: world.structures.length + Math.floor(Math.random() * 100000), // Better ID gen
+            id: world.nextStructureId++,
             type: this.currentType,
             x: x,
             y: y,

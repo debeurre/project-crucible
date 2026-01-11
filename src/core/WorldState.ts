@@ -10,6 +10,7 @@ export class WorldState {
     public structures: Structure[];
     public grid: Grid;
     public terrainDirty: boolean = true;
+    public nextStructureId: number = 0;
 
     constructor() {
         this.map = new MapData(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
@@ -34,7 +35,8 @@ export class WorldState {
             height: this.map.height,
             // Convert TypedArray to normal Array for JSON
             terrain: Array.from(this.map.terrain),
-            structures: this.structures
+            structures: this.structures,
+            nextStructureId: this.nextStructureId
         };
         return JSON.stringify(levelData);
     }
@@ -49,6 +51,18 @@ export class WorldState {
 
         // Restore Structures
         this.structures = data.structures;
+        
+        // Restore ID Counter
+        if (typeof data.nextStructureId === 'number') {
+            this.nextStructureId = data.nextStructureId;
+        } else {
+            // Migration for old saves: Find max ID + 1
+            let maxId = 0;
+            for (const s of this.structures) {
+                if (s.id > maxId) maxId = s.id;
+            }
+            this.nextStructureId = maxId + 1;
+        }
 
         // Clear Sprigs (Reset population on load)
         this.sprigs = new EntityData();
