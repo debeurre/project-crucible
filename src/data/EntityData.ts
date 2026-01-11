@@ -12,8 +12,8 @@ export class EntityData {
     public cargo: Uint8Array;
     public targetX: Float32Array;
     public targetY: Float32Array;
-    public homeID: Int16Array;
-    public targetId: Int16Array;
+    public homeID: Int32Array;
+    public targetId: Int32Array;
     public timer: Float32Array;
     public speed: Float32Array;
     public count: number;
@@ -31,8 +31,8 @@ export class EntityData {
         this.cargo = new Uint8Array(size);
         this.targetX = new Float32Array(size);
         this.targetY = new Float32Array(size);
-        this.homeID = new Int16Array(size).fill(-1);
-        this.targetId = new Int16Array(size).fill(-1);
+        this.homeID = new Int32Array(size).fill(-1);
+        this.targetId = new Int32Array(size).fill(-1);
         this.timer = new Float32Array(size);
         this.speed = new Float32Array(size);
         this.count = 0;
