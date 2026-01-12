@@ -39,4 +39,19 @@ export class Stock {
         }
         return total;
     }
+
+    public toJSON() {
+        return {
+            capacity: this.capacity,
+            inventory: Array.from(this.inventory.entries())
+        };
+    }
+
+    public static deserialize(data: any): Stock {
+        const stock = new Stock(data.capacity);
+        if (data.inventory) {
+            stock.inventory = new Map(data.inventory);
+        }
+        return stock;
+    }
 }

@@ -4,6 +4,7 @@ import { EntityData } from '../data/EntityData';
 import { Structure } from '../data/StructureData';
 import { Grid } from './Grid';
 import { SpatialHash } from './SpatialHash';
+import { Stock } from '../components/Stock';
 
 export class WorldState {
     public map: MapData;
@@ -55,6 +56,13 @@ export class WorldState {
         // Restore Structures
         this.structures = data.structures;
         
+        // Rehydrate Stock
+        for (const s of this.structures) {
+            if (s.stock) {
+                s.stock = Stock.deserialize(s.stock);
+            }
+        }
+
         // Restore ID Counter
         if (typeof data.nextStructureId === 'number') {
             this.nextStructureId = data.nextStructureId;
