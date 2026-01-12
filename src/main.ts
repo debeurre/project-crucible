@@ -9,7 +9,7 @@ import { ToolManager } from './tools/ToolManager';
 import { UISystem } from './systems/UISystem';
 import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from './core/Config';
+import { SCREEN_WIDTH, SCREEN_HEIGHT, CONFIG } from './core/Config';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { DEFAULT_LEVEL } from './data/LevelData';
 import { Toolbar } from './tools/Toolbar';
@@ -32,6 +32,18 @@ async function init() {
     const world = new WorldState();
     world.load(JSON.stringify(DEFAULT_LEVEL));
 
+    // Auto-Spawn Sprigs
+    const nest = world.structures.find(s => s.type === 0); // Nest
+    if (nest) {
+        for (let i = 0; i < CONFIG.START_SPRIGS; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * CONFIG.LEASH_RADIUS;
+            const sx = nest.x + Math.cos(angle) * dist;
+            const sy = nest.y + Math.sin(angle) * dist;
+            world.sprigs.spawn(sx, sy);
+        }
+    }
+    
     // Initialize TextureManager before RenderSystem
     await TextureManager.init(app);
 

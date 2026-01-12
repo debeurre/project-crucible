@@ -38,13 +38,16 @@ export class HiveMindSystem {
                 let bestTarget = null;
 
                 if (cargo === 0) {
-                    // Needs Food: Find nearest Cookie with stock
+                    // Needs Food: Find nearest Resource (Cookie/Crumb) with stock
+                    const SCAN_RANGE_SQ = 1000 * 1000;
+                    
                     for (const s of structures) {
-                        if (s.type === StructureType.COOKIE && s.stock && s.stock.count('FOOD') > 0) {
+                        const isResource = (s.type === StructureType.COOKIE || s.type === StructureType.CRUMB);
+                        if (isResource && s.stock && s.stock.count('FOOD') > 0) {
                             const dx = s.x - px;
                             const dy = s.y - py;
                             const distSq = dx*dx + dy*dy;
-                            if (distSq < bestDistSq) {
+                            if (distSq < SCAN_RANGE_SQ && distSq < bestDistSq) {
                                 bestDistSq = distSq;
                                 bestTarget = s;
                             }

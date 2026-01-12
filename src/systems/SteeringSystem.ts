@@ -1,6 +1,7 @@
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
 import { SpatialHash } from '../core/SpatialHash';
+import { getStructureStats } from '../data/StructureData';
 
 export class SteeringSystem {
     public update(world: WorldState) {
@@ -55,6 +56,64 @@ export class SteeringSystem {
                 // If at target, damp velocity
                 ax += -sprigs.vx[i];
                 ay += -sprigs.vy[i];
+            }
+
+            // OBSTACLE AVOIDANCE
+            let avoidX = 0;
+            let avoidY = 0;
+            let avoidCount = 0;
+            const buffer = 40.0;
+
+            for (const s of world.structures) {
+                const stats = getStructureStats(s.type);
+                if (stats.solid) { // Rocks
+                    const sdx = x - s.x;
+                    const sdy = y - s.y;
+                    const sDistSq = sdx*sdx + sdy*sdy;
+                    const combinedRadius = stats.radius + 15.0; // Sprig Radius
+                    const checkDist = combinedRadius + buffer;
+                    
+                    if (sDistSq < checkDist * checkDist) {
+                        const sDist = Math.sqrt(sDistSq) || 0.001;
+                        
+                        // Radial (Away from rock)
+                        const radialX = sdx / sDist;
+                        const radialY = sdy / sDist;
+
+                        // Tangent (Perpendicular) (-y, x)
+                        const t1x = -radialY;
+                        const t1y = radialX;
+                        
+                        // Dot product with velocity to pick side
+                        const dot = t1x * sprigs.vx[i] + t1y * sprigs.vy[i];
+                        const tangentX = dot > 0 ? t1x : -t1x;
+                        const tangentY = dot > 0 ? t1y : -t1y;
+
+                        // Weighted Sum (Slide)
+                        const forceX = (radialX * 0.6) + (tangentX * 0.4);
+                        const forceY = (radialY * 0.6) + (tangentY * 0.4);
+
+                        // Weight by proximity
+                        const weight = 1.0 - ((sDist - combinedRadius) / buffer);
+                        const clampedWeight = Math.max(0, Math.min(1, weight));
+                        
+                        avoidX += forceX * clampedWeight;
+                        avoidY += forceY * clampedWeight;
+                        avoidCount++;
+                    }
+                }
+            }
+
+            if (avoidCount > 0) {
+                // Normalize and Scale
+                const len = Math.sqrt(avoidX*avoidX + avoidY*avoidY) || 1;
+                const maxSpeed = sprigs.speed[i];
+                avoidX = (avoidX / len) * maxSpeed;
+                avoidY = (avoidY / len) * maxSpeed;
+
+                // Steer
+                ax += (avoidX - sprigs.vx[i]) * CONFIG.STEER_AVOID_WEIGHT;
+                ay += (avoidY - sprigs.vy[i]) * CONFIG.STEER_AVOID_WEIGHT;
             }
 
             // NEIGHBORS (Separation / Cohesion)

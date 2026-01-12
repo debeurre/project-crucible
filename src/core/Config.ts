@@ -5,7 +5,7 @@ export const CONFIG = {
     WORLD_HEIGHT: 30,
     // Sprigs
     MAX_SPRIGS: 500,
-    START_SPRIGS: 10,
+    START_SPRIGS: 50,
     MAX_SPEED: 100.0,
     SPRIG_RADIUS: 15.0,
     // Wander
@@ -19,6 +19,7 @@ export const CONFIG = {
     STEER_COHESION_WEIGHT: 0.5,
     STEER_ALIGNMENT_WEIGHT: 0.0,
     STEER_SEEK_WEIGHT: 1.0,
+    STEER_AVOID_WEIGHT: 3.0,
     FRICTION_BASE: 0.0,
     FRICTION_MUD: 0.5,
     FRICTION_WATER: 0.8,
