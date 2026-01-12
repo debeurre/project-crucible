@@ -1,5 +1,5 @@
 {
-  "name": "project-crucible",
+  "name": "project-gardenrealm",
   "version": "1.0.0",
   "description": "",
   "type": "module",
@@ -14,15 +14,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/debeurre/project-crucible.git"
+    "url": "git+https://github.com/debeurre/project-gardenrealm.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/debeurre/project-crucible/issues"
+    "url": "https://github.com/debeurre/project-gardenrealm/issues"
   },
-  "homepage": "https://github.com/debeurre/project-crucible#readme",
+  "homepage": "https://github.com/debeurre/project-gardenrealm#readme",
   "dependencies": {
     "gsap": "^3.14.1",
     "pixi.js": "^8.5.2",
