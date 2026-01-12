@@ -62,7 +62,7 @@ export class SteeringSystem {
             let avoidX = 0;
             let avoidY = 0;
             let avoidCount = 0;
-            const buffer = 40.0;
+            const buffer = 5.0;
 
             for (const s of world.structures) {
                 const stats = getStructureStats(s.type);
