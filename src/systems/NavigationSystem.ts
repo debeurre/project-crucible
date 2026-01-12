@@ -77,7 +77,7 @@ export class NavigationSystem {
                     if (dist < CONFIG.LEASH_RADIUS) {
                         // Inside: Away from home
                         baseAngle = Math.atan2(sy - hy, sx - hx);
-                        variance = (Math.random() - 0.5) * (135 * 2 * DEG_TO_RAD);
+                        variance = (Math.random() - 0.5) * (90 * 2 * DEG_TO_RAD);
                     } else {
                         // Outside: Towards home
                         baseAngle = Math.atan2(hy - sy, hx - sx);

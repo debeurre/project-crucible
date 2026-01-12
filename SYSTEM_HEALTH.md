@@ -1,6 +1,6 @@
 # 🧹 System Health Report
 
-**Generated:** 1/11/2026, 6:37:43 PM
+**Generated:** 1/11/2026, 7:24:13 PM
 **Total Source Files:** 29
 
 ### Legend
@@ -10,9 +10,9 @@
 
 | File | LOC | Status | Issues |
 | :--- | :---: | :---: | :--- |
-| `src/systems/RenderSystem.ts` | 220 | 🟡 WARNING |  |
+| `src/systems/RenderSystem.ts` | 219 | 🟡 WARNING |  |
 | `src/tools/Toolbar.ts` | 198 | 🟢 HEALTHY |  |
-| `src/systems/SteeringSystem.ts` | 138 | 🟢 HEALTHY |  |
+| `src/systems/SteeringSystem.ts` | 146 | 🟢 HEALTHY |  |
 | `src/systems/HiveMindSystem.ts` | 126 | 🟢 HEALTHY |  |
 | `src/systems/PhysicsSystem.ts` | 105 | 🟢 HEALTHY |  |
 | `src/systems/NavigationSystem.ts` | 97 | 🟢 HEALTHY |  |
