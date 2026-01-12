@@ -9,13 +9,24 @@ export class HiveMindSystem {
         
         if (!structures) return;
 
-        // 1. Nest Logic: Spawning
+        // 0. Pre-filter Lists (Optimization)
+        const availableResources = [];
+        const availableNests = [];
+
         for (const s of structures) {
-            if (s.type === StructureType.NEST && s.stock) {
-                if (s.stock.count('FOOD') >= 10) {
-                    // Try to spawn
-                    if (world.sprigs.spawn(s.x, s.y) !== -1) {
-                        s.stock.remove('FOOD', 10);
+            if (s.stock) {
+                if (s.type === StructureType.NEST) {
+                    availableNests.push(s);
+                    // Nest Logic: Spawning
+                    if (s.stock.count('FOOD') >= 10) {
+                        if (world.sprigs.spawn(s.x, s.y) !== -1) {
+                            s.stock.remove('FOOD', 10);
+                        }
+                    }
+                } else if (s.type === StructureType.COOKIE || s.type === StructureType.CRUMB) {
+                    // Only list resources that have food
+                    if (s.stock.count('FOOD') > 0) {
+                        availableResources.push(s);
                     }
                 }
             }
@@ -23,6 +34,7 @@ export class HiveMindSystem {
 
         // 2. Sprig Logic
         const count = CONFIG.MAX_SPRIGS;
+        const SCAN_RANGE_SQ = 1000 * 1000;
 
         for (let i = 0; i < count; i++) {
             if (sprigs.active[i] === 0) continue;
@@ -38,19 +50,14 @@ export class HiveMindSystem {
                 let bestTarget = null;
 
                 if (cargo === 0) {
-                    // Needs Food: Find nearest Resource (Cookie/Crumb) with stock
-                    const SCAN_RANGE_SQ = 1000 * 1000;
-                    
-                    for (const s of structures) {
-                        const isResource = (s.type === StructureType.COOKIE || s.type === StructureType.CRUMB);
-                        if (isResource && s.stock && s.stock.count('FOOD') > 0) {
-                            const dx = s.x - px;
-                            const dy = s.y - py;
-                            const distSq = dx*dx + dy*dy;
-                            if (distSq < SCAN_RANGE_SQ && distSq < bestDistSq) {
-                                bestDistSq = distSq;
-                                bestTarget = s;
-                            }
+                    // Needs Food: Find nearest Resource
+                    for (const s of availableResources) {
+                        const dx = s.x - px;
+                        const dy = s.y - py;
+                        const distSq = dx*dx + dy*dy;
+                        if (distSq < SCAN_RANGE_SQ && distSq < bestDistSq) {
+                            bestDistSq = distSq;
+                            bestTarget = s;
                         }
                     }
                     if (bestTarget) {
@@ -61,15 +68,13 @@ export class HiveMindSystem {
                     }
                 } else {
                     // Has Food: Find nearest Nest
-                    for (const s of structures) {
-                        if (s.type === StructureType.NEST) {
-                            const dx = s.x - px;
-                            const dy = s.y - py;
-                            const distSq = dx*dx + dy*dy;
-                            if (distSq < bestDistSq) {
-                                bestDistSq = distSq;
-                                bestTarget = s;
-                            }
+                    for (const s of availableNests) {
+                        const dx = s.x - px;
+                        const dy = s.y - py;
+                        const distSq = dx*dx + dy*dy;
+                        if (distSq < bestDistSq) {
+                            bestDistSq = distSq;
+                            bestTarget = s;
                         }
                     }
                     if (bestTarget) {
@@ -97,6 +102,7 @@ export class HiveMindSystem {
                     // Target destroyed
                     sprigs.state[i] = 0;
                     sprigs.targetId[i] = -1;
+                    sprigs.timer[i] = 0; // Force immediate re-think
                     continue;
                 }
 
@@ -110,9 +116,10 @@ export class HiveMindSystem {
                         if (target.stock && target.stock.remove('FOOD', 1)) {
                             sprigs.cargo[i] = 1;
                         }
-                        // Whether successful or not (maybe emptied just now), return to IDLE to re-evaluate
+                        // Reset to IDLE
                         sprigs.state[i] = 0;
                         sprigs.targetId[i] = -1;
+                        sprigs.timer[i] = 0; // Force Wander Logic to pick new target immediately
                     } else if (state === 2) {
                         // At Sink (Nest)
                         if (target.stock && target.stock.add('FOOD', 1)) {
@@ -120,6 +127,7 @@ export class HiveMindSystem {
                         }
                         sprigs.state[i] = 0;
                         sprigs.targetId[i] = -1;
+                        sprigs.timer[i] = 0; // Force Wander Logic to pick new target immediately
                     }
                 }
             }
