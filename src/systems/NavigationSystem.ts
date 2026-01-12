@@ -12,6 +12,9 @@ export class NavigationSystem {
         for (let i = 0; i < sprigs.active.length; i++) {
             if (sprigs.active[i] === 0) continue;
             
+            // Only wander if IDLE (State 0)
+            if (sprigs.state[i] !== 0) continue;
+
             // Step 1: Timer Tick
             sprigs.timer[i] -= dt;
 
