@@ -32,12 +32,20 @@ export class SteeringSystem {
             // Only seek if distance > 1
             if (distSq > 1) {
                 const dist = Math.sqrt(distSq);
-                // Desire: Max Speed towards target
-                const maxSpeed = sprigs.speed[i];
-                const desireX = (dx / dist) * maxSpeed;
-                const desireY = (dy / dist) * maxSpeed;
+                
+                // ARRIVAL LOGIC
+                const SLOWING_RADIUS = 50.0;
+                let desiredSpeed = sprigs.speed[i];
+                if (dist < SLOWING_RADIUS) {
+                    desiredSpeed = desiredSpeed * (dist / SLOWING_RADIUS);
+                }
+
+                // Desire: Scaled Speed towards target
+                const desireX = (dx / dist) * desiredSpeed;
+                const desireY = (dy / dist) * desiredSpeed;
                 
                 // Steer: Desire - Current Velocity
+                // Reynolds Steering = Desired - Velocity
                 const steerX = desireX - sprigs.vx[i];
                 const steerY = desireY - sprigs.vy[i];
 
