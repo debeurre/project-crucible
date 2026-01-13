@@ -110,13 +110,22 @@ export class JobExecutionSystem {
         
         const targetId = world.jobs.targetId[jobId];
         const source = structures.find(s => s.id === targetId);
+        const carrying = sprigs.stock[i].count('FOOD') > 0;
 
-        if (!source || !source.stock || (source.stock.count('FOOD') <= 0 && sprigs.stock[i].count('FOOD') <= 0)) {
+        // Validation: If source is gone/empty AND we aren't carrying anything, abort.
+        if ((!source || !source.stock || source.stock.count('FOOD') <= 0) && !carrying) {
             this.completeJob(world, i, jobId);
             return;
         }
 
-        if (state === SprigState.MOVE_TO_SOURCE) {
+        // If source is bad but we are carrying, ensure we are delivering
+        if ((!source || !source.stock || source.stock.count('FOOD') <= 0) && carrying && state !== SprigState.MOVE_TO_SINK) {
+            sprigs.state[i] = SprigState.MOVE_TO_SINK;
+        }
+
+        if (sprigs.state[i] === SprigState.MOVE_TO_SOURCE) {
+            if (!source) return; // Should be handled above, but safety first
+
             sprigs.targetX[i] = source.x;
             sprigs.targetY[i] = source.y;
             
@@ -126,14 +135,14 @@ export class JobExecutionSystem {
             const range = getStructureStats(source.type).radius + 15;
 
             if (distSq < range * range) {
-                if (source.stock.remove('FOOD', 1)) {
+                if (source.stock && source.stock.remove('FOOD', 1)) {
                     sprigs.stock[i].add('FOOD', 1);
                     sprigs.state[i] = SprigState.MOVE_TO_SINK;
                 } else {
                     this.completeJob(world, i, jobId);
                 }
             }
-        } else if (state === SprigState.MOVE_TO_SINK) {
+        } else if (sprigs.state[i] === SprigState.MOVE_TO_SINK) {
             let nest = null;
             if (sprigs.homeID[i] !== -1) {
                 nest = structures.find(s => s.id === sprigs.homeID[i]);
@@ -157,8 +166,8 @@ export class JobExecutionSystem {
                     nest.stock.add('FOOD', 1);
                 }
                 
-                // Repeat logic
-                if (source.stock.count('FOOD') > 0) {
+                // Repeat logic: Check if source is still valid
+                if (source && source.stock && source.stock.count('FOOD') > 0) {
                     sprigs.state[i] = SprigState.MOVE_TO_SOURCE;
                 } else {
                     this.completeJob(world, i, jobId);
