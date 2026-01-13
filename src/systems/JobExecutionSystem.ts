@@ -4,6 +4,8 @@ import { StructureType, getStructureStats } from '../data/StructureData';
 import { CONFIG } from '../core/Config';
 import { SprigState } from '../data/SprigState';
 
+const DEG_TO_RAD = Math.PI / 180;
+
 export class JobExecutionSystem {
     public update(world: WorldState, dt: number) {
         const sprigs = world.sprigs;
@@ -17,7 +19,7 @@ export class JobExecutionSystem {
             const jobId = sprigs.jobId[i];
             
             if (jobId === -1) {
-                this.handleIdle(sprigs, i, dt);
+                this.handleIdle(world, i, dt);
                 continue;
             }
 
@@ -34,13 +36,70 @@ export class JobExecutionSystem {
         }
     }
 
-    private handleIdle(sprigs: any, i: number, dt: number) {
+    private handleIdle(world: WorldState, i: number, dt: number) {
+        const sprigs = world.sprigs;
+        const structures = world.structures;
+
+        // 1. Find Home if homeless
+        if (sprigs.homeID[i] === -1) {
+             let bestDistSq = Infinity;
+             let bestNest = null;
+             for (const s of structures) {
+                 if (s.type === StructureType.NEST) {
+                     const dx = sprigs.x[i] - s.x;
+                     const dy = sprigs.y[i] - s.y;
+                     const distSq = dx*dx + dy*dy;
+                     if (distSq < bestDistSq) {
+                         bestDistSq = distSq;
+                         bestNest = s;
+                     }
+                 }
+             }
+             if (bestNest) {
+                 sprigs.homeID[i] = bestNest.id;
+             }
+        }
+
+        // 2. Wander Logic
         sprigs.timer[i] -= dt;
         if (sprigs.timer[i] <= 0) {
             sprigs.timer[i] = CONFIG.WANDER_TMIN + Math.random() * (CONFIG.WANDER_TMAX - CONFIG.WANDER_TMIN);
-            const angle = Math.random() * Math.PI * 2;
-            sprigs.targetX[i] = sprigs.x[i] + Math.cos(angle) * CONFIG.WANDER_DIST;
-            sprigs.targetY[i] = sprigs.y[i] + Math.sin(angle) * CONFIG.WANDER_DIST;
+            
+            const homeId = sprigs.homeID[i];
+            const home = homeId !== -1 ? structures.find(s => s.id === homeId) : null;
+
+            if (home) {
+                // Leash Logic
+                const sx = sprigs.x[i];
+                const sy = sprigs.y[i];
+                const hx = home.x;
+                const hy = home.y;
+                const dx = sx - hx;
+                const dy = sy - hy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                let baseAngle = 0;
+                let variance = 0;
+
+                if (dist < CONFIG.LEASH_RADIUS) {
+                    // Inside: Away from home
+                    baseAngle = Math.atan2(sy - hy, sx - hx);
+                    variance = (Math.random() - 0.5) * (90 * 2 * DEG_TO_RAD);
+                } else {
+                    // Outside: Towards home
+                    baseAngle = Math.atan2(hy - sy, hx - sx);
+                    variance = (Math.random() - 0.5) * (45 * 2 * DEG_TO_RAD);
+                }
+
+                const angle = baseAngle + variance;
+                sprigs.targetX[i] = sx + Math.cos(angle) * CONFIG.WANDER_DIST;
+                sprigs.targetY[i] = sy + Math.sin(angle) * CONFIG.WANDER_DIST;
+            } else {
+                // Random Walk (Panic)
+                const angle = Math.random() * Math.PI * 2;
+                sprigs.targetX[i] = sprigs.x[i] + Math.cos(angle) * CONFIG.WANDER_DIST;
+                sprigs.targetY[i] = sprigs.y[i] + Math.sin(angle) * CONFIG.WANDER_DIST;
+            }
         }
     }
 
