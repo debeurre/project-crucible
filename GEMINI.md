@@ -25,6 +25,7 @@ As of JAN-09-2026: Primitives rebuilt. Level editor and other devtooling enhance
 - **Strict TypeScript:** No `any`. Use interfaces.
 - **Config-Driven:** All "magic numbers" (speed, colors, spawn rates) go into `src/config.ts`.
 - **Shell Safety:** DO NOT chain shell commands with `&&`. Run them sequentially.
+- **No Hidden Effects:** Avoid Event Emitters/Listeners for game logic. Prefer polling or direct function calls. Hidden side effects make debugging difficult.
 - **Code Bonsai:** Do not exceed 300 LOC per file. If unavoidable, report to developer and/or run `npm run janitor` to monitor health.
 
 ## 4. ARCHITECTURE (STRICT)
