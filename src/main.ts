@@ -3,8 +3,8 @@ import { WorldState } from './core/WorldState';
 import { RenderSystem } from './systems/RenderSystem';
 import { PhysicsSystem } from './systems/PhysicsSystem';
 import { SteeringSystem } from './systems/SteeringSystem';
-import { HiveMindSystem } from './systems/HiveMindSystem';
-import { NavigationSystem } from './systems/NavigationSystem';
+import { JobDispatchSystem } from './systems/JobDispatchSystem';
+import { JobExecutionSystem } from './systems/JobExecutionSystem';
 import { ToolManager } from './tools/ToolManager';
 import { UISystem } from './systems/UISystem';
 import { TextureManager } from './core/TextureManager';
@@ -50,8 +50,8 @@ async function init() {
     const renderSystem = new RenderSystem(app, world);
     const physicsSystem = new PhysicsSystem();
     const steeringSystem = new SteeringSystem();
-    const hiveMindSystem = new HiveMindSystem();
-    const navigationSystem = new NavigationSystem();
+    const jobDispatchSystem = new JobDispatchSystem();
+    const jobExecutionSystem = new JobExecutionSystem();
     const toolManager = new ToolManager(world);
     const uiSystem = new UISystem(app);
     const flowFieldSystem = new FlowFieldSystem();
@@ -79,9 +79,9 @@ async function init() {
     app.ticker.add(() => {
         const dt = app.ticker.deltaMS / 1000;
         toolManager.update(world);
-        hiveMindSystem.update(world);
+        jobDispatchSystem.update(world);
+        jobExecutionSystem.update(world, dt);
         flowFieldSystem.update();
-        navigationSystem.update(world, dt);
         steeringSystem.update(world);
         physicsSystem.update(world, dt);
         

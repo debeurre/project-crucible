@@ -5,11 +5,13 @@ import { Structure } from '../data/StructureData';
 import { Grid } from './Grid';
 import { SpatialHash } from './SpatialHash';
 import { Stock } from '../components/Stock';
+import { JobData } from '../data/JobData';
 
 export class WorldState {
     public map: MapData;
     public sprigs: EntityData;
     public structures: Structure[];
+    public jobs: JobData;
     public grid: Grid;
     public spatialHash: SpatialHash;
     public terrainDirty: boolean = true;
@@ -19,6 +21,7 @@ export class WorldState {
         this.map = new MapData(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
         this.sprigs = new EntityData();
         this.structures = [];
+        this.jobs = new JobData();
         this.grid = new Grid(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
         this.spatialHash = new SpatialHash(CONFIG.GRID_SIZE * 2);
         
