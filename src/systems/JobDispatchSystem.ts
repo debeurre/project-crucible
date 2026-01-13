@@ -1,6 +1,6 @@
 import { WorldState } from '../core/WorldState';
 import { StructureType } from '../data/StructureData';
-import { JobType } from '../data/JobData';
+import { JobType, JobData } from '../data/JobData';
 
 export class JobDispatchSystem {
     private frameCount: number = 0;
@@ -8,6 +8,10 @@ export class JobDispatchSystem {
     public update(world: WorldState) {
         this.frameCount++;
         if (this.frameCount % 10 !== 0) return; // Run every 10 frames
+
+        if (!world.jobs) {
+            world.jobs = new JobData();
+        }
 
         const jobs = world.jobs;
         const sprigs = world.sprigs;
