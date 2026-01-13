@@ -155,7 +155,7 @@ export class RenderSystem {
                 if (Math.abs(sprigs.vx[i]) > 0.01 || Math.abs(sprigs.vy[i]) > 0.01) {
                      sprite.rotation = Math.atan2(sprigs.vy[i], sprigs.vx[i]) + 1.57;
                 }
-                sprite.tint = sprigs.cargo[i] === 1 ? 0xFF69B4 : 0x00FF00;
+                sprite.tint = sprigs.stock[i].count('FOOD') > 0 ? 0xFF69B4 : 0x00FF00;
                 
                 // Calculate scale: Target Diameter / Texture Visual Diameter (36px)
                 const scale = (CONFIG.SPRIG_RADIUS * 2) / 36;

@@ -52,7 +52,7 @@ export class JobExecutionSystem {
         const targetId = world.jobs.targetId[jobId];
         const source = structures.find(s => s.id === targetId);
 
-        if (!source || !source.stock || source.stock.count('FOOD') <= 0) {
+        if (!source || !source.stock || (source.stock.count('FOOD') <= 0 && sprigs.stock[i].count('FOOD') <= 0)) {
             this.completeJob(world, i, jobId);
             return;
         }
@@ -68,7 +68,7 @@ export class JobExecutionSystem {
 
             if (distSq < range * range) {
                 if (source.stock.remove('FOOD', 1)) {
-                    sprigs.cargo[i] = 1;
+                    sprigs.stock[i].add('FOOD', 1);
                     sprigs.state[i] = SprigState.MOVE_TO_SINK;
                 } else {
                     this.completeJob(world, i, jobId);
@@ -94,8 +94,9 @@ export class JobExecutionSystem {
             const range = getStructureStats(nest.type).radius + 15;
 
             if (distSq < range * range) {
-                if (nest.stock) nest.stock.add('FOOD', 1);
-                sprigs.cargo[i] = 0;
+                if (nest.stock && sprigs.stock[i].remove('FOOD', 1)) {
+                    nest.stock.add('FOOD', 1);
+                }
                 
                 // Repeat logic
                 if (source.stock.count('FOOD') > 0) {
@@ -105,7 +106,6 @@ export class JobExecutionSystem {
                 }
             }
         } else {
-            // Default/Fallback
             sprigs.state[i] = SprigState.MOVE_TO_SOURCE;
         }
     }

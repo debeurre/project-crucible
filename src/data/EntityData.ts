@@ -1,5 +1,6 @@
 import { CONFIG } from '../core/Config';
 import { SprigState } from './SprigState';
+import { Stock } from '../components/Stock';
 
 export class EntityData {
     public x: Float32Array;
@@ -12,7 +13,7 @@ export class EntityData {
     public debugAy: Float32Array;
     public active: Uint8Array;
     public state: Uint8Array;
-    public cargo: Uint8Array;
+    public stock: Stock[];
     public targetX: Float32Array;
     public targetY: Float32Array;
     public homeID: Int32Array;
@@ -34,7 +35,7 @@ export class EntityData {
         this.debugAy = new Float32Array(size);
         this.active = new Uint8Array(size);
         this.state = new Uint8Array(size);
-        this.cargo = new Uint8Array(size);
+        this.stock = Array.from({ length: size }, () => new Stock(1));
         this.targetX = new Float32Array(size);
         this.targetY = new Float32Array(size);
         this.homeID = new Int32Array(size).fill(-1);
@@ -56,7 +57,7 @@ export class EntityData {
                 this.ay[i] = 0;
                 this.active[i] = 1;
                 this.state[i] = SprigState.IDLE; 
-                this.cargo[i] = 0;
+                this.stock[i].remove('FOOD', this.stock[i].count('FOOD')); // Clear stock
                 this.targetX[i] = startX;
                 this.targetY[i] = startY;
                 this.homeID[i] = -1;
