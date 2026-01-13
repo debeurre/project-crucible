@@ -1,7 +1,7 @@
 # 🧹 System Health Report
 
-**Generated:** 1/12/2026, 2:08:23 AM
-**Total Source Files:** 29
+**Generated:** 1/13/2026, 12:13:17 PM
+**Total Source Files:** 30
 
 ### Legend
 - 🟢 Healthy (< 200 LOC)
@@ -13,13 +13,14 @@
 | `src/systems/RenderSystem.ts` | 219 | 🟡 WARNING |  |
 | `src/systems/SteeringSystem.ts` | 205 | 🟡 WARNING |  |
 | `src/tools/Toolbar.ts` | 198 | 🟢 HEALTHY |  |
-| `src/systems/HiveMindSystem.ts` | 129 | 🟢 HEALTHY |  |
+| `src/systems/JobExecutionSystem.ts` | 130 | 🟢 HEALTHY |  |
 | `src/systems/PhysicsSystem.ts` | 105 | 🟢 HEALTHY |  |
-| `src/systems/NavigationSystem.ts` | 100 | 🟢 HEALTHY |  |
 | `src/main.ts` | 96 | 🟢 HEALTHY |  |
-| `src/core/WorldState.ts` | 84 | 🟢 HEALTHY |  |
-| `src/data/EntityData.ts` | 82 | 🟢 HEALTHY |  |
+| `src/core/WorldState.ts` | 87 | 🟢 HEALTHY |  |
+| `src/systems/JobDispatchSystem.ts` | 87 | 🟢 HEALTHY |  |
+| `src/data/EntityData.ts` | 85 | 🟢 HEALTHY |  |
 | `src/tools/ToolManager.ts` | 82 | 🟢 HEALTHY |  |
+| `src/data/JobData.ts` | 77 | 🟢 HEALTHY |  |
 | `src/tools/TerrainTool.ts` | 74 | 🟢 HEALTHY |  |
 | `src/core/Grid.ts` | 73 | 🟢 HEALTHY |  |
 | `src/core/SpatialHash.ts` | 69 | 🟢 HEALTHY |  |
