@@ -1,7 +1,7 @@
 import { MapData } from '../data/MapData';
 import { CONFIG } from './Config';
 import { EntityData } from '../data/EntityData';
-import { Structure, StructureType } from '../data/StructureData';
+import { Structure, createStructure } from '../data/StructureData';
 import { Grid } from './Grid';
 import { SpatialHash } from './SpatialHash';
 import { Stock } from '../components/Stock';
@@ -57,25 +57,20 @@ export class WorldState {
         this.map.terrain = new Uint8Array(data.terrain);
 
         // Restore Structures
-        this.structures = data.structures;
-        
-        // Rehydrate Stock
-        for (const s of this.structures) {
-            if (s.stock) {
-                s.stock = Stock.deserialize(s.stock);
-            } else {
-                // Initialize default stock if missing (e.g. from old save or default level)
-                if (s.type === StructureType.NEST) {
-                    s.stock = new Stock(Infinity);
-                } else if (s.type === StructureType.COOKIE) {
-                    s.stock = new Stock(500);
-                    // Note: We don't add food here because if it was saved without stock, 
-                    // it might be a bug or intended. But for DEFAULT_LEVEL, we might want it.
-                    // However, I updated LevelData to include stock for the cookie.
-                    // But for the Nest, it has no stock in LevelData.
-                }
+        this.structures = data.structures.map((loadedS: any) => {
+            // 1. Create default template
+            const s = createStructure(loadedS.type, loadedS.x, loadedS.y);
+            
+            // 2. Override with saved ID and data
+            s.id = loadedS.id;
+
+            // 3. Hydrate Stock if present
+            if (loadedS.stock) {
+                s.stock = Stock.deserialize(loadedS.stock);
             }
-        }
+            
+            return s;
+        });
 
         // Restore ID Counter
         if (typeof data.nextStructureId === 'number') {

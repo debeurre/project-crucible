@@ -35,3 +35,26 @@ export interface Structure {
 export const getStructureStats = (type: StructureType): StructureStats => {
     return STRUCTURE_STATS[type];
 };
+
+export function createStructure(type: StructureType, x: number, y: number): Structure {
+    const structure: Structure = {
+        id: -1, // ID should be assigned by WorldState or Tool
+        type,
+        x,
+        y
+    };
+
+    // Apply Defaults
+    if (type === StructureType.NEST) {
+        structure.stock = new Stock(Infinity);
+    } else if (type === StructureType.COOKIE) {
+        structure.stock = new Stock(500);
+        structure.stock.add('FOOD', 500);
+    } else if (type === StructureType.CRUMB) {
+        structure.stock = new Stock(50);
+        structure.stock.add('FOOD', 50);
+    } 
+    // Rocks have no stock by default
+
+    return structure;
+}

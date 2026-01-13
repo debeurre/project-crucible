@@ -1,28 +1,14 @@
 import { Tool, ToolOption } from './Tool';
 import { WorldState } from '../core/WorldState';
-import { StructureType, getStructureStats, STRUCTURE_STATS } from '../data/StructureData';
-import { Stock } from '../components/Stock';
+import { StructureType, getStructureStats, STRUCTURE_STATS, createStructure } from '../data/StructureData';
 
 export class BuildTool implements Tool {
     private currentType: StructureType = StructureType.NEST;
 
     public onDown(world: WorldState, x: number, y: number): void {
-        let stock: Stock | undefined;
-
-        if (this.currentType === StructureType.NEST) {
-            stock = new Stock(Infinity);
-        } else if (this.currentType === StructureType.COOKIE) {
-            stock = new Stock(500);
-            stock.add('FOOD', 500);
-        }
-
-        world.structures.push({
-            id: world.nextStructureId++,
-            type: this.currentType,
-            x: x,
-            y: y,
-            stock: stock
-        });
+        const structure = createStructure(this.currentType, x, y);
+        structure.id = world.nextStructureId++;
+        world.structures.push(structure);
         world.refreshGrid();
     }
 
