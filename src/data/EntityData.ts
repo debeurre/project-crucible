@@ -1,4 +1,5 @@
 import { CONFIG } from '../core/Config';
+import { SprigState } from './SprigState';
 
 export class EntityData {
     public x: Float32Array;
@@ -54,7 +55,7 @@ export class EntityData {
                 this.ax[i] = 0;
                 this.ay[i] = 0;
                 this.active[i] = 1;
-                this.state[i] = 0; 
+                this.state[i] = SprigState.IDLE; 
                 this.cargo[i] = 0;
                 this.targetX[i] = startX;
                 this.targetY[i] = startY;

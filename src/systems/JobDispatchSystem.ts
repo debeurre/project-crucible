@@ -1,6 +1,7 @@
 import { WorldState } from '../core/WorldState';
 import { StructureType } from '../data/StructureData';
 import { JobType, JobData } from '../data/JobData';
+import { SprigState } from '../data/SprigState';
 
 export class JobDispatchSystem {
     private frameCount: number = 0;
@@ -81,8 +82,8 @@ export class JobDispatchSystem {
                     // Assign
                     jobs.assign(j, bestWorkerId);
                     sprigs.jobId[bestWorkerId] = j;
-                    // Reset worker state to INIT
-                    sprigs.state[bestWorkerId] = 0; 
+                    // Reset worker state to MOVE_TO_SOURCE
+                    sprigs.state[bestWorkerId] = SprigState.MOVE_TO_SOURCE; 
                 }
             }
         }
