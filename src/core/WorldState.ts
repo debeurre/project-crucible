@@ -1,7 +1,7 @@
 import { MapData } from '../data/MapData';
 import { CONFIG } from './Config';
 import { EntityData } from '../data/EntityData';
-import { Structure } from '../data/StructureData';
+import { Structure, StructureType } from '../data/StructureData';
 import { Grid } from './Grid';
 import { SpatialHash } from './SpatialHash';
 import { Stock } from '../components/Stock';
@@ -63,6 +63,17 @@ export class WorldState {
         for (const s of this.structures) {
             if (s.stock) {
                 s.stock = Stock.deserialize(s.stock);
+            } else {
+                // Initialize default stock if missing (e.g. from old save or default level)
+                if (s.type === StructureType.NEST) {
+                    s.stock = new Stock(Infinity);
+                } else if (s.type === StructureType.COOKIE) {
+                    s.stock = new Stock(500);
+                    // Note: We don't add food here because if it was saved without stock, 
+                    // it might be a bug or intended. But for DEFAULT_LEVEL, we might want it.
+                    // However, I updated LevelData to include stock for the cookie.
+                    // But for the Nest, it has no stock in LevelData.
+                }
             }
         }
 
