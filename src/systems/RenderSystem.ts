@@ -1,7 +1,7 @@
-import { Application, Graphics, Container, Sprite } from 'pixi.js';
+import { Application, Graphics, Container, Sprite, Text, TextStyle } from 'pixi.js';
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
-import { getStructureStats } from '../data/StructureData';
+import { getStructureStats, StructureType } from '../data/StructureData';
 import { TextureManager } from '../core/TextureManager';
 import { InputState } from '../core/InputState';
 import { Terrain } from '../data/MapData';
@@ -16,6 +16,8 @@ export class RenderSystem {
     private debugGraphics: Graphics;
     private spriteContainer: Container;
     private container: Container;
+    private labelContainer: Container;
+    private structureLabels: Map<number, Text> = new Map();
     private needsRedraw: boolean = true;
     private sprites: Map<number, Sprite> = new Map();
     public activeTool: string = '';
@@ -30,12 +32,14 @@ export class RenderSystem {
         this.hoverGraphics = new Graphics();
         this.debugGraphics = new Graphics();
         this.spriteContainer = new Container();
+        this.labelContainer = new Container();
         
         this.container.addChild(this.gridGraphics);
         this.container.addChild(this.structureGraphics);
         this.container.addChild(this.obstacleDebugGraphics); 
         this.container.addChild(this.spriteContainer); // Sprites below debug vectors
         this.container.addChild(this.debugGraphics);   // Debug vectors on top
+        this.container.addChild(this.labelContainer);  // Labels on top of vectors
         this.container.addChild(this.hoverGraphics);   // UI/Cursor on very top
         
         this.app.stage.addChild(this.container);
@@ -50,7 +54,11 @@ export class RenderSystem {
 
         this.drawStructures();
         this.updateSprigs();
-        this.drawDebug();
+        
+        this.debugGraphics.clear();
+        this.drawDebugVectors();
+        this.drawStructureLabels();
+        
         this.drawHover();
     }
 
@@ -79,10 +87,9 @@ export class RenderSystem {
         }
     }
 
-    private drawDebug() {
-        const g = this.debugGraphics;
-        g.clear();
+    private drawDebugVectors() {
         if (!CONFIG.DEBUG_SPRIG_VECTORS) return;
+        const g = this.debugGraphics;
 
         const sprigs = this.world.sprigs;
         const count = CONFIG.MAX_SPRIGS;
@@ -126,6 +133,71 @@ export class RenderSystem {
                  .lineTo(sprigs.targetX[i], sprigs.targetY[i])
                  .stroke({ width: 1, color: 0xFF00FF });
             }
+        }
+    }
+
+    private drawStructureLabels() {
+        if (!CONFIG.DEBUG_STRUCTURE_LABELS) {
+            this.labelContainer.visible = false;
+            return;
+        }
+        this.labelContainer.visible = true;
+
+        const structures = this.world.structures;
+        
+        // Remove labels for dead structures
+        for (const [id, text] of this.structureLabels) {
+            if (!structures.find(s => s.id === id)) {
+                this.labelContainer.removeChild(text);
+                text.destroy();
+                this.structureLabels.delete(id);
+            }
+        }
+
+        // Update/Create labels
+        for (const s of structures) {
+            let text = this.structureLabels.get(s.id);
+            if (!text) {
+                const style = new TextStyle({
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    fill: '#ffffff',
+                    stroke: { color: '#000000', width: 2 }
+                });
+                text = new Text({ text: '', style });
+                this.labelContainer.addChild(text);
+                this.structureLabels.set(s.id, text);
+            }
+
+            // Build String
+            let content = `ID: ${s.id}\nType: ${getStructureStats(s.type).name}`;
+            if (s.stock) {
+                const inventory = s.stock.toJSON().inventory; // [ [key, val], ... ]
+                for (const [key, val] of inventory) {
+                    if (val > 0) {
+                        content += `\n${key}: ${val}`;
+                    }
+                }
+            }
+            if (s.type === StructureType.NEST) {
+                let housing = 0;
+                const sprigs = this.world.sprigs;
+                for(let i=0; i<sprigs.active.length; i++) {
+                    if (sprigs.active[i] && sprigs.homeID[i] === s.id) housing++;
+                }
+                content += `\nHousing: ${housing}`;
+            }
+
+            text.text = content;
+            text.x = s.x + 15;
+            text.y = s.y - 15;
+
+            // Draw background rect in debugGraphics
+            // Note: Text metrics are available but expensive to query every frame?
+            // width/height of text object should be available.
+            const w = text.width;
+            const h = text.height;
+            this.debugGraphics.rect(text.x - 2, text.y - 2, w + 4, h + 4).fill({ color: 0x000000, alpha: 0.5 });
         }
     }
 

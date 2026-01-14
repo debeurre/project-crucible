@@ -115,12 +115,32 @@ export class Toolbar {
         });
 
         const label = document.createElement('label');
-        label.textContent = 'DEBUG VIZ';
+        label.textContent = 'VECTORS';
         label.style.cursor = 'pointer';
         label.addEventListener('click', () => checkbox.click());
 
         toggleRow.appendChild(checkbox);
         toggleRow.appendChild(label);
+
+        // Labels Toggle
+        const checkbox2 = document.createElement('input');
+        checkbox2.type = 'checkbox';
+        checkbox2.checked = CONFIG.DEBUG_STRUCTURE_LABELS;
+        checkbox2.style.cursor = 'pointer';
+        checkbox2.style.marginLeft = '10px';
+
+        checkbox2.addEventListener('change', (e) => {
+            CONFIG.DEBUG_STRUCTURE_LABELS = (e.target as HTMLInputElement).checked;
+        });
+
+        const label2 = document.createElement('label');
+        label2.textContent = 'LABELS';
+        label2.style.cursor = 'pointer';
+        label2.addEventListener('click', () => checkbox2.click());
+
+        toggleRow.appendChild(checkbox2);
+        toggleRow.appendChild(label2);
+
         this.container.appendChild(toggleRow);
     }
 
