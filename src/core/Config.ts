@@ -8,7 +8,7 @@ export const CONFIG = {
     START_SPRIGS: 20,
     MAX_SPEED: 100.0,
     SPRIG_RADIUS: 15.0,
-    SPRIG_VIEW_RADIUS: 100.0,
+    SPRIG_VIEW_RADIUS: 200.0,
     // Wander
     WANDER_SPEED: 50.0,
     LEASH_RADIUS: 200.0,

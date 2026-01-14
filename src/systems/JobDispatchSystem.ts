@@ -21,31 +21,18 @@ export class JobDispatchSystem {
         // 1. Post Jobs (Producers)
         for (const s of structures) {
             if (s.type === StructureType.NEST && s.stock) {
-                // Survival: Need Food?
-                // Logic: If food < 50, ensure we have active harvest jobs
-                // Count current harvest jobs for this nest?
-                // For simplicity: If low on food, just spam a job if we have slots.
-                if (s.stock.count('FOOD') < 50) {
-                    // Post HARVEST job
-                    // Target: Find a cookie/crumb
-                    // Wait, the JOB target should be the SOURCE (Cookie) or the SINK (Nest)?
-                    // "Sprig accepts JOB_HAUL (Target: Nest A)" -> implies Sink.
-                    // But HARVEST implies Source.
-                    // Let's say HARVEST job target is the RESOURCE.
-                    
-                    // Simple logic: Find a resource, post a job to harvest it.
-                    // Check if we already have open jobs?
-                    // Let's just post one if we can.
-                    
-                    // Find a resource
-                    const resource = structures.find(r => 
-                        (r.type === StructureType.COOKIE || r.type === StructureType.CRUMB) && 
-                        r.stock && r.stock.count('FOOD') > 0
-                    );
+                // Survival: Need Food? Find food
+                // Nests are now 'greedy' (always interested in food)
+                // Simple logic: Find a resource, post a job to harvest it.
+                
+                // Find a resource
+                const resource = structures.find(r => 
+                    (r.type === StructureType.COOKIE || r.type === StructureType.CRUMB) && 
+                    r.stock && r.stock.count('FOOD') > 0
+                );
 
-                    if (resource) {
-                        jobs.add(JobType.HARVEST, resource.id, 5); // Priority 5
-                    }
+                if (resource) {
+                    jobs.add(JobType.HARVEST, resource.id, 5); // Priority 5
                 }
             }
         }
