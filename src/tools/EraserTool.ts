@@ -36,6 +36,7 @@ export class EraserTool implements Tool {
             const dx = s.x - x;
             const dy = s.y - y;
             if (dx * dx + dy * dy < rSq) {
+                world.structureHash.remove(s);
                 world.structures.splice(i, 1);
             }
         }

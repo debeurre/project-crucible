@@ -4,6 +4,7 @@ import { EntityData } from '../data/EntityData';
 import { Structure, createStructure } from '../data/StructureData';
 import { Grid } from './Grid';
 import { SpatialHash } from './SpatialHash';
+import { StructureHash } from './StructureHash';
 import { Stock } from '../components/Stock';
 import { JobData } from '../data/JobData';
 
@@ -14,6 +15,7 @@ export class WorldState {
     public jobs: JobData;
     public grid: Grid;
     public spatialHash: SpatialHash;
+    public structureHash: StructureHash;
     public terrainDirty: boolean = true;
     public nextStructureId: number = 0;
 
@@ -24,6 +26,7 @@ export class WorldState {
         this.jobs = new JobData();
         this.grid = new Grid(CONFIG.WORLD_WIDTH, CONFIG.WORLD_HEIGHT);
         this.spatialHash = new SpatialHash(CONFIG.GRID_SIZE * 2);
+        this.structureHash = new StructureHash(CONFIG.GRID_SIZE * 4);
         
         // Initial Bake
         this.refreshGrid();
@@ -71,6 +74,12 @@ export class WorldState {
             
             return s;
         });
+
+        // Populate Structure Hash
+        this.structureHash.clear();
+        for (const s of this.structures) {
+            this.structureHash.add(s);
+        }
 
         // Restore ID Counter
         if (typeof data.nextStructureId === 'number') {

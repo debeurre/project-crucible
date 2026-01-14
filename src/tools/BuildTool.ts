@@ -9,6 +9,7 @@ export class BuildTool implements Tool {
         const structure = createStructure(this.currentType, x, y);
         structure.id = world.nextStructureId++;
         world.structures.push(structure);
+        world.structureHash.add(structure);
         world.refreshGrid();
     }
 
