@@ -141,25 +141,6 @@ export class Toolbar {
         toggleRow.appendChild(checkbox2);
         toggleRow.appendChild(label2);
 
-        // Labs Toggle
-        const checkbox3 = document.createElement('input');
-        checkbox3.type = 'checkbox';
-        checkbox3.checked = CONFIG.DEBUG_LABS;
-        checkbox3.style.cursor = 'pointer';
-        checkbox3.style.marginLeft = '10px';
-
-        checkbox3.addEventListener('change', (e) => {
-            CONFIG.DEBUG_LABS = (e.target as HTMLInputElement).checked;
-        });
-
-        const label3 = document.createElement('label');
-        label3.textContent = 'LABS';
-        label3.style.cursor = 'pointer';
-        label3.addEventListener('click', () => checkbox3.click());
-
-        toggleRow.appendChild(checkbox3);
-        toggleRow.appendChild(label3);
-
         this.container.appendChild(toggleRow);
     }
 
