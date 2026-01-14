@@ -9,6 +9,8 @@ export class EntityData {
     public vy: Float32Array;
     public ax: Float32Array;
     public ay: Float32Array;
+    public avoidAx: Float32Array;
+    public avoidAy: Float32Array;
     public debugAx: Float32Array;
     public debugAy: Float32Array;
     public active: Uint8Array;
@@ -31,6 +33,8 @@ export class EntityData {
         this.vy = new Float32Array(size);
         this.ax = new Float32Array(size);
         this.ay = new Float32Array(size);
+        this.avoidAx = new Float32Array(size);
+        this.avoidAy = new Float32Array(size);
         this.debugAx = new Float32Array(size);
         this.debugAy = new Float32Array(size);
         this.active = new Uint8Array(size);
@@ -55,6 +59,8 @@ export class EntityData {
                 this.vy[i] = 0;
                 this.ax[i] = 0;
                 this.ay[i] = 0;
+                this.avoidAx[i] = 0;
+                this.avoidAy[i] = 0;
                 this.active[i] = 1;
                 this.state[i] = SprigState.IDLE; 
                 this.stock[i].remove('FOOD', this.stock[i].count('FOOD')); // Clear stock

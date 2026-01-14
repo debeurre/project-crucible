@@ -104,17 +104,30 @@ export class SteeringSystem {
                 }
             }
 
+            // Cumulative Decay Logic
+            const DECAY = 0.9; // Retain 90% of previous avoidance momentum
+            sprigs.avoidAx[i] *= DECAY;
+            sprigs.avoidAy[i] *= DECAY;
+
             if (avoidCount > 0) {
                 // Normalize and Scale
                 const len = Math.sqrt(avoidX*avoidX + avoidY*avoidY) || 1;
                 const maxSpeed = sprigs.speed[i];
-                avoidX = (avoidX / len) * maxSpeed;
-                avoidY = (avoidY / len) * maxSpeed;
+                const inputX = (avoidX / len) * maxSpeed;
+                const inputY = (avoidY / len) * maxSpeed;
 
-                // Steer
-                ax += (avoidX - sprigs.vx[i]) * CONFIG.STEER_AVOID_WEIGHT;
-                ay += (avoidY - sprigs.vy[i]) * CONFIG.STEER_AVOID_WEIGHT;
+                // Add to accumulator (Lerp towards new input?)
+                // Or just add? Adding might explode.
+                // Let's Lerp the accumulator towards the input
+                const INPUT_WEIGHT = 0.2; // 20% new input, 80% history (via decay)
+                
+                sprigs.avoidAx[i] += (inputX - sprigs.vx[i]) * CONFIG.STEER_AVOID_WEIGHT * INPUT_WEIGHT;
+                sprigs.avoidAy[i] += (inputY - sprigs.vy[i]) * CONFIG.STEER_AVOID_WEIGHT * INPUT_WEIGHT;
             }
+            
+            // Apply Accumulated Avoidance
+            ax += sprigs.avoidAx[i];
+            ay += sprigs.avoidAy[i];
 
             // NEIGHBORS (Separation / Cohesion)
             const neighbors = hash.query(x, y, 40); // 40px radius check
