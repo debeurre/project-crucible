@@ -35,7 +35,7 @@ export class EntityData {
         this.debugAy = new Float32Array(size);
         this.active = new Uint8Array(size);
         this.state = new Uint8Array(size);
-        this.stock = Array.from({ length: size }, () => new Stock(1));
+        this.stock = Array.from({ length: size }, () => new Stock(5));
         this.targetX = new Float32Array(size);
         this.targetY = new Float32Array(size);
         this.homeID = new Int32Array(size).fill(-1);

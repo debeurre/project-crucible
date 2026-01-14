@@ -1,6 +1,6 @@
 import { WorldState } from '../core/WorldState';
 import { JobType } from '../data/JobData';
-import { StructureType, getStructureStats } from '../data/StructureData';
+import { StructureType, getStructureStats, Structure } from '../data/StructureData';
 import { CONFIG } from '../core/Config';
 import { SprigState } from '../data/SprigState';
 
@@ -21,13 +21,11 @@ export class JobExecutionSystem {
 
             const jobId = sprigs.jobId[i];
             
-            // Passive Discovery (Opportunistic)
-            // Staggered check: every 30 frames
+            // Passive Discovery
             if ((i + this.frameCount) % 30 === 0) {
                 this.scanForResources(world, i, jobId);
             }
 
-            // Re-fetch jobId in case scan swapped it
             const currentJobId = sprigs.jobId[i];
 
             if (currentJobId === -1) {
@@ -51,7 +49,6 @@ export class JobExecutionSystem {
     private scanForResources(world: WorldState, i: number, currentJobId: number) {
         const sprigs = world.sprigs;
         
-        // Rule: Don't switch if carrying cargo
         if (sprigs.stock[i].count('FOOD') > 0) return;
 
         const x = sprigs.x[i];
@@ -73,10 +70,9 @@ export class JobExecutionSystem {
                         distToOld = (sprigs.targetX[i] - x)**2 + (sprigs.targetY[i] - y)**2;
                     }
 
-                    // If significantly closer (bias factor)
                     if (distToNew < distToOld * 0.8) {
                         this.swapJob(world, i, currentJobId, s.id);
-                        return; // Swapped once per frame max
+                        return;
                     }
                 }
             }
@@ -88,7 +84,6 @@ export class JobExecutionSystem {
             world.jobs.unassign(oldJobId);
         }
         
-        // Self-Dispatch
         const newJobId = world.jobs.add(JobType.HARVEST, newTargetId, 8);
         if (newJobId !== -1) {
             world.jobs.assign(newJobId, sprigId);
@@ -101,7 +96,6 @@ export class JobExecutionSystem {
         const sprigs = world.sprigs;
         const structures = world.structures;
 
-        // 1. Find Home if homeless
         if (sprigs.homeID[i] === -1) {
              let bestDistSq = Infinity;
              let bestNest = null;
@@ -121,7 +115,6 @@ export class JobExecutionSystem {
              }
         }
 
-        // 2. Wander Logic
         sprigs.timer[i] -= dt;
         if (sprigs.timer[i] <= 0) {
             sprigs.timer[i] = CONFIG.WANDER_TMIN + Math.random() * (CONFIG.WANDER_TMAX - CONFIG.WANDER_TMIN);
@@ -130,7 +123,6 @@ export class JobExecutionSystem {
             const home = homeId !== -1 ? structures.find(s => s.id === homeId) : null;
 
             if (home) {
-                // Leash Logic
                 const sx = sprigs.x[i];
                 const sy = sprigs.y[i];
                 const hx = home.x;
@@ -143,11 +135,9 @@ export class JobExecutionSystem {
                 let variance = 0;
 
                 if (dist < CONFIG.LEASH_RADIUS) {
-                    // Inside: Away from home
                     baseAngle = Math.atan2(sy - hy, sx - hx);
                     variance = (Math.random() - 0.5) * (90 * 2 * DEG_TO_RAD);
                 } else {
-                    // Outside: Towards home
                     baseAngle = Math.atan2(hy - sy, hx - sx);
                     variance = (Math.random() - 0.5) * (45 * 2 * DEG_TO_RAD);
                 }
@@ -156,7 +146,6 @@ export class JobExecutionSystem {
                 sprigs.targetX[i] = sx + Math.cos(angle) * CONFIG.WANDER_DIST;
                 sprigs.targetY[i] = sy + Math.sin(angle) * CONFIG.WANDER_DIST;
             } else {
-                // Random Walk (Panic)
                 const angle = Math.random() * Math.PI * 2;
                 sprigs.targetX[i] = sprigs.x[i] + Math.cos(angle) * CONFIG.WANDER_DIST;
                 sprigs.targetY[i] = sprigs.y[i] + Math.sin(angle) * CONFIG.WANDER_DIST;
@@ -173,13 +162,11 @@ export class JobExecutionSystem {
         const source = structures.find(s => s.id === targetId);
         const carrying = sprigs.stock[i].count('FOOD') > 0;
 
-        // Validation: If source is gone/empty AND we aren't carrying anything, abort.
         if ((!source || !source.stock || source.stock.count('FOOD') <= 0) && !carrying) {
             this.completeJob(world, i, jobId);
             return;
         }
 
-        // If source is bad but we are carrying, ensure we are delivering
         if ((!source || !source.stock || source.stock.count('FOOD') <= 0) && carrying && state !== SprigState.MOVE_TO_SINK) {
             sprigs.state[i] = SprigState.MOVE_TO_SINK;
         }
@@ -196,9 +183,17 @@ export class JobExecutionSystem {
             const range = getStructureStats(source.type).radius + 15;
 
             if (distSq < range * range) {
-                if (source.stock && source.stock.remove('FOOD', 1)) {
-                    sprigs.stock[i].add('FOOD', 1);
+                // Take up to 5 units
+                const amount = Math.min(5, source.stock!.count('FOOD'));
+                
+                if (amount > 0 && source.stock!.remove('FOOD', amount)) {
+                    sprigs.stock[i].add('FOOD', amount);
                     sprigs.state[i] = SprigState.MOVE_TO_SINK;
+
+                    // Clean up Empty Source
+                    if (source.stock!.count('FOOD') <= 0) {
+                        this.destroyStructure(world, source);
+                    }
                 } else {
                     this.completeJob(world, i, jobId);
                 }
@@ -223,11 +218,11 @@ export class JobExecutionSystem {
             const range = getStructureStats(nest.type).radius + 15;
 
             if (distSq < range * range) {
-                if (nest.stock && sprigs.stock[i].remove('FOOD', 1)) {
-                    nest.stock.add('FOOD', 1);
+                const amount = sprigs.stock[i].count('FOOD');
+                if (nest.stock && sprigs.stock[i].remove('FOOD', amount)) {
+                    nest.stock.add('FOOD', amount);
                 }
                 
-                // Repeat logic
                 if (source && source.stock && source.stock.count('FOOD') > 0) {
                     sprigs.state[i] = SprigState.MOVE_TO_SOURCE;
                 } else {
@@ -244,10 +239,19 @@ export class JobExecutionSystem {
         world.jobs.remove(jobId);
         sprigIdToIdle(world, sprigId);
     }
+
+    private destroyStructure(world: WorldState, structure: Structure) {
+        world.structureHash.remove(structure);
+        const idx = world.structures.indexOf(structure);
+        if (idx !== -1) {
+            world.structures.splice(idx, 1);
+        }
+        world.refreshGrid(); // Optional: unblock pathing
+    }
 }
 
 function sprigIdToIdle(world: WorldState, id: number) {
     world.sprigs.jobId[id] = -1;
     world.sprigs.state[id] = SprigState.IDLE;
-    world.sprigs.timer[id] = 0; // Trigger immediate wander
+    world.sprigs.timer[id] = 0; 
 }
