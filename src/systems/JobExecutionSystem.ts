@@ -7,32 +7,93 @@ import { SprigState } from '../data/SprigState';
 const DEG_TO_RAD = Math.PI / 180;
 
 export class JobExecutionSystem {
+    private frameCount: number = 0;
+
     public update(world: WorldState, dt: number) {
+        this.frameCount++;
         const sprigs = world.sprigs;
         const jobs = world.jobs;
 
-        if (!jobs) return; // Handle HMR edge case
+        if (!jobs) return; 
 
         for (let i = 0; i < sprigs.active.length; i++) {
             if (sprigs.active[i] === 0) continue;
 
             const jobId = sprigs.jobId[i];
             
-            if (jobId === -1) {
+            // Passive Discovery (Opportunistic)
+            // Staggered check: every 30 frames
+            if ((i + this.frameCount) % 30 === 0) {
+                this.scanForResources(world, i, jobId);
+            }
+
+            // Re-fetch jobId in case scan swapped it
+            const currentJobId = sprigs.jobId[i];
+
+            if (currentJobId === -1) {
                 this.handleIdle(world, i, dt);
                 continue;
             }
 
             // Verify Job
-            if (!jobs.active[jobId] || jobs.assignedSprigId[jobId] !== i) {
+            if (!jobs.active[currentJobId] || jobs.assignedSprigId[currentJobId] !== i) {
                 sprigIdToIdle(world, i);
                 continue;
             }
 
-            const type = jobs.type[jobId];
+            const type = jobs.type[currentJobId];
             if (type === JobType.HARVEST) {
-                this.handleHarvest(world, i, jobId);
+                this.handleHarvest(world, i, currentJobId);
             }
+        }
+    }
+
+    private scanForResources(world: WorldState, i: number, currentJobId: number) {
+        const sprigs = world.sprigs;
+        
+        // Rule: Don't switch if carrying cargo
+        if (sprigs.stock[i].count('FOOD') > 0) return;
+
+        const x = sprigs.x[i];
+        const y = sprigs.y[i];
+        const VIEW_RADIUS = 100;
+
+        const nearby = world.structureHash.query(x, y, VIEW_RADIUS);
+
+        for (const s of nearby) {
+            if (s.type === StructureType.COOKIE || s.type === StructureType.CRUMB) {
+                if (s.stock && s.stock.count('FOOD') > 0) {
+                    const currentTargetId = currentJobId !== -1 ? world.jobs.targetId[currentJobId] : -1;
+                    if (s.id === currentTargetId) continue; 
+
+                    const distToNew = (s.x - x)**2 + (s.y - y)**2;
+                    let distToOld = Infinity;
+                    
+                    if (currentJobId !== -1) {
+                        distToOld = (sprigs.targetX[i] - x)**2 + (sprigs.targetY[i] - y)**2;
+                    }
+
+                    // If significantly closer (bias factor)
+                    if (distToNew < distToOld * 0.8) {
+                        this.swapJob(world, i, currentJobId, s.id);
+                        return; // Swapped once per frame max
+                    }
+                }
+            }
+        }
+    }
+
+    private swapJob(world: WorldState, sprigId: number, oldJobId: number, newTargetId: number) {
+        if (oldJobId !== -1) {
+            world.jobs.unassign(oldJobId);
+        }
+        
+        // Self-Dispatch
+        const newJobId = world.jobs.add(JobType.HARVEST, newTargetId, 8);
+        if (newJobId !== -1) {
+            world.jobs.assign(newJobId, sprigId);
+            world.sprigs.jobId[sprigId] = newJobId;
+            world.sprigs.state[sprigId] = SprigState.MOVE_TO_SOURCE;
         }
     }
 
@@ -124,7 +185,7 @@ export class JobExecutionSystem {
         }
 
         if (sprigs.state[i] === SprigState.MOVE_TO_SOURCE) {
-            if (!source) return; // Should be handled above, but safety first
+            if (!source) return; 
 
             sprigs.targetX[i] = source.x;
             sprigs.targetY[i] = source.y;
@@ -166,7 +227,7 @@ export class JobExecutionSystem {
                     nest.stock.add('FOOD', 1);
                 }
                 
-                // Repeat logic: Check if source is still valid
+                // Repeat logic
                 if (source && source.stock && source.stock.count('FOOD') > 0) {
                     sprigs.state[i] = SprigState.MOVE_TO_SOURCE;
                 } else {
