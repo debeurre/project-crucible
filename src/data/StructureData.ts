@@ -30,6 +30,7 @@ export interface Structure {
     y: number;
     value?: number; // Health or Stock
     stock?: Stock;
+    knownStructures?: number[]; // IDs of known resources (Nest only)
 }
 
 export const getStructureStats = (type: StructureType): StructureStats => {
@@ -47,6 +48,7 @@ export function createStructure(type: StructureType, x: number, y: number): Stru
     // Apply Defaults
     if (type === StructureType.NEST) {
         structure.stock = new Stock(Infinity);
+        structure.knownStructures = [];
     } else if (type === StructureType.COOKIE) {
         structure.stock = new Stock(500);
         structure.stock.add('FOOD', 500);

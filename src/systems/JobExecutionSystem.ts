@@ -221,6 +221,13 @@ export class JobExecutionSystem {
                 const amount = sprigs.stock[i].count('FOOD');
                 if (nest.stock && sprigs.stock[i].remove('FOOD', amount)) {
                     nest.stock.add('FOOD', amount);
+                    
+                    // Scout: Share knowledge
+                    if (nest.knownStructures && source) {
+                        if (!nest.knownStructures.includes(source.id)) {
+                            nest.knownStructures.push(source.id);
+                        }
+                    }
                 }
                 
                 if (source && source.stock && source.stock.count('FOOD') > 0) {

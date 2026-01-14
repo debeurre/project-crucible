@@ -22,19 +22,37 @@ export class JobDispatchSystem {
         // 1. Post Jobs (Producers)
         for (const s of structures) {
             if (s.type === StructureType.NEST && s.stock) {
-                // Survival: Need Food? Find food
-                // Nests are now 'greedy' (always interested in food)
-                // Simple logic: Find a resource, post a job to harvest it.
-                
-                // Find a resource
-                const resource = structures.find(r => 
-                    (r.type === StructureType.COOKIE || r.type === StructureType.CRUMB) && 
-                    r.stock && r.stock.count('FOOD') > 0 &&
-                    ((r.x - s.x)**2 + (r.y - s.y)**2 < CONFIG.NEST_VIEW_RADIUS**2)
-                );
+                // Initialize Memory
+                if (!s.knownStructures) s.knownStructures = [];
 
-                if (resource) {
-                    jobs.add(JobType.HARVEST, resource.id, 5); // Priority 5
+                // A. Scan Local Area (The "Eye")
+                const nearby = world.structureHash.query(s.x, s.y, CONFIG.NEST_VIEW_RADIUS);
+                for (const other of nearby) {
+                    if ((other.type === StructureType.COOKIE || other.type === StructureType.CRUMB) && 
+                        other.stock && other.stock.count('FOOD') > 0) {
+                        
+                        // Distance Check (Hash is coarse)
+                        const distSq = (other.x - s.x)**2 + (other.y - s.y)**2;
+                        if (distSq < CONFIG.NEST_VIEW_RADIUS**2) {
+                             if (!s.knownStructures.includes(other.id)) {
+                                 s.knownStructures.push(other.id);
+                             }
+                        }
+                    }
+                }
+
+                // B. Prune Memory (Forget empty/gone sources)
+                for (let i = s.knownStructures.length - 1; i >= 0; i--) {
+                    const id = s.knownStructures[i];
+                    const struct = structures.find(st => st.id === id);
+                    if (!struct || !struct.stock || struct.stock.count('FOOD') <= 0) {
+                        s.knownStructures.splice(i, 1);
+                    }
+                }
+
+                // C. Post Jobs for KNOWN sources
+                for (const id of s.knownStructures) {
+                    jobs.add(JobType.HARVEST, id, 5);
                 }
             }
         }
