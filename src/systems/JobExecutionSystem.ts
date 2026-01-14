@@ -53,7 +53,7 @@ export class JobExecutionSystem {
 
         const x = sprigs.x[i];
         const y = sprigs.y[i];
-        const VIEW_RADIUS = 100;
+        const VIEW_RADIUS = CONFIG.SPRIG_VIEW_RADIUS;
 
         const nearby = world.structureHash.query(x, y, VIEW_RADIUS);
 
