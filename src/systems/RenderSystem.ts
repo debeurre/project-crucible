@@ -58,8 +58,22 @@ export class RenderSystem {
         this.debugGraphics.clear();
         this.drawDebugVectors();
         this.drawStructureLabels();
+        this.drawLabs();
         
         this.drawHover();
+    }
+
+    private drawLabs() {
+        if (!CONFIG.DEBUG_LABS) return;
+        const g = this.debugGraphics;
+        
+        for (const s of this.world.structures) {
+            if (s.type === StructureType.NEST) {
+                const stats = getStructureStats(s.type);
+                g.circle(s.x, s.y, CONFIG.NEST_VIEW_RADIUS)
+                 .stroke({ width: 2, color: stats.color, alpha: 0.5 });
+            }
+        }
     }
 
     private drawHover() {

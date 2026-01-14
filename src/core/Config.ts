@@ -32,6 +32,7 @@ export const CONFIG = {
     ERASER_RADIUS: 30.0,
     DEBUG_SPRIG_VECTORS: true,
     DEBUG_STRUCTURE_LABELS: true,
+    DEBUG_LABS: false,
 };
 
 export const SCREEN_WIDTH = CONFIG.GRID_SIZE * CONFIG.WORLD_WIDTH;
