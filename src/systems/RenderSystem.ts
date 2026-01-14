@@ -120,7 +120,7 @@ export class RenderSystem {
                     const dy = y - home.y;
                     const dist = Math.sqrt(dx*dx + dy*dy);
                     
-                    const color = dist < CONFIG.LEASH_RADIUS ? 0x00FF00 : 0xFF0000;
+                    const color = dist < CONFIG.NEST_VIEW_RADIUS ? 0x00FF00 : 0xFF0000;
                     g.moveTo(x, y)
                      .lineTo(home.x, home.y)
                      .stroke({ width: 1, color: color, alpha: 0.5 });

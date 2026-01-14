@@ -2,6 +2,7 @@ import { WorldState } from '../core/WorldState';
 import { StructureType } from '../data/StructureData';
 import { JobType, JobData } from '../data/JobData';
 import { SprigState } from '../data/SprigState';
+import { CONFIG } from '../core/Config';
 
 export class JobDispatchSystem {
     private frameCount: number = 0;
@@ -28,7 +29,8 @@ export class JobDispatchSystem {
                 // Find a resource
                 const resource = structures.find(r => 
                     (r.type === StructureType.COOKIE || r.type === StructureType.CRUMB) && 
-                    r.stock && r.stock.count('FOOD') > 0
+                    r.stock && r.stock.count('FOOD') > 0 &&
+                    ((r.x - s.x)**2 + (r.y - s.y)**2 < CONFIG.NEST_VIEW_RADIUS**2)
                 );
 
                 if (resource) {

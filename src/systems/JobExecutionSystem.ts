@@ -134,7 +134,7 @@ export class JobExecutionSystem {
                 let baseAngle = 0;
                 let variance = 0;
 
-                if (dist < CONFIG.LEASH_RADIUS) {
+                if (dist < CONFIG.NEST_VIEW_RADIUS) {
                     baseAngle = Math.atan2(sy - hy, sx - hx);
                     variance = (Math.random() - 0.5) * (90 * 2 * DEG_TO_RAD);
                 } else {

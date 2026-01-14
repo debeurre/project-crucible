@@ -37,7 +37,7 @@ async function init() {
     if (nest) {
         for (let i = 0; i < CONFIG.START_SPRIGS; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const dist = Math.random() * CONFIG.LEASH_RADIUS;
+            const dist = Math.random() * CONFIG.NEST_VIEW_RADIUS;
             const sx = nest.x + Math.cos(angle) * dist;
             const sy = nest.y + Math.sin(angle) * dist;
             world.sprigs.spawn(sx, sy);

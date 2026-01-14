@@ -9,11 +9,11 @@ export const CONFIG = {
     MAX_SPEED: 100.0,
     SPRIG_RADIUS: 15.0,
     SPRIG_VIEW_RADIUS: 200.0,
+    NEST_VIEW_RADIUS: 400.0,
     // Wander
     WANDER_SPEED: 50.0,
-    LEASH_RADIUS: 200.0,
-    WANDER_DIST:  100.0,
-    WANDER_TMIN: 3.0,
+    WANDER_DIST: 60.0,
+    WANDER_TMIN: 1.0,
     WANDER_TMAX: 5.0,
     // Steering
     STEER_SEPARATION_WEIGHT: 1.0,
