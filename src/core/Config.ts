@@ -35,10 +35,10 @@ export const CONFIG = {
     // Lifecycle
     HUNGER_INTERVAL: 30.0,
     HUNGER_PENALTY: 0.75,
-    HUNGER_BUFFER: 2,
-    HUNGER_RISK: 0.75,
+    HUNGER_BUFFER: 1,
+    HUNGER_RISK: 0.5,
     SPAWN_COST: 10,
-    SPAWN_TIME: 10.0,
+    SPAWN_TIME: 5.0,
     REGEN_INTERVAL: 60.0,
     REGEN_AMOUNT: 10,
 };

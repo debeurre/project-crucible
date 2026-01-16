@@ -19,7 +19,7 @@ export class BuildTool implements Tool {
 
     public cycleOption(): void {
         this.currentType++;
-        if (this.currentType > StructureType.ROCK) {
+        if (this.currentType > StructureType.BUSH) {
             this.currentType = StructureType.NEST;
         }
     }
@@ -35,7 +35,13 @@ export class BuildTool implements Tool {
     public getAvailableOptions(): ToolOption[] {
         // Map STRUCTURE_STATS to ToolOptions
         const options: ToolOption[] = [];
-        const types = [StructureType.NEST, StructureType.CRUMB, StructureType.COOKIE, StructureType.ROCK];
+        const types = [
+            StructureType.NEST, 
+            StructureType.CRUMB, 
+            StructureType.COOKIE, 
+            StructureType.ROCK,
+            StructureType.BUSH
+        ];
         
         types.forEach(type => {
             const stats = STRUCTURE_STATS[type];

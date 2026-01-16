@@ -4,7 +4,8 @@ export enum StructureType {
     NEST = 0,
     CRUMB = 1,
     COOKIE = 2,
-    ROCK = 3
+    ROCK = 3,
+    BUSH = 4
 }
 
 export interface StructureStats {
@@ -20,7 +21,8 @@ export const STRUCTURE_STATS: Record<StructureType, StructureStats> = {
     [StructureType.NEST]:   { name: 'Nest',   radius: 30, color: 0xFFD700, solid: false, shape: 'CIRCLE' },
     [StructureType.CRUMB]:  { name: 'Crumb',  radius: 10,  color: 0xB8860B, solid: false, shape: 'DIAMOND' },
     [StructureType.COOKIE]: { name: 'Cookie', radius: 45, color: 0xDAA520, solid: false, shape: 'CIRCLE' },
-    [StructureType.ROCK]:   { name: 'Rock',   radius: 40, color: 0x808080, solid: true,  shape: 'CIRCLE' }
+    [StructureType.ROCK]:   { name: 'Rock',   radius: 40, color: 0x808080, solid: true,  shape: 'CIRCLE' },
+    [StructureType.BUSH]:   { name: 'Bush',   radius: 20, color: 0x228B22, solid: false, shape: 'CIRCLE' }
 };
 
 export interface Structure {
@@ -59,7 +61,11 @@ export function createStructure(type: StructureType, x: number, y: number): Stru
     } else if (type === StructureType.CRUMB) {
         structure.stock = new Stock(50);
         structure.stock.add('FOOD', 50);
-    } 
+    } else if (type === StructureType.BUSH) {
+        structure.stock = new Stock(10);
+        structure.stock.add('FOOD', 10);
+        structure.regenTimer = 0;
+    }
     // Rocks have no stock by default
 
     return structure;

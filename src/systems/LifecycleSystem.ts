@@ -137,13 +137,11 @@ export class LifecycleSystem {
     private updateRegeneration(world: WorldState, dt: number) {
         for (const s of world.structures) {
             // Check for regeneration eligibility
-            // For now, let's assume Cookies regenerate
-            if (s.type === StructureType.COOKIE && s.stock) {
+            if ((s.type === StructureType.COOKIE || s.type === StructureType.BUSH) && s.stock) {
                 if (s.regenTimer === undefined) s.regenTimer = 0;
 
                 const capacity = s.stock.capacityLimit;
                 
-                // If we can't check capacity easily, we can just check if stock < 500
                 if (s.stock.count('FOOD') < capacity) {
                     s.regenTimer += dt;
                     if (s.regenTimer >= CONFIG.REGEN_INTERVAL) {
