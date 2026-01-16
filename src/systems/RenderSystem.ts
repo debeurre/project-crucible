@@ -72,7 +72,7 @@ export class RenderSystem {
         if (this.activeTool === 'PAINT' || this.activeTool === 'ERASER') {
             // Draw Brush Indicator
             const color = this.activeTool === 'ERASER' ? 0xFF0000 : 0xFFFFFF;
-            const radius = this.activeTool === 'ERASER' ? CONFIG.ERASER_RADIUS : CONFIG.BRUSH_RADIUS;
+            const radius = this.activeTool === 'ERASER' ? CONFIG.ERASER_RADIUS : CONFIG.TERRAIN_RADIUS;
             g.circle(x, y, radius).stroke({ width: 2, color });
         } else if (this.activeTool === 'COMMAND') {
             // Draw Selection Brush

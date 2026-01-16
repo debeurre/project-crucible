@@ -4,8 +4,8 @@ import { Terrain } from '../data/MapData';
 import { CONFIG } from '../core/Config';
 
 export class TerrainTool implements Tool {
-    private brush: number = Terrain.GRASS;
-    private radius: number = CONFIG.BRUSH_RADIUS;
+    private currentTerrain: number = Terrain.MUD;
+    private radius: number = CONFIG.TERRAIN_RADIUS;
 
     public onDown(world: WorldState, x: number, y: number): void {
         this.paint(world, x, y);
@@ -34,7 +34,7 @@ export class TerrainTool implements Tool {
 
                     if (dx * dx + dy * dy < rSq) {
                         const idx = world.map.getIndex(col, row);
-                        world.map.terrain[idx] = this.brush;
+                        world.map.terrain[idx] = this.currentTerrain;
                         world.terrainDirty = true;
                     }
                 }
@@ -43,17 +43,17 @@ export class TerrainTool implements Tool {
     }
 
     public cycleOption(): void {
-        this.brush++;
+        this.currentTerrain++;
         // Cycle: GRASS(1) -> MUD(2) -> WATER(3) -> VOID(0) -> GRASS(1)
-        if (this.brush > 3) this.brush = 0;
+        if (this.currentTerrain > 3) this.currentTerrain = 0;
     }
 
     public setOption(value: number): void {
-        this.brush = value;
+        this.currentTerrain = value;
     }
 
     public getOptionName(): string {
-        switch (this.brush) {
+        switch (this.currentTerrain) {
             case Terrain.VOID: return 'VOID';
             case Terrain.GRASS: return 'GRASS';
             case Terrain.MUD: return 'MUD';
