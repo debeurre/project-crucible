@@ -22,7 +22,7 @@ export class JobExecutionSystem {
             const jobId = sprigs.jobId[i];
             
             // Passive Discovery
-            if ((i + this.frameCount) % 30 === 0) {
+            if ((i + this.frameCount) % 30 === 0 && sprigs.state[i] !== SprigState.FORCED_MARCH) {
                 this.scanForResources(world, i, jobId);
             }
 
