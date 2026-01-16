@@ -26,8 +26,8 @@ export class ToolManager {
             [TOOL_NAMES.SIGNAL]: new HarvestSignalTool(),
             [TOOL_NAMES.COMMAND]: new CommandBrushTool()
         };
-        this.activeToolName = TOOL_NAMES.SPAWN;
-        this.activeTool = this.tools[TOOL_NAMES.SPAWN];
+        this.activeToolName = TOOL_NAMES.HAND;
+        this.activeTool = this.tools[TOOL_NAMES.HAND];
     }
 
     public setTool(name: string) {
