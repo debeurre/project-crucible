@@ -21,44 +21,33 @@ export class LifecycleSystem {
             if (sprigs.feedTimer[i] <= 0) {
                 // Time to eat
                 const homeId = sprigs.homeID[i];
+                let fed = false;
                 let dying = false;
-                let brownout = false;
 
-                if (homeId !== -1) {
+                // 1. Eat from SELF first
+                if (sprigs.stock[i].count('FOOD') >= 1) {
+                    sprigs.stock[i].remove('FOOD', 1);
+                    fed = true;
+                } 
+                // 2. Eat from Nest
+                else if (homeId !== -1) {
                     const nest = structures.find(s => s.id === homeId);
                     if (nest && nest.stock) {
                         const food = nest.stock.count('FOOD');
                         
-                        // Count housed sprigs
-                        let housed = 0;
-                        for(let k=0; k<sprigs.active.length; k++) {
-                            if (sprigs.active[k] && sprigs.homeID[k] === homeId) housed++;
-                        }
-
-                        const buffer = housed * CONFIG.HUNGER_BUFFER;
-
                         if (food > 0) {
                             nest.stock.remove('FOOD', 1);
-                            
-                            // Check for Brownout Condition
-                            if (food <= buffer) {
-                                brownout = true;
-                            }
+                            fed = true;
                         } else {
                             // No Food -> Risk Death
                             if (Math.random() < CONFIG.HUNGER_RISK) {
                                 dying = true;
-                            } else {
-                                // Survived but starving (Brownout)
-                                brownout = true;
                             }
                         }
                     } else {
-                         // No nest or no stock component? Die.
                          dying = true;
                     }
                 } else {
-                    // Homeless? Die.
                     dying = true;
                 }
 
@@ -68,18 +57,19 @@ export class LifecycleSystem {
                     // Reset Timer
                     sprigs.feedTimer[i] = CONFIG.HUNGER_INTERVAL;
                     
-                    if (brownout) {
+                    if (fed) {
+                        // Sated (Normal Green)
+                        sprigs.hungerState[i] = 0;
+                        sprigs.speed[i] = CONFIG.MAX_SPEED;
+                    } else {
+                        // Starving (increment hunger state)
                         if (sprigs.hungerState[i] < 2) {
                              sprigs.hungerState[i]++;
+                             sprigs.speed[i] = CONFIG.MAX_SPEED * CONFIG.HUNGER_PENALTY;
                         } else {
                              // Missed 3rd meal -> Die
                              this.killSprig(world, i);
-                             continue;
                         }
-                        sprigs.speed[i] = CONFIG.MAX_SPEED * CONFIG.HUNGER_PENALTY;
-                    } else {
-                        sprigs.hungerState[i] = 0;
-                        sprigs.speed[i] = CONFIG.MAX_SPEED;
                     }
                 }
             }
