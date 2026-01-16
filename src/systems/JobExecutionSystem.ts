@@ -29,7 +29,9 @@ export class JobExecutionSystem {
             const currentJobId = sprigs.jobId[i];
 
             if (currentJobId === -1) {
-                this.handleIdle(world, i, dt);
+                if (sprigs.state[i] !== SprigState.FORCED_MARCH) {
+                    this.handleIdle(world, i, dt);
+                }
                 continue;
             }
 
