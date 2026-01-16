@@ -46,6 +46,8 @@ export class RenderSystem {
     }
 
     public update() {
+        this.debugGraphics.clear();
+
         if (this.needsRedraw || this.world.terrainDirty) {
             this.drawTerrain();
             this.needsRedraw = false;
@@ -55,7 +57,6 @@ export class RenderSystem {
         this.drawStructures();
         this.updateSprigs();
         
-        this.debugGraphics.clear();
         this.drawDebugVectors();
         this.drawStructureLabels();
         
