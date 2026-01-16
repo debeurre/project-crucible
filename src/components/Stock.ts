@@ -52,7 +52,8 @@ export class Stock {
     }
 
     public static deserialize(data: any): Stock {
-        const stock = new Stock(data.capacity);
+        const capacity = (data.capacity === null || data.capacity === undefined) ? Infinity : data.capacity;
+        const stock = new Stock(capacity);
         if (data.inventory) {
             stock.inventory = new Map(data.inventory);
         }
