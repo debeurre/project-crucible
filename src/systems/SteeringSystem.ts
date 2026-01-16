@@ -105,7 +105,7 @@ export class SteeringSystem {
             }
 
             // Cumulative Decay Logic
-            const DECAY = 0.9; // Retain 90% of previous avoidance momentum
+            const DECAY = 0.7; // Retain 70% of previous avoidance momentum
             sprigs.avoidAx[i] *= DECAY;
             sprigs.avoidAy[i] *= DECAY;
 

@@ -192,7 +192,9 @@ export class JobExecutionSystem {
 
                     // Clean up Empty Source
                     if (source.stock!.count('FOOD') <= 0) {
-                        this.destroyStructure(world, source);
+                        if (source.type !== StructureType.BUSH) {
+                            this.destroyStructure(world, source);
+                        }
                     }
                 } else {
                     this.completeJob(world, i, jobId);
