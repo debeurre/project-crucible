@@ -76,8 +76,8 @@ export class RenderSystem {
             g.circle(x, y, radius).stroke({ width: 2, color });
         } else if (this.activeTool === 'COMMAND') {
             // Draw Selection Brush
-            g.circle(x, y, CONFIG.BRUSH_RADIUS).stroke({ width: 2, color: 0x00FFFF });
-            g.circle(x, y, CONFIG.BRUSH_RADIUS).fill({ color: 0x00FFFF, alpha: 0.1 });
+            g.circle(x, y, CONFIG.COMMAND_RADIUS).stroke({ width: 2, color: 0x00FFFF });
+            g.circle(x, y, CONFIG.COMMAND_RADIUS).fill({ color: 0x00FFFF, alpha: 0.1 });
         } else {
             // Draw Grid Highlight
             const col = this.world.grid.getCol(x);

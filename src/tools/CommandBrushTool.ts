@@ -33,7 +33,7 @@ export class CommandBrushTool implements Tool {
     public onDrag(world: WorldState, x: number, y: number): void {
         if (this.isSelecting) {
             // Select sprigs under brush
-            this.selectInRadius(world, x, y, CONFIG.BRUSH_RADIUS);
+            this.selectInRadius(world, x, y, CONFIG.COMMAND_RADIUS);
         } else if (this.isCommanding) {
             this.pathEndX = x;
             this.pathEndY = y;
@@ -45,7 +45,7 @@ export class CommandBrushTool implements Tool {
             this.isSelecting = false;
             // If tap without moving, select under cursor
             if (Math.abs(x - this.startX) < 5 && Math.abs(y - this.startY) < 5) {
-                 this.selectInRadius(world, x, y, CONFIG.BRUSH_RADIUS);
+                 this.selectInRadius(world, x, y, CONFIG.COMMAND_RADIUS);
             }
         } else if (this.isCommanding) {
             this.isCommanding = false;
