@@ -25,6 +25,7 @@ export class EntityData {
     public speed: Float32Array;
     public feedTimer: Float32Array;
     public hungerState: Uint8Array;
+    public selected: Uint8Array;
     public count: number;
     
     // Memory
@@ -56,6 +57,7 @@ export class EntityData {
         this.speed = new Float32Array(size);
         this.feedTimer = new Float32Array(size);
         this.hungerState = new Uint8Array(size);
+        this.selected = new Uint8Array(size);
         
         this.discoveryBuffer = new Int32Array(size * this.MEMORY_CAPACITY).fill(-1);
         this.discoveryCount = new Uint8Array(size);
@@ -103,6 +105,7 @@ export class EntityData {
                 this.speed[i] = CONFIG.MAX_SPEED;
                 this.feedTimer[i] = CONFIG.HUNGER_INTERVAL;
                 this.hungerState[i] = 0;
+                this.selected[i] = 0;
                 this.discoveryCount[i] = 0;
                 this.count++;
                 return i;

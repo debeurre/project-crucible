@@ -310,6 +310,8 @@ export class RenderSystem {
                  .lineTo(s.x - radius, s.y) // Left
                  .closePath()
                  .fill(color);
+            } else if (s.type === StructureType.SIGNAL) {
+                g.circle(s.x, s.y, radius).fill({ color, alpha: 0.25 });
             } else {
                 g.circle(s.x, s.y, radius).fill(color);
             }

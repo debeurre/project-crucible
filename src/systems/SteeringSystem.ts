@@ -3,6 +3,8 @@ import { CONFIG } from '../core/Config';
 import { SpatialHash } from '../core/SpatialHash';
 import { getStructureStats } from '../data/StructureData';
 
+import { SprigState } from '../data/SprigState';
+
 export class SteeringSystem {
     public update(world: WorldState) {
         if (!world.spatialHash) {
@@ -22,6 +24,38 @@ export class SteeringSystem {
             const y = sprigs.y[i];
             let ax = 0;
             let ay = 0;
+
+            // FORCED MARCH OVERRIDE
+            if (sprigs.state[i] === SprigState.FORCED_MARCH) {
+                const tx = sprigs.targetX[i];
+                const ty = sprigs.targetY[i];
+                const dx = tx - x;
+                const dy = ty - y;
+                const distSq = dx * dx + dy * dy;
+
+                if (distSq > 25) { // 5px tolerance
+                    const dist = Math.sqrt(distSq);
+                    // High speed direct movement
+                    const desireX = (dx / dist) * sprigs.speed[i];
+                    const desireY = (dy / dist) * sprigs.speed[i];
+                    
+                    // Simple steering (Desired - Velocity) * High Weight
+                    ax += (desireX - sprigs.vx[i]) * 5.0;
+                    ay += (desireY - sprigs.vy[i]) * 5.0;
+                    
+                    // Minimal Separation to prevent total stacking
+                    // We'll skip complex avoidance to "unstick"
+                } else {
+                    // Arrived
+                    sprigs.state[i] = SprigState.IDLE;
+                    sprigs.vx[i] *= 0.5; // Dampen
+                    sprigs.vy[i] *= 0.5;
+                }
+                
+                sprigs.ax[i] = ax;
+                sprigs.ay[i] = ay;
+                continue; // Skip standard steering
+            }
 
             // SEEK (Target)
             const tx = sprigs.targetX[i];

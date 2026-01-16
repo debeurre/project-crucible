@@ -1,6 +1,7 @@
 import { Tool } from './Tool';
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
+import { StructureType } from '../data/StructureData';
 
 export class EraserTool implements Tool {
     private radius: number = CONFIG.ERASER_RADIUS;
@@ -36,6 +37,24 @@ export class EraserTool implements Tool {
             const dx = s.x - x;
             const dy = s.y - y;
             if (dx * dx + dy * dy < rSq) {
+                // Special handling for Signals
+                if (s.type === StructureType.SIGNAL && s.jobs) {
+                    for (const jobId of s.jobs) {
+                        // Cancel Job
+                        world.jobs.remove(jobId);
+                        // If assigned, free the sprig?
+                        // JobData.remove sets sprigId to -1, but doesn't notify Sprig.
+                        // Ideally we find the sprig and set it to IDLE.
+                        // Iterate sprigs to find who has this job? Expensive but correct.
+                        for(let k=0; k<sprigs.active.length; k++) {
+                            if (sprigs.active[k] && sprigs.jobId[k] === jobId) {
+                                sprigs.jobId[k] = -1;
+                                // We don't reset state here, JobExecutionSystem will handle "Verify Job" fail next frame.
+                            }
+                        }
+                    }
+                }
+
                 world.structureHash.remove(s);
                 world.structures.splice(i, 1);
             }

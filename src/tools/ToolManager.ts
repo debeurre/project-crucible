@@ -6,6 +6,8 @@ import { TerrainTool } from './TerrainTool';
 import { SpawnTool } from './SpawnTool';
 import { BuildTool } from './BuildTool';
 import { EraserTool } from './EraserTool';
+import { HarvestSignalTool } from './HarvestSignalTool';
+import { CommandBrushTool } from './CommandBrushTool';
 import { TOOL_NAMES } from './ToolConfig';
 
 export class ToolManager {
@@ -20,7 +22,9 @@ export class ToolManager {
             [TOOL_NAMES.PAINT]: new TerrainTool(),
             [TOOL_NAMES.SPAWN]: new SpawnTool(),
             [TOOL_NAMES.BUILD]: new BuildTool(),
-            [TOOL_NAMES.ERASER]: new EraserTool()
+            [TOOL_NAMES.ERASER]: new EraserTool(),
+            [TOOL_NAMES.SIGNAL]: new HarvestSignalTool(),
+            [TOOL_NAMES.COMMAND]: new CommandBrushTool()
         };
         this.activeToolName = TOOL_NAMES.SPAWN;
         this.activeTool = this.tools[TOOL_NAMES.SPAWN];
