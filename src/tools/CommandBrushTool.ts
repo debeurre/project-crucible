@@ -80,11 +80,7 @@ export class CommandBrushTool implements Tool {
         const sprigs = world.sprigs;
         for (let i = 0; i < sprigs.active.length; i++) {
             if (sprigs.active[i] && sprigs.selected[i]) {
-                // Clear Job
-                if (sprigs.jobId[i] !== -1) {
-                    world.jobs.unassign(sprigs.jobId[i]);
-                    sprigs.jobId[i] = -1;
-                }
+                // Keep Job (Contract), but set override state
                 
                 // Set State
                 sprigs.state[i] = SprigState.FORCED_MARCH;
@@ -92,9 +88,6 @@ export class CommandBrushTool implements Tool {
                 sprigs.targetY[i] = y;
                 
                 // Deselect after command? Prompt implies "free sprigs of orders" on cancel.
-                // Usually RTS deselects after move, but let's keep selection for multi-move?
-                // Prompt: "Tap once to select... Tap empty terrain to cancel selection."
-                // So selection persists.
             }
         }
     }

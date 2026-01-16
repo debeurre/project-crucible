@@ -19,19 +19,20 @@ export class JobExecutionSystem {
         for (let i = 0; i < sprigs.active.length; i++) {
             if (sprigs.active[i] === 0) continue;
 
+            // Marching sprigs ignore all job/idle logic
+            if (sprigs.state[i] === SprigState.FORCED_MARCH) continue;
+
             const jobId = sprigs.jobId[i];
             
             // Passive Discovery
-            if ((i + this.frameCount) % 30 === 0 && sprigs.state[i] !== SprigState.FORCED_MARCH) {
+            if ((i + this.frameCount) % 30 === 0) {
                 this.scanForResources(world, i, jobId);
             }
 
             const currentJobId = sprigs.jobId[i];
 
             if (currentJobId === -1) {
-                if (sprigs.state[i] !== SprigState.FORCED_MARCH) {
-                    this.handleIdle(world, i, dt);
-                }
+                this.handleIdle(world, i, dt);
                 continue;
             }
 
@@ -258,6 +259,9 @@ export class JobExecutionSystem {
                     this.completeJob(world, i, jobId);
                 }
             }
+        } else if (state === SprigState.IDLE) {
+            // Resume based on inventory
+            sprigs.state[i] = carrying ? SprigState.MOVE_TO_SINK : SprigState.MOVE_TO_SOURCE;
         } else {
             sprigs.state[i] = SprigState.MOVE_TO_SOURCE;
         }
