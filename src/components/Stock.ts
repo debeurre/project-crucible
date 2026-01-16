@@ -40,6 +40,10 @@ export class Stock {
         return total;
     }
 
+    public get capacityLimit(): number {
+        return this.capacity;
+    }
+
     public toJSON() {
         return {
             capacity: this.capacity,

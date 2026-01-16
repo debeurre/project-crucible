@@ -23,6 +23,8 @@ export class EntityData {
     public jobId: Int32Array;
     public timer: Float32Array;
     public speed: Float32Array;
+    public feedTimer: Float32Array;
+    public starvationState: Uint8Array;
     public count: number;
 
     constructor() {
@@ -47,6 +49,8 @@ export class EntityData {
         this.jobId = new Int32Array(size).fill(-1);
         this.timer = new Float32Array(size);
         this.speed = new Float32Array(size);
+        this.feedTimer = new Float32Array(size);
+        this.starvationState = new Uint8Array(size);
         this.count = 0;
     }
 
@@ -71,6 +75,8 @@ export class EntityData {
                 this.jobId[i] = -1;
                 this.timer[i] = 0;
                 this.speed[i] = CONFIG.MAX_SPEED;
+                this.feedTimer[i] = CONFIG.HUNGER_INTERVAL;
+                this.starvationState[i] = 0;
                 this.count++;
                 return i;
             }

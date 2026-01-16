@@ -31,6 +31,8 @@ export interface Structure {
     value?: number; // Health or Stock
     stock?: Stock;
     knownStructures?: number[]; // IDs of known resources (Nest only)
+    regenTimer?: number;
+    spawnTimer?: number;
 }
 
 export const getStructureStats = (type: StructureType): StructureStats => {
@@ -49,9 +51,11 @@ export function createStructure(type: StructureType, x: number, y: number): Stru
     if (type === StructureType.NEST) {
         structure.stock = new Stock(Infinity);
         structure.knownStructures = [];
+        structure.spawnTimer = 0;
     } else if (type === StructureType.COOKIE) {
         structure.stock = new Stock(500);
         structure.stock.add('FOOD', 500);
+        structure.regenTimer = 0; // Cookies regenerate? Prompt says "Regenerating component", let's assume Cookies for now or add explicit check later.
     } else if (type === StructureType.CRUMB) {
         structure.stock = new Stock(50);
         structure.stock.add('FOOD', 50);

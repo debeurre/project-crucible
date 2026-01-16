@@ -232,7 +232,17 @@ export class RenderSystem {
                 if (Math.abs(sprigs.vx[i]) > 0.01 || Math.abs(sprigs.vy[i]) > 0.01) {
                      sprite.rotation = Math.atan2(sprigs.vy[i], sprigs.vx[i]) + 1.57;
                 }
-                sprite.tint = sprigs.stock[i].count('FOOD') > 0 ? 0xFF69B4 : 0x00FF00;
+                
+                // Color Logic
+                let tint = 0x00FF00;
+                if (sprigs.starvationState[i] === 1) {
+                    tint = 0xFFA500; // Orange for Brownout
+                }
+                if (sprigs.stock[i].count('FOOD') > 0) {
+                     tint = 0xFF69B4; // Pink for Carrying
+                }
+                
+                sprite.tint = tint;
                 
                 // Calculate scale: Target Diameter / Texture Visual Diameter (36px)
                 const scale = (CONFIG.SPRIG_RADIUS * 2) / 36;
@@ -290,6 +300,20 @@ export class RenderSystem {
                  .fill(color);
             } else {
                 g.circle(s.x, s.y, radius).fill(color);
+            }
+
+            // Spawn Progress Bar
+            if (s.type === StructureType.NEST && s.spawnTimer && s.spawnTimer > 0) {
+                 const progress = s.spawnTimer / CONFIG.SPAWN_TIME;
+                 const barWidth = 40;
+                 const barHeight = 6;
+                 const bx = s.x - barWidth / 2;
+                 const by = s.y - radius - 15;
+                 
+                 // Bg
+                 g.rect(bx, by, barWidth, barHeight).fill(0x000000);
+                 // Fg
+                 g.rect(bx + 1, by + 1, (barWidth - 2) * progress, barHeight - 2).fill(0x00FF00);
             }
         }
     }

@@ -7,6 +7,7 @@ import { JobDispatchSystem } from './systems/JobDispatchSystem';
 import { JobExecutionSystem } from './systems/JobExecutionSystem';
 import { ToolManager } from './tools/ToolManager';
 import { UISystem } from './systems/UISystem';
+import { LifecycleSystem } from './systems/LifecycleSystem';
 import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, CONFIG } from './core/Config';
@@ -52,6 +53,7 @@ async function init() {
     const steeringSystem = new SteeringSystem();
     const jobDispatchSystem = new JobDispatchSystem();
     const jobExecutionSystem = new JobExecutionSystem();
+    const lifecycleSystem = new LifecycleSystem();
     const toolManager = new ToolManager(world);
     const uiSystem = new UISystem(app);
     const flowFieldSystem = new FlowFieldSystem();
@@ -79,6 +81,7 @@ async function init() {
     app.ticker.add(() => {
         const dt = app.ticker.deltaMS / 1000;
         toolManager.update(world);
+        lifecycleSystem.update(world, dt);
         jobDispatchSystem.update(world);
         jobExecutionSystem.update(world, dt);
         flowFieldSystem.update();
