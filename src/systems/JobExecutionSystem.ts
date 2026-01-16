@@ -61,6 +61,12 @@ export class JobExecutionSystem {
             if (s.type === StructureType.COOKIE || s.type === StructureType.CRUMB || s.type === StructureType.BUSH) {
                 if (s.stock && s.stock.count('FOOD') > 0) {
                     const currentTargetId = currentJobId !== -1 ? world.jobs.targetId[currentJobId] : -1;
+                    
+                    // Memory: Remember this source (if not current target)
+                    if (s.id !== currentTargetId) {
+                        sprigs.addDiscovery(i, s.id);
+                    }
+
                     if (s.id === currentTargetId) continue; 
 
                     const distToNew = (s.x - x)**2 + (s.y - y)**2;
@@ -225,10 +231,22 @@ export class JobExecutionSystem {
                     nest.stock.add('FOOD', amount);
                     
                     // Scout: Share knowledge
-                    if (nest.knownStructures && source) {
-                        if (!nest.knownStructures.includes(source.id)) {
+                    if (nest.knownStructures) {
+                        // 1. Direct Target
+                        if (source && !nest.knownStructures.includes(source.id)) {
                             nest.knownStructures.push(source.id);
                         }
+                        // 2. Buffered Memories
+                        const start = i * sprigs.MEMORY_CAPACITY;
+                        const count = sprigs.discoveryCount[i];
+                        for(let m=0; m<count; m++) {
+                            const id = sprigs.discoveryBuffer[start + m];
+                            if (!nest.knownStructures.includes(id)) {
+                                nest.knownStructures.push(id);
+                            }
+                        }
+                        // 3. Wipe Memory
+                        sprigs.clearDiscoveries(i);
                     }
                 }
                 

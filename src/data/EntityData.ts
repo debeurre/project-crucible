@@ -26,6 +26,11 @@ export class EntityData {
     public feedTimer: Float32Array;
     public hungerState: Uint8Array;
     public count: number;
+    
+    // Memory
+    public discoveryBuffer: Int32Array;
+    public discoveryCount: Uint8Array;
+    public readonly MEMORY_CAPACITY = 4;
 
     constructor() {
         const size = CONFIG.MAX_SPRIGS;
@@ -51,7 +56,28 @@ export class EntityData {
         this.speed = new Float32Array(size);
         this.feedTimer = new Float32Array(size);
         this.hungerState = new Uint8Array(size);
+        
+        this.discoveryBuffer = new Int32Array(size * this.MEMORY_CAPACITY).fill(-1);
+        this.discoveryCount = new Uint8Array(size);
+        
         this.count = 0;
+    }
+
+    public addDiscovery(sprigId: number, structureId: number) {
+        if (this.discoveryCount[sprigId] < this.MEMORY_CAPACITY) {
+            // Check for duplicates in current memory
+            const start = sprigId * this.MEMORY_CAPACITY;
+            for(let i=0; i<this.discoveryCount[sprigId]; i++) {
+                if (this.discoveryBuffer[start + i] === structureId) return;
+            }
+            
+            this.discoveryBuffer[start + this.discoveryCount[sprigId]] = structureId;
+            this.discoveryCount[sprigId]++;
+        }
+    }
+
+    public clearDiscoveries(sprigId: number) {
+        this.discoveryCount[sprigId] = 0;
     }
 
     public spawn(startX: number, startY: number): number {
@@ -77,6 +103,7 @@ export class EntityData {
                 this.speed[i] = CONFIG.MAX_SPEED;
                 this.feedTimer[i] = CONFIG.HUNGER_INTERVAL;
                 this.hungerState[i] = 0;
+                this.discoveryCount[i] = 0;
                 this.count++;
                 return i;
             }
