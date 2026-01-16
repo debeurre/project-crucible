@@ -58,7 +58,7 @@ export class JobExecutionSystem {
         const nearby = world.structureHash.query(x, y, VIEW_RADIUS);
 
         for (const s of nearby) {
-            if (s.type === StructureType.COOKIE || s.type === StructureType.CRUMB) {
+            if (s.type === StructureType.COOKIE || s.type === StructureType.CRUMB || s.type === StructureType.BUSH) {
                 if (s.stock && s.stock.count('FOOD') > 0) {
                     const currentTargetId = currentJobId !== -1 ? world.jobs.targetId[currentJobId] : -1;
                     if (s.id === currentTargetId) continue; 

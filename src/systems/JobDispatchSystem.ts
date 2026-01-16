@@ -28,7 +28,7 @@ export class JobDispatchSystem {
                 // A. Scan Local Area (The "Eye")
                 const nearby = world.structureHash.query(s.x, s.y, CONFIG.NEST_VIEW_RADIUS);
                 for (const other of nearby) {
-                    if ((other.type === StructureType.COOKIE || other.type === StructureType.CRUMB) && 
+                    if ((other.type === StructureType.COOKIE || other.type === StructureType.CRUMB || other.type === StructureType.BUSH) && 
                         other.stock && other.stock.count('FOOD') > 0) {
                         
                         // Distance Check (Hash is coarse)
