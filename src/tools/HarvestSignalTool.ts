@@ -2,6 +2,7 @@ import { Tool } from './Tool';
 import { WorldState } from '../core/WorldState';
 import { StructureType, createStructure } from '../data/StructureData';
 import { JobType } from '../data/JobData';
+import { CONFIG } from '../core/Config';
 
 export class HarvestSignalTool implements Tool {
     
@@ -14,7 +15,7 @@ export class HarvestSignalTool implements Tool {
         world.structureHash.add(signal);
         
         // Signal Logic: Scan and Post Jobs
-        const RADIUS = 300;
+        const RADIUS = CONFIG.SIGNAL_RADIUS;
         const nearby = world.structureHash.query(x, y, RADIUS);
         let jobsPosted = 0;
 

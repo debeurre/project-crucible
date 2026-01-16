@@ -24,7 +24,7 @@ export const STRUCTURE_STATS: Record<StructureType, StructureStats> = {
     [StructureType.COOKIE]: { name: 'Cookie', radius: 45, color: 0xDAA520, solid: false, shape: 'CIRCLE' },
     [StructureType.ROCK]:   { name: 'Rock',   radius: 40, color: 0x808080, solid: true,  shape: 'CIRCLE' },
     [StructureType.BUSH]:   { name: 'Bush',   radius: 20, color: 0x228B22, solid: false, shape: 'CIRCLE' },
-    [StructureType.SIGNAL]: { name: 'Signal', radius: 10, color: 0x00FF00, solid: false, shape: 'CIRCLE' }
+    [StructureType.SIGNAL]: { name: 'Signal', radius: 300, color: 0x00FF00, solid: false, shape: 'CIRCLE' }
 };
 
 export interface Structure {

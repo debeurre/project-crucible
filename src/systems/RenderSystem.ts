@@ -325,7 +325,21 @@ export class RenderSystem {
                  .closePath()
                  .fill(color);
             } else if (s.type === StructureType.SIGNAL) {
+                // Area Indicator
                 g.circle(s.x, s.y, radius).fill({ color, alpha: 0.25 });
+                
+                // Pennant (1.0 alpha)
+                // Pole
+                g.moveTo(s.x, s.y + 10)
+                 .lineTo(s.x, s.y - 20)
+                 .stroke({ width: 2, color: 0xFFFFFF });
+                
+                // Triangle
+                g.moveTo(s.x, s.y - 20)
+                 .lineTo(s.x + 15, s.y - 12)
+                 .lineTo(s.x, s.y - 5)
+                 .closePath()
+                 .fill(color);
             } else {
                 g.circle(s.x, s.y, radius).fill(color);
             }
