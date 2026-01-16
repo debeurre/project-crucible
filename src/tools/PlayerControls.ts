@@ -1,6 +1,12 @@
 import { ToolManager } from './ToolManager';
 import { TOOL_NAMES } from './ToolConfig';
 
+/**
+ * PlayerControls
+ * Handles the UI for player-specific tools (Signal, Command).
+ * Currently implemented with DOM elements for rapid iteration.
+ * TODO: Migrate to a native PixiJS UI layer (e.g., in a future PlayerGUI class) for better integration with the game view.
+ */
 export class PlayerControls {
     private toolManager: ToolManager;
     private container: HTMLDivElement;
