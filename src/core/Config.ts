@@ -44,6 +44,8 @@ export const CONFIG = {
     // Player GUI
     COMMAND_RADIUS: 50.0,
     SIGNAL_RADIUS: 300.0,
+    SIGNAL_DURATION: 30.0,
+    SIGNAL_ALPHA: 0.25,
 };
 
 export const SCREEN_WIDTH = CONFIG.GRID_SIZE * CONFIG.WORLD_WIDTH;

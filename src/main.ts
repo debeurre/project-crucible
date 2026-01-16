@@ -8,6 +8,7 @@ import { JobExecutionSystem } from './systems/JobExecutionSystem';
 import { ToolManager } from './tools/ToolManager';
 import { UISystem } from './systems/UISystem';
 import { LifecycleSystem } from './systems/LifecycleSystem';
+import { SignalSystem } from './systems/SignalSystem';
 import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, CONFIG } from './core/Config';
@@ -55,6 +56,7 @@ async function init() {
     const jobDispatchSystem = new JobDispatchSystem();
     const jobExecutionSystem = new JobExecutionSystem();
     const lifecycleSystem = new LifecycleSystem();
+    const signalSystem = new SignalSystem();
     const toolManager = new ToolManager(world);
     const uiSystem = new UISystem(app);
     const flowFieldSystem = new FlowFieldSystem();
@@ -84,6 +86,7 @@ async function init() {
         const dt = app.ticker.deltaMS / 1000;
         toolManager.update(world);
         lifecycleSystem.update(world, dt);
+        signalSystem.update(world, dt);
         jobDispatchSystem.update(world);
         jobExecutionSystem.update(world, dt);
         flowFieldSystem.update();

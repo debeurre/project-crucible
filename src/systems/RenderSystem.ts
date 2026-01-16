@@ -326,7 +326,7 @@ export class RenderSystem {
                  .fill(color);
             } else if (s.type === StructureType.SIGNAL) {
                 // Area Indicator
-                g.circle(s.x, s.y, radius).fill({ color, alpha: 0.25 });
+                g.circle(s.x, s.y, radius).fill({ color, alpha: CONFIG.SIGNAL_ALPHA });
                 
                 // Pennant (1.0 alpha)
                 // Pole
