@@ -20,9 +20,9 @@ export const DEFAULT_LEVEL: LevelData = {
         {"id":9,"type":1,"x":900,"y":680,"stock":{"capacity":50,"inventory":[["FOOD",50]]}},
         {"id":10,"type":1,"x":1050,"y":610,"stock":{"capacity":50,"inventory":[["FOOD",50]]}},
         {"id":11,"type":1,"x":1200,"y":540,"stock":{"capacity":50,"inventory":[["FOOD",50]]}},
-        {"id":12,"type":4,"x":250,"y":350,"stock":{"capacity":10,"inventory":[["FOOD",10]]},"regenTimer":0},
+        {"id":12,"type":4,"x":300,"y":350,"stock":{"capacity":10,"inventory":[["FOOD",10]]},"regenTimer":0},
         {"id":13,"type":4,"x":900,"y":350,"stock":{"capacity":10,"inventory":[["FOOD",10]]},"regenTimer":0},
-        {"id":14,"type":4,"x":250,"y":900,"stock":{"capacity":10,"inventory":[["FOOD",10]]},"regenTimer":0}
+        {"id":14,"type":4,"x":300,"y":900,"stock":{"capacity":10,"inventory":[["FOOD",10]]},"regenTimer":0}
     ],
     "nextStructureId": 15
 }
