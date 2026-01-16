@@ -36,16 +36,14 @@ export class PlayerControls {
             btn.textContent = name;
             btn.style.backgroundColor = '#444';
             btn.style.color = 'white';
-            btn.style.padding = '15px 25px';
-            btn.style.border = '2px solid #555';
-            btn.style.borderRadius = '8px';
+            btn.style.padding = '10px 0';
+            btn.style.border = '1px solid #555';
+            btn.style.borderRadius = '5px';
             btn.style.cursor = 'pointer';
             btn.style.fontFamily = 'monospace';
-            btn.style.fontSize = '16px';
-            btn.style.fontWeight = 'bold';
             btn.style.userSelect = 'none';
             btn.style.textAlign = 'center';
-            btn.style.minWidth = '100px';
+            btn.style.width = '80px';
             
             btn.addEventListener('pointerdown', (e) => {
                 e.stopPropagation();
@@ -65,15 +63,11 @@ export class PlayerControls {
             for (const name in this.buttons) {
                 const btn = this.buttons[name];
                 if (name === active) {
-                    btn.style.backgroundColor = '#2196F3'; // Blue for Player Tools
-                    btn.style.borderColor = '#64B5F6';
-                    btn.style.transform = 'translateY(-2px)';
-                    btn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                    btn.style.backgroundColor = '#4CAF50'; // Green like devtools
+                    btn.style.borderColor = '#66BB6A';
                 } else {
                     btn.style.backgroundColor = '#444';
                     btn.style.borderColor = '#555';
-                    btn.style.transform = 'translateY(0)';
-                    btn.style.boxShadow = 'none';
                 }
             }
         }
