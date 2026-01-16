@@ -68,7 +68,7 @@ export class JobDispatchSystem {
                 // Simple: Find nearest idle sprig
                 // Optimization: Use SpatialHash if available, but linear scan for 500 sprigs is fine for now
                 for (let i = 0; i < sprigs.active.length; i++) {
-                    if (sprigs.active[i] && sprigs.jobId[i] === -1) {
+                    if (sprigs.active[i] && sprigs.jobId[i] === -1 && sprigs.state[i] !== SprigState.FORCED_MARCH) {
                         // Check distance to target? 
                         // We need target position.
                         // Job stores targetId. Look up structure.
