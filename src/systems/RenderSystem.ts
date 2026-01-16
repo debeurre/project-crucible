@@ -327,6 +327,20 @@ export class RenderSystem {
                  // Fg
                  g.rect(bx + 1, by + 1, (barWidth - 2) * progress, barHeight - 2).fill(0x00FF00);
             }
+
+            // Regen Progress Bar (Bush)
+            if (s.type === StructureType.BUSH && s.regenTimer && s.regenTimer > 0) {
+                 const progress = s.regenTimer / CONFIG.REGEN_INTERVAL;
+                 const barWidth = 30;
+                 const barHeight = 4;
+                 const bx = s.x - barWidth / 2;
+                 const by = s.y - radius - 10;
+                 
+                 // Bg
+                 g.rect(bx, by, barWidth, barHeight).fill(0x000000);
+                 // Fg (Blue for Regen)
+                 g.rect(bx + 1, by + 1, (barWidth - 2) * progress, barHeight - 2).fill(0x00FFFF);
+            }
         }
     }
 }

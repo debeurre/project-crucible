@@ -39,7 +39,7 @@ export const CONFIG = {
     HUNGER_RISK: 0.5,
     SPAWN_COST: 10,
     SPAWN_TIME: 5.0,
-    REGEN_INTERVAL: 60.0,
+    REGEN_INTERVAL: 30.0,
     REGEN_AMOUNT: 10,
 };
 
