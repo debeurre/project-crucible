@@ -40,15 +40,20 @@ export class WorldState {
     }
 
     public serialize(): string {
-        const levelData = {
-            width: this.map.width,
-            height: this.map.height,
-            // Convert TypedArray to normal Array for JSON
-            terrain: Array.from(this.map.terrain),
-            structures: this.structures,
-            nextStructureId: this.nextStructureId
-        };
-        return JSON.stringify(levelData);
+        const terrainStr = JSON.stringify(Array.from(this.map.terrain));
+        
+        // Custom serialization for structures to be multi-line but compact per object
+        const structuresStr = this.structures.map(s => JSON.stringify(s)).join(',\n        ');
+
+        return `{
+    "width": ${this.map.width},
+    "height": ${this.map.height},
+    "terrain": ${terrainStr},
+    "structures": [
+        ${structuresStr}
+    ],
+    "nextStructureId": ${this.nextStructureId}
+}`;
     }
 
     public load(json: string) {

@@ -33,7 +33,7 @@ export const CONFIG = {
     DEBUG_SPRIG_VECTORS: true,
     DEBUG_STRUCTURE_LABELS: true,
     // Lifecycle
-    HUNGER_INTERVAL: 30.0,
+    HUNGER_INTERVAL: 300.0,
     SPAWN_COST: 10,
     SPAWN_TIME: 3.0,
     REGEN_INTERVAL: 60.0,
