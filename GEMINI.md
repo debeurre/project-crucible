@@ -1,7 +1,9 @@
 # PROJECT GARDENREALM: CONTEXT & RULES
 
-## CURRENT PHASE: TRAILFIELD REWRITE
-As of JAN-09-2026: Primitives rebuilt. Level editor and other devtooling enhanced. Restoring basic autonomous steering.
+## CURRENT PHASE: JOB SYSTEM REWRITE
+As of JAN-15-2026: Primitives rebuilt. Level editor and other devtooling enhanced. Restoring basic autonomous steering.
+
+Autonomous steering restored to parity with early prototypes and vision. New 'Job System' has supplanted original 'trailfield' objective. Now restoring 'metabolic loop'.
 
 ## 1. THE DEVELOPER (CRITICAL)
 - **Input Constraints:** Developer MOSTLY uses a mouse/touchscreen (Tap/Drag). 
@@ -17,8 +19,8 @@ As of JAN-09-2026: Primitives rebuilt. Level editor and other devtooling enhance
     - **Output:** Sprigs autonomously Scavenge, Haul, Fight, Build and Explore based on signals/need.
 - **Vibe:** "Garden Fantasy." Organic, biological, insectoid behavior wrapped in a cute/fairy-tale aesthetic.
 - **Key Mechanics:**
-    - **Autonomous Survival:** An empty Sprig looks for work; a full Sprig looks for home. Emergent equilibriums without player intervention.
-    - **Adaptive Evolution:** No preset classes. Sprigs specialize as they work and engage with their environment.
+    - **Autonomous Survival:** An idle Sprig looks for work; an occupied Sprig executes tasks to sustain its nest. Equilibriums emerge without player intervention.
+    - **Adaptive Evolution:** No preset classes. Sprigs are generalists that specialize as they work and engage with their environment.
     - **Physical Resources:** Resources are physical items on the map, not only abstract numbers.
 
 ## 3. CODING GUIDELINES

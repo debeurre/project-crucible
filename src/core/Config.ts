@@ -13,23 +13,23 @@ export const CONFIG = {
     // Wander
     WANDER_SPEED: 50.0,
     WANDER_DIST: 60.0,
-    WANDER_TMIN: 1.0,
+    WANDER_TMIN: 2.0,
     WANDER_TMAX: 5.0,
     // Steering
     STEER_SEPARATION_WEIGHT: 1.0,
     STEER_COHESION_WEIGHT: 0.5,
-    STEER_ALIGNMENT_WEIGHT: 0.0,
+    STEER_ALIGNMENT_WEIGHT: 0.0,    // standard boids force, unused
     STEER_SEEK_WEIGHT: 1.0,
-    STEER_AVOID_WEIGHT: 3.0,
+    STEER_AVOID_WEIGHT: 2.0,
     FRICTION_BASE: 0.0,
     FRICTION_MUD: 0.5,
     FRICTION_WATER: 0.8,
-    // Tools
+    // Devtools
     SPAWN_PER_TAP: 1,
     SPAWN_PER_SEC: 10,
     TAP_THRESHOLD_MS: 200,
     BRUSH_RADIUS: 50.0,
-    ERASER_RADIUS: 30.0,
+    ERASER_RADIUS: 40.0,
     DEBUG_SPRIG_VECTORS: true,
     DEBUG_STRUCTURE_LABELS: true,
 };
