@@ -69,10 +69,16 @@ export class LifecycleSystem {
                     sprigs.feedTimer[i] = CONFIG.HUNGER_INTERVAL;
                     
                     if (brownout) {
-                        sprigs.starvationState[i] = 1;
+                        if (sprigs.hungerState[i] < 2) {
+                             sprigs.hungerState[i]++;
+                        } else {
+                             // Missed 3rd meal -> Die
+                             this.killSprig(world, i);
+                             continue;
+                        }
                         sprigs.speed[i] = CONFIG.MAX_SPEED * CONFIG.HUNGER_PENALTY;
                     } else {
-                        sprigs.starvationState[i] = 0;
+                        sprigs.hungerState[i] = 0;
                         sprigs.speed[i] = CONFIG.MAX_SPEED;
                     }
                 }

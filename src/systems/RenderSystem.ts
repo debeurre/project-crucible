@@ -234,12 +234,24 @@ export class RenderSystem {
                 }
                 
                 // Color Logic
-                let tint = 0x00FF00;
-                if (sprigs.starvationState[i] === 1) {
-                    tint = 0xFFA500; // Orange for Brownout
-                }
-                if (sprigs.stock[i].count('FOOD') > 0) {
-                     tint = 0xFF69B4; // Pink for Carrying
+                let tint = 0x00FF00; // Default Green
+                const isHauling = sprigs.stock[i].count('FOOD') > 0;
+                const hunger = sprigs.hungerState[i];
+
+                if (isHauling) {
+                    if (hunger === 1) {
+                         tint = 0xFF7F50; // Coral (Pink + Orangeish)
+                    } else if (hunger === 2) {
+                         tint = 0xFF4500; // OrangeRed (Urgent)
+                    } else {
+                         tint = 0xFF69B4; // Pink
+                    }
+                } else {
+                    if (hunger === 1) {
+                        tint = 0xFFA500; // Orange
+                    } else if (hunger === 2) {
+                        tint = 0xFF4500; // OrangeRed
+                    }
                 }
                 
                 sprite.tint = tint;
