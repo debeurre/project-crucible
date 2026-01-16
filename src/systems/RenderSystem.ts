@@ -74,6 +74,10 @@ export class RenderSystem {
             const color = this.activeTool === 'ERASER' ? 0xFF0000 : 0xFFFFFF;
             const radius = this.activeTool === 'ERASER' ? CONFIG.ERASER_RADIUS : CONFIG.BRUSH_RADIUS;
             g.circle(x, y, radius).stroke({ width: 2, color });
+        } else if (this.activeTool === 'COMMAND') {
+            // Draw Selection Brush
+            g.circle(x, y, CONFIG.BRUSH_RADIUS).stroke({ width: 2, color: 0x00FFFF });
+            g.circle(x, y, CONFIG.BRUSH_RADIUS).fill({ color: 0x00FFFF, alpha: 0.1 });
         } else {
             // Draw Grid Highlight
             const col = this.world.grid.getCol(x);
@@ -259,6 +263,15 @@ export class RenderSystem {
                 // Calculate scale: Target Diameter / Texture Visual Diameter (36px)
                 const scale = (CONFIG.SPRIG_RADIUS * 2) / 36;
                 sprite.scale.set(scale);
+
+                // Selection Indicator
+                if (sprigs.selected[i]) {
+                    this.debugGraphics.moveTo(sprite.x, sprite.y - 20)
+                        .lineTo(sprite.x - 5, sprite.y - 30)
+                        .lineTo(sprite.x + 5, sprite.y - 30)
+                        .closePath()
+                        .fill(0xFFFF00);
+                }
             }
         }
     }
