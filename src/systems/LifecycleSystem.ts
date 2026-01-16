@@ -20,33 +20,60 @@ export class LifecycleSystem {
 
             if (sprigs.feedTimer[i] <= 0) {
                 // Time to eat
-                let fed = false;
                 const homeId = sprigs.homeID[i];
+                let dying = false;
+                let brownout = false;
+
                 if (homeId !== -1) {
                     const nest = structures.find(s => s.id === homeId);
-                    if (nest && nest.stock && nest.stock.count('FOOD') >= 1) {
-                        nest.stock.remove('FOOD', 1);
-                        fed = true;
+                    if (nest && nest.stock) {
+                        const food = nest.stock.count('FOOD');
+                        
+                        // Count housed sprigs
+                        let housed = 0;
+                        for(let k=0; k<sprigs.active.length; k++) {
+                            if (sprigs.active[k] && sprigs.homeID[k] === homeId) housed++;
+                        }
+
+                        const buffer = housed * CONFIG.HUNGER_BUFFER;
+
+                        if (food > 0) {
+                            nest.stock.remove('FOOD', 1);
+                            
+                            // Check for Brownout Condition
+                            if (food <= buffer) {
+                                brownout = true;
+                            }
+                        } else {
+                            // No Food -> Risk Death
+                            if (Math.random() < CONFIG.HUNGER_RISK) {
+                                dying = true;
+                            } else {
+                                // Survived but starving (Brownout)
+                                brownout = true;
+                            }
+                        }
+                    } else {
+                         // No nest or no stock component? Die.
+                         dying = true;
                     }
+                } else {
+                    // Homeless? Die.
+                    dying = true;
                 }
 
-                if (fed) {
-                    // Reset to Satisfied
-                    sprigs.feedTimer[i] = CONFIG.HUNGER_INTERVAL;
-                    sprigs.starvationState[i] = 0;
-                    sprigs.speed[i] = CONFIG.MAX_SPEED;
+                if (dying) {
+                    this.killSprig(world, i);
                 } else {
-                    // Failed to eat
-                    if (sprigs.starvationState[i] === 0) {
-                        // Enter Brownout
+                    // Reset Timer
+                    sprigs.feedTimer[i] = CONFIG.HUNGER_INTERVAL;
+                    
+                    if (brownout) {
                         sprigs.starvationState[i] = 1;
-                        sprigs.feedTimer[i] = CONFIG.HUNGER_INTERVAL; // Give another cycle before death
-                        sprigs.speed[i] = CONFIG.MAX_SPEED * 0.5;
-                        // Cap carry capacity? Logic is in JobExecution, but we can't easily change capacity there dynamically without checks.
-                        // For now, speed reduction is key.
-                    } else if (sprigs.starvationState[i] === 1) {
-                        // Death
-                        this.killSprig(world, i);
+                        sprigs.speed[i] = CONFIG.MAX_SPEED * CONFIG.HUNGER_PENALTY;
+                    } else {
+                        sprigs.starvationState[i] = 0;
+                        sprigs.speed[i] = CONFIG.MAX_SPEED;
                     }
                 }
             }
@@ -74,9 +101,18 @@ export class LifecycleSystem {
     }
 
     private updateSpawning(world: WorldState, dt: number) {
+        const sprigs = world.sprigs;
         for (const s of world.structures) {
             if (s.type === StructureType.NEST && s.stock) {
-                if (s.stock.count('FOOD') >= CONFIG.SPAWN_COST) {
+                // Calculate Threshold
+                let housed = 0;
+                for(let k=0; k<sprigs.active.length; k++) {
+                    if (sprigs.active[k] && sprigs.homeID[k] === s.id) housed++;
+                }
+                
+                const threshold = (housed * CONFIG.HUNGER_BUFFER) + CONFIG.SPAWN_COST;
+
+                if (s.stock.count('FOOD') >= threshold) {
                     if (s.spawnTimer === undefined) s.spawnTimer = 0;
                     s.spawnTimer += dt;
                     
