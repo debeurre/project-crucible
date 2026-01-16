@@ -5,9 +5,11 @@ import { InputState } from '../core/InputState';
 export class UISystem {
     private app: Application;
     private statsText: Text;
+    private startTime: number;
 
     constructor(app: Application) {
         this.app = app;
+        this.startTime = Date.now();
         const style = new TextStyle({
             fontFamily: 'monospace',
             fontSize: 16,
@@ -37,6 +39,11 @@ export class UISystem {
         const gx = world.grid.getCol(mx);
         const gy = world.grid.getRow(my);
 
-        this.statsText.text = `FPS: ${fps} | Sprigs: ${activeCount}\nWorld: ${mx.toFixed(0)}, ${my.toFixed(0)}\nGrid: [${gx}, ${gy}]`;
+        // Timer
+        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        const mm = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const ss = (elapsed % 60).toString().padStart(2, '0');
+
+        this.statsText.text = `Time: ${mm}:${ss}\nFPS: ${fps} | Sprigs: ${activeCount}\nWorld: ${mx.toFixed(0)}, ${my.toFixed(0)}\nGrid: [${gx}, ${gy}]`;
     }
 }
