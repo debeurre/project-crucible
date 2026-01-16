@@ -29,7 +29,10 @@ export class Toolbar {
         this.container.style.zIndex = '100';
         document.body.appendChild(this.container);
 
-        TOOL_ORDER.forEach(name => {
+        // Filter out Player Tools
+        const DEV_TOOLS = TOOL_ORDER.filter(t => t !== 'SIGNAL' && t !== 'COMMAND');
+
+        DEV_TOOLS.forEach(name => {
             const row = document.createElement('div');
             row.style.display = 'flex';
             row.style.gap = '5px';

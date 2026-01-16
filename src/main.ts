@@ -14,6 +14,7 @@ import { SCREEN_WIDTH, SCREEN_HEIGHT, CONFIG } from './core/Config';
 import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { DEFAULT_LEVEL } from './data/LevelData';
 import { Toolbar } from './tools/Toolbar';
+import { PlayerControls } from './tools/PlayerControls';
 
 async function init() {
     const app = new Application();
@@ -59,6 +60,7 @@ async function init() {
     const flowFieldSystem = new FlowFieldSystem();
 
     const toolbar = new Toolbar(toolManager, world);
+    const playerControls = new PlayerControls(toolManager);
 
     window.addEventListener('keydown', (e) => {
         if (e.key === '1') toolManager.setTool('HAND');
@@ -93,6 +95,7 @@ async function init() {
         
         uiSystem.update(world);
         toolbar.update();
+        playerControls.update();
     });
 }
 
