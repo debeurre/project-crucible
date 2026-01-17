@@ -2,6 +2,7 @@ import { Tool } from './Tool';
 import { WorldState } from '../core/WorldState';
 import { SprigState } from '../data/SprigState';
 import { CONFIG } from '../core/Config';
+import { Graphics } from 'pixi.js';
 
 export class CommandBrushTool implements Tool {
     private isSelecting: boolean = false;
@@ -71,6 +72,18 @@ export class CommandBrushTool implements Tool {
             
             this.currentPathPoints = [];
             this.lastPoint = null;
+        }
+    }
+
+    public drawPreview(g: Graphics): void {
+        if (!this.isDrawing || this.currentPathPoints.length < 1) return;
+
+        g.moveTo(this.currentPathPoints[0].x, this.currentPathPoints[0].y);
+        for (let i = 1; i < this.currentPathPoints.length; i++) {
+            const p = this.currentPathPoints[i];
+            const size = 4 * (1 - i / (this.currentPathPoints.length + 1)) + 1;
+            g.lineTo(p.x, p.y).stroke({ width: size, color: 0x00FF00, alpha: 0.5 });
+            g.circle(p.x, p.y, size).fill({ color: 0x00FF00, alpha: 0.7 });
         }
     }
 

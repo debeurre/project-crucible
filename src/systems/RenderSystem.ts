@@ -5,10 +5,12 @@ import { getStructureStats, StructureType } from '../data/StructureData';
 import { TextureManager } from '../core/TextureManager';
 import { InputState } from '../core/InputState';
 import { Terrain } from '../data/MapData';
+import { ToolManager } from '../tools/ToolManager';
 
 export class RenderSystem {
     private app: Application;
     private world: WorldState;
+    private toolManager: ToolManager;
     private gridGraphics: Graphics;
     private structureGraphics: Graphics;
     private obstacleDebugGraphics: Graphics;
@@ -22,9 +24,10 @@ export class RenderSystem {
     private sprites: Map<number, Sprite> = new Map();
     public activeTool: string = '';
 
-    constructor(app: Application, world: WorldState) {
+    constructor(app: Application, world: WorldState, toolManager: ToolManager) {
         this.app = app;
         this.world = world;
+        this.toolManager = toolManager;
         this.container = new Container();
         this.gridGraphics = new Graphics();
         this.structureGraphics = new Graphics();
@@ -56,6 +59,7 @@ export class RenderSystem {
 
         this.drawStructures();
         this.drawPaths();
+        this.toolManager.drawActiveToolPreview(this.debugGraphics, this.world);
         this.updateSprigs();
         
         this.drawDebugVectors();

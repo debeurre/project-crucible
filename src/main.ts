@@ -50,14 +50,14 @@ async function init() {
     // Initialize TextureManager before RenderSystem
     await TextureManager.init(app);
 
-    const renderSystem = new RenderSystem(app, world);
+    const toolManager = new ToolManager(world);
+    const renderSystem = new RenderSystem(app, world, toolManager);
     const physicsSystem = new PhysicsSystem();
     const steeringSystem = new SteeringSystem();
     const jobDispatchSystem = new JobDispatchSystem();
     const jobExecutionSystem = new JobExecutionSystem();
     const lifecycleSystem = new LifecycleSystem();
     const signalSystem = new SignalSystem();
-    const toolManager = new ToolManager(world);
     const uiSystem = new UISystem(app);
     const flowFieldSystem = new FlowFieldSystem();
 

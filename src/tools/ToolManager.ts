@@ -1,6 +1,7 @@
 import { Tool, ToolOption } from './Tool';
 import { WorldState } from '../core/WorldState';
 import { InputState } from '../core/InputState';
+import { Graphics } from 'pixi.js';
 import { DragTool } from './DragTool';
 import { TerrainTool } from './TerrainTool';
 import { SpawnTool } from './SpawnTool';
@@ -40,6 +41,12 @@ export class ToolManager {
 
     public getActiveToolName(): string {
         return this.activeToolName;
+    }
+
+    public drawActiveToolPreview(g: Graphics, world: WorldState) {
+        if (this.activeTool.drawPreview) {
+            this.activeTool.drawPreview(g, world);
+        }
     }
 
     public cycleToolOption(name: string) {
