@@ -1,9 +1,7 @@
 # PROJECT GARDENREALM: CONTEXT & RULES
 
-## CURRENT PHASE: JOB SYSTEM REWRITE
-As of JAN-15-2026: Primitives rebuilt. Level editor and other devtooling enhanced. Restoring basic autonomous steering.
-
-Autonomous steering restored to parity with early prototypes and vision. New 'Job System' has supplanted original 'trailfield' objective. Now restoring 'metabolic loop'.
+## CURRENT PHASE: JOB SYSTEM WRAP-UP
+As of JAN-16-2026: Metabolic loop and player UI restored then greatly enhanced. Codebase refactored to deflate bloated classes.
 
 ## 1. THE DEVELOPER (CRITICAL)
 - **Input Constraints:** Developer MOSTLY uses a mouse/touchscreen (Tap/Drag). 
@@ -33,6 +31,7 @@ Autonomous steering restored to parity with early prototypes and vision. New 'Jo
 ## 4. ARCHITECTURE (STRICT)
 - **Entity-Component-Systems (ECS):** Prefer composition and simple functions over deep class inheritance. Avoid state in **Systems**. **Systems** (e.g., `HivemindSystem`) manage **Pure Data** (`{ hp, x, y, type }`).
 - **Data-Oriented Design (DOD):** Use flat `Float32Array` buffers for high-volume entities (Sprigs). The 'target' is a smooth 60fps at 500+ entities/objects.
+- **Hybrid over Pure ECS-DOD:** Use of traditonal objects and patterns for rapid iteration is encouraged if the gains from enforcing architectural purity would be minimal at best.
 - **Separate Data from View:** **Renderers** (e.g., `RenderSystem`) read that data and manage **PixiJS Sprites**. **Never** store Sprites inside the Logic System.
 - **Raw Math Only:** Do NOT use `PIXI.Point` methods for physics. Use raw `x/y` numbers to avoid garbage collection pauses.
 - **Spatial Optimization:** Use Spatial Hash Grids for neighbor lookups.
