@@ -17,8 +17,8 @@ export const CONFIG = {
     HUNGER_RISK: 0.5,
     SPAWN_COST: 10,
     SPAWN_TIME: 5.0,
-    REGEN_INTERVAL: 30.0,
-    REGEN_AMOUNT: 10,
+    REGEN_INTERVAL: 15.0,
+    REGEN_AMOUNT: 5,
     // Wander
     WANDER_SPEED: 50.0,
     WANDER_DIST: 60.0,
@@ -30,7 +30,7 @@ export const CONFIG = {
     STEER_ALIGNMENT_WEIGHT: 0.0,    // standard boids force, unused
     STEER_SEEK_WEIGHT: 1.0,
     STEER_AVOID_WEIGHT: 2.5,
-    STEER_PATH_WEIGHT: 0.5,
+    STEER_PATH_WEIGHT: 0.75,
     FRICTION_BASE: 0.0,
     FRICTION_MUD: 0.5,
     FRICTION_WATER: 0.8,
