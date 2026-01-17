@@ -56,17 +56,25 @@ export class CommandBrushTool implements Tool {
             this.isSelecting = false;
         } else if (this.isDrawing) {
             this.isDrawing = false;
-            // Add final point
-            this.currentPathPoints.push({x, y});
             
-            // Create Path
-            if (this.currentPathPoints.length > 1) {
-                const pathId = world.paths.add(this.currentPathPoints);
-                if (pathId !== -1) {
-                    this.assignPathToSelected(world, pathId);
+            // Check if the drag had any significant length
+            const start = this.currentPathPoints[0];
+            const dragDistSq = (x - start.x)**2 + (y - start.y)**2;
+            const IS_TAP = dragDistSq < 100; // 10px threshold
+
+            if (!IS_TAP) {
+                // Add final point
+                this.currentPathPoints.push({x, y});
+                
+                // Create Path
+                if (this.currentPathPoints.length > 1) {
+                    const pathId = world.paths.add(this.currentPathPoints);
+                    if (pathId !== -1) {
+                        this.assignPathToSelected(world, pathId);
+                    }
                 }
             } else {
-                // Double tap/Short drag on empty terrain -> Deselect
+                // Tap on empty terrain (since we already checked for sprig in onDown) -> Deselect
                 this.clearSelection(world);
             }
             
