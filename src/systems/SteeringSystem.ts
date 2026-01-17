@@ -49,8 +49,8 @@ export class SteeringSystem {
                     const dist = Math.sqrt(distSq);
                     const desireX = (dx / dist) * sprigs.speed[i];
                     const desireY = (dy / dist) * sprigs.speed[i];
-                    ax += (desireX - sprigs.vx[i]) * 5.0;
-                    ay += (desireY - sprigs.vy[i]) * 5.0;
+                    ax += (desireX - sprigs.vx[i]) * CONFIG.STEER_PATH_WEIGHT;
+                    ay += (desireY - sprigs.vy[i]) * CONFIG.STEER_PATH_WEIGHT;
                 } else {
                     // Advance Waypoint or Finish
                     if (pathId !== -1 && world.paths.active[pathId]) {
@@ -70,6 +70,21 @@ export class SteeringSystem {
                     } else {
                         // No path or path invalid -> Arrived at single point
                         sprigs.state[i] = SprigState.IDLE;
+                    }
+                }
+
+                // Apply neighbors (Separation) even in FORCED_MARCH to reduce overlap
+                const neighbors = hash.query(x, y, 30);
+                for (const nIdx of neighbors) {
+                    if (nIdx === i) continue;
+                    const ndx = x - sprigs.x[nIdx];
+                    const ndy = y - sprigs.y[nIdx];
+                    const ndistSq = ndx * ndx + ndy * ndy;
+                    if (ndistSq > 0 && ndistSq < 900) {
+                        const ndist = Math.sqrt(ndistSq);
+                        const push = 1.0 / (ndist / 5);
+                        ax += (ndx / ndist) * push * CONFIG.STEER_SEPARATION_WEIGHT;
+                        ay += (ndy / ndist) * push * CONFIG.STEER_SEPARATION_WEIGHT;
                     }
                 }
                 

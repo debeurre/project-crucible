@@ -30,6 +30,7 @@ export const CONFIG = {
     STEER_ALIGNMENT_WEIGHT: 0.0,    // standard boids force, unused
     STEER_SEEK_WEIGHT: 1.0,
     STEER_AVOID_WEIGHT: 2.0,
+    STEER_PATH_WEIGHT: 2.0,
     FRICTION_BASE: 0.0,
     FRICTION_MUD: 0.5,
     FRICTION_WATER: 0.8,
