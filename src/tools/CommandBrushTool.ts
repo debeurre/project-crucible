@@ -78,11 +78,15 @@ export class CommandBrushTool implements Tool {
     public drawPreview(g: Graphics): void {
         if (!this.isDrawing || this.currentPathPoints.length < 1) return;
 
-        g.moveTo(this.currentPathPoints[0].x, this.currentPathPoints[0].y);
         for (let i = 1; i < this.currentPathPoints.length; i++) {
             const p = this.currentPathPoints[i];
+            const prev = this.currentPathPoints[i-1];
             const size = 4 * (1 - i / (this.currentPathPoints.length + 1)) + 1;
-            g.lineTo(p.x, p.y).stroke({ width: size, color: 0x00FF00, alpha: 0.5 });
+            
+            g.moveTo(prev.x, prev.y)
+             .lineTo(p.x, p.y)
+             .stroke({ width: size, color: 0x00FF00, alpha: 0.5 });
+             
             g.circle(p.x, p.y, size).fill({ color: 0x00FF00, alpha: 0.7 });
         }
     }
