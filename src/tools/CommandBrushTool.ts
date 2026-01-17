@@ -5,52 +5,72 @@ import { CONFIG } from '../core/Config';
 
 export class CommandBrushTool implements Tool {
     private isSelecting: boolean = false;
-    private isCommanding: boolean = false;
-    private startX: number = 0;
-    private startY: number = 0;
-    private pathEndX: number = 0;
-    private pathEndY: number = 0;
+    private isDrawing: boolean = false;
+    private currentPathPoints: {x: number, y: number}[] = [];
+    private lastPoint: {x: number, y: number} | null = null;
+    private readonly MIN_DIST = 30; // Min distance between waypoints
 
     public onDown(world: WorldState, x: number, y: number): void {
-        // Phase 1: Selection
-        if (!this.hasSelection(world)) {
-            // Check for tap on empty terrain vs tap on sprigs
-            // For now, let's implement the drag selection
-            this.isSelecting = true;
-            this.startX = x;
-            this.startY = y;
-            return;
-        }
+        const hasSelection = this.hasSelection(world);
 
-        // Phase 2: Command
-        // Check if tapping existing path to cancel?
-        // Let's stick to the prompt: Drag again to draw path.
-        this.isCommanding = true;
-        this.pathEndX = x;
-        this.pathEndY = y;
+        if (!hasSelection) {
+            // Start Selection
+            this.isSelecting = true;
+            this.selectInRadius(world, x, y, CONFIG.COMMAND_RADIUS);
+        } else {
+            // Check if clicking on sprig to reselect or empty to deselect
+            const clickedSprig = world.sprigs.getSprigAt(x, y, 20);
+            if (clickedSprig !== -1) {
+                // Reselect (Keep current selection or clear and select new?)
+                // Standard behavior: clear and select new on tap
+                this.clearSelection(world);
+                this.selectInRadius(world, x, y, CONFIG.COMMAND_RADIUS);
+                this.isSelecting = true;
+            } else {
+                // Start drawing path
+                this.isDrawing = true;
+                this.currentPathPoints = [{x, y}];
+                this.lastPoint = {x, y};
+            }
+        }
     }
 
     public onDrag(world: WorldState, x: number, y: number): void {
         if (this.isSelecting) {
-            // Select sprigs under brush
             this.selectInRadius(world, x, y, CONFIG.COMMAND_RADIUS);
-        } else if (this.isCommanding) {
-            this.pathEndX = x;
-            this.pathEndY = y;
+        } else if (this.isDrawing) {
+            if (this.lastPoint) {
+                const dx = x - this.lastPoint.x;
+                const dy = y - this.lastPoint.y;
+                if (Math.sqrt(dx*dx + dy*dy) > this.MIN_DIST) {
+                    this.currentPathPoints.push({x, y});
+                    this.lastPoint = {x, y};
+                }
+            }
         }
     }
 
     public onUp(world: WorldState, x: number, y: number): void {
         if (this.isSelecting) {
             this.isSelecting = false;
-            // If tap without moving, select under cursor
-            if (Math.abs(x - this.startX) < 5 && Math.abs(y - this.startY) < 5) {
-                 this.selectInRadius(world, x, y, CONFIG.COMMAND_RADIUS);
+        } else if (this.isDrawing) {
+            this.isDrawing = false;
+            // Add final point
+            this.currentPathPoints.push({x, y});
+            
+            // Create Path
+            if (this.currentPathPoints.length > 1) {
+                const pathId = world.paths.add(this.currentPathPoints);
+                if (pathId !== -1) {
+                    this.assignPathToSelected(world, pathId);
+                }
+            } else {
+                // Double tap/Short drag on empty terrain -> Deselect
+                this.clearSelection(world);
             }
-        } else if (this.isCommanding) {
-            this.isCommanding = false;
-            // Issue Order to the final drag position
-            this.issueMoveOrder(world, this.pathEndX, this.pathEndY);
+            
+            this.currentPathPoints = [];
+            this.lastPoint = null;
         }
     }
 
@@ -68,6 +88,13 @@ export class CommandBrushTool implements Tool {
         }
     }
 
+    private clearSelection(world: WorldState) {
+        const sprigs = world.sprigs;
+        for (let i = 0; i < sprigs.active.length; i++) {
+            sprigs.selected[i] = 0;
+        }
+    }
+
     private hasSelection(world: WorldState): boolean {
         const sprigs = world.sprigs;
         for (let i = 0; i < sprigs.active.length; i++) {
@@ -76,18 +103,20 @@ export class CommandBrushTool implements Tool {
         return false;
     }
 
-    private issueMoveOrder(world: WorldState, x: number, y: number) {
+    private assignPathToSelected(world: WorldState, pathId: number) {
         const sprigs = world.sprigs;
         for (let i = 0; i < sprigs.active.length; i++) {
             if (sprigs.active[i] && sprigs.selected[i]) {
-                // Keep Job (Contract), but set override state
-                
-                // Set State
                 sprigs.state[i] = SprigState.FORCED_MARCH;
-                sprigs.targetX[i] = x;
-                sprigs.targetY[i] = y;
+                sprigs.pathId[i] = pathId;
+                sprigs.pathTargetIdx[i] = 0;
                 
-                // Deselect after command? Prompt implies "free sprigs of orders" on cancel.
+                // Set first target
+                const p = world.paths.getPoint(pathId, 0);
+                if (p) {
+                    sprigs.targetX[i] = p.x;
+                    sprigs.targetY[i] = p.y;
+                }
             }
         }
     }

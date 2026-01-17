@@ -25,36 +25,57 @@ export class SteeringSystem {
             let ax = 0;
             let ay = 0;
 
-            // FORCED MARCH OVERRIDE
+            // FORCED MARCH OVERRIDE (Path Following)
             if (sprigs.state[i] === SprigState.FORCED_MARCH) {
-                const tx = sprigs.targetX[i];
-                const ty = sprigs.targetY[i];
+                const pathId = sprigs.pathId[i];
+                let tx = sprigs.targetX[i];
+                let ty = sprigs.targetY[i];
+
+                // If on a valid path, use waypoints
+                if (pathId !== -1 && world.paths.active[pathId]) {
+                    const targetIdx = sprigs.pathTargetIdx[i];
+                    const p = world.paths.getPoint(pathId, targetIdx);
+                    if (p) {
+                        tx = p.x;
+                        ty = p.y;
+                    }
+                }
+
                 const dx = tx - x;
                 const dy = ty - y;
                 const distSq = dx * dx + dy * dy;
 
-                if (distSq > 25) { // 5px tolerance
+                if (distSq > 400) { // 20px waypoint tolerance
                     const dist = Math.sqrt(distSq);
-                    // High speed direct movement
                     const desireX = (dx / dist) * sprigs.speed[i];
                     const desireY = (dy / dist) * sprigs.speed[i];
-                    
-                    // Simple steering (Desired - Velocity) * High Weight
                     ax += (desireX - sprigs.vx[i]) * 5.0;
                     ay += (desireY - sprigs.vy[i]) * 5.0;
-                    
-                    // Minimal Separation to prevent total stacking
-                    // We'll skip complex avoidance to "unstick"
                 } else {
-                    // Arrived
-                    sprigs.state[i] = SprigState.IDLE;
-                    sprigs.vx[i] *= 0.5; // Dampen
-                    sprigs.vy[i] *= 0.5;
+                    // Advance Waypoint or Finish
+                    if (pathId !== -1 && world.paths.active[pathId]) {
+                        sprigs.pathTargetIdx[i]++;
+                        if (sprigs.pathTargetIdx[i] >= world.paths.pointsCount[pathId]) {
+                            // End of path
+                            sprigs.state[i] = SprigState.IDLE;
+                            sprigs.pathId[i] = -1;
+                        } else {
+                            // Update target for next frame
+                            const nextP = world.paths.getPoint(pathId, sprigs.pathTargetIdx[i]);
+                            if (nextP) {
+                                sprigs.targetX[i] = nextP.x;
+                                sprigs.targetY[i] = nextP.y;
+                            }
+                        }
+                    } else {
+                        // No path or path invalid -> Arrived at single point
+                        sprigs.state[i] = SprigState.IDLE;
+                    }
                 }
                 
                 sprigs.ax[i] = ax;
                 sprigs.ay[i] = ay;
-                continue; // Skip standard steering
+                continue;
             }
 
             // SEEK (Target)

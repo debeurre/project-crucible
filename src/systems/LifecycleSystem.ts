@@ -7,6 +7,27 @@ export class LifecycleSystem {
         this.updateHunger(world, dt);
         this.updateSpawning(world, dt);
         this.updateRegeneration(world, dt);
+        this.updatePaths(world);
+    }
+
+    private updatePaths(world: WorldState) {
+        const paths = world.paths;
+        const sprigs = world.sprigs;
+        const activePathIndices = new Set<number>();
+
+        for (let i = 0; i < sprigs.active.length; i++) {
+            if (sprigs.active[i] && sprigs.state[i] === 5) { // FORCED_MARCH
+                if (sprigs.pathId[i] !== -1) {
+                    activePathIndices.add(sprigs.pathId[i]);
+                }
+            }
+        }
+
+        for (let p = 0; p < 10; p++) {
+            if (paths.active[p] && !activePathIndices.has(p)) {
+                paths.remove(p);
+            }
+        }
     }
 
     private updateHunger(world: WorldState, dt: number) {
