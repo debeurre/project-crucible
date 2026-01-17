@@ -45,7 +45,7 @@ export class SteeringSystem {
                 const dy = ty - y;
                 const distSq = dx * dx + dy * dy;
 
-                if (distSq > 400) { // 20px waypoint tolerance
+                if (distSq > CONFIG.WAYPOINT_TOLERANCE * CONFIG.WAYPOINT_TOLERANCE) { 
                     const dist = Math.sqrt(distSq);
                     const desireX = (dx / dist) * sprigs.speed[i];
                     const desireY = (dy / dist) * sprigs.speed[i];
