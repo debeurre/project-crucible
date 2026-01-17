@@ -1,7 +1,7 @@
 # 🧹 System Health Report
 
-**Generated:** 1/16/2026, 9:18:13 PM
-**Total Source Files:** 42
+**Generated:** 1/16/2026, 10:11:25 PM
+**Total Source Files:** 41
 
 🚨 **ARCHITECTURAL SMELLS DETECTED:** 5
 
@@ -23,7 +23,7 @@
 | `src/systems/jobs/HarvestRunner.ts` | 115 | 🟢 HEALTHY |  |
 | `src/core/WorldState.ts` | 111 | 🟢 HEALTHY |  |
 | `src/systems/PhysicsSystem.ts` | 105 | 🟢 HEALTHY |  |
-| `src/main.ts` | 102 | 🟢 HEALTHY |  |
+| `src/main.ts` | 99 | 🟢 HEALTHY |  |
 | `src/systems/JobDispatchSystem.ts` | 99 | 🟢 HEALTHY |  |
 | `src/tools/ToolManager.ts` | 93 | 🟢 HEALTHY |  |
 | `src/data/StructureData.ts` | 80 | 🟢 HEALTHY |  |
@@ -52,5 +52,4 @@
 | `src/tools/Tool.ts` | 20 | 🟢 HEALTHY |  |
 | `src/tools/ToolConfig.ts` | 20 | 🟢 HEALTHY |  |
 | `src/data/SprigState.ts` | 9 | 🟢 HEALTHY |  |
-| `src/systems/FlowFieldSystem.ts` | 4 | 🟢 HEALTHY |  |
 | `src/vite-env.d.ts` | 2 | 🟢 HEALTHY |  |
