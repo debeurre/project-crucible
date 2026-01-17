@@ -10,6 +10,9 @@ export class CommandBrushTool implements Tool {
     private currentPathPoints: {x: number, y: number}[] = [];
     private lastPoint: {x: number, y: number} | null = null;
     private readonly MIN_DIST = 30; // Min distance between waypoints
+    private pendingDeletePathId: number = -1;
+    private deleteMarkX: number = 0;
+    private deleteMarkY: number = 0;
 
     public onDown(world: WorldState, x: number, y: number): void {
         const hasSelection = this.hasSelection(world);
@@ -19,6 +22,21 @@ export class CommandBrushTool implements Tool {
             this.isSelecting = true;
             this.selectInRadius(world, x, y, CONFIG.COMMAND_RADIUS);
         } else {
+            // Check for path click first (Cancellation)
+            const clickedPath = this.getPathAt(world, x, y, 20);
+            if (clickedPath !== -1) {
+                if (this.pendingDeletePathId === clickedPath) {
+                    this.removePath(world, clickedPath);
+                    this.pendingDeletePathId = -1;
+                } else {
+                    this.pendingDeletePathId = clickedPath;
+                    this.deleteMarkX = x;
+                    this.deleteMarkY = y;
+                }
+                return;
+            }
+            this.pendingDeletePathId = -1;
+
             // Check if clicking on sprig to reselect or empty to deselect
             const clickedSprig = world.sprigs.getSprigAt(x, y, 20);
             if (clickedSprig !== -1) {
@@ -74,7 +92,7 @@ export class CommandBrushTool implements Tool {
                     }
                 }
             } else {
-                // Tap on empty terrain (since we already checked for sprig in onDown) -> Deselect
+                // Tap on empty terrain (since we already checked for sprig/path in onDown) -> Deselect
                 this.clearSelection(world);
             }
             
@@ -84,18 +102,59 @@ export class CommandBrushTool implements Tool {
     }
 
     public drawPreview(g: Graphics): void {
-        if (!this.isDrawing || this.currentPathPoints.length < 1) return;
+        // Path Drawing Preview
+        if (this.isDrawing && this.currentPathPoints.length >= 1) {
+            for (let i = 1; i < this.currentPathPoints.length; i++) {
+                const p = this.currentPathPoints[i];
+                const prev = this.currentPathPoints[i-1];
+                const size = 4 * (1 - i / (this.currentPathPoints.length + 1)) + 1;
+                
+                g.moveTo(prev.x, prev.y)
+                 .lineTo(p.x, p.y)
+                 .stroke({ width: size, color: 0x00FF00, alpha: 0.5 });
+                 
+                g.circle(p.x, p.y, size).fill({ color: 0x00FF00, alpha: 0.7 });
+            }
+        }
 
-        for (let i = 1; i < this.currentPathPoints.length; i++) {
-            const p = this.currentPathPoints[i];
-            const prev = this.currentPathPoints[i-1];
-            const size = 4 * (1 - i / (this.currentPathPoints.length + 1)) + 1;
+        // Delete Marker (Red X)
+        if (this.pendingDeletePathId !== -1) {
+            const x = this.deleteMarkX;
+            const y = this.deleteMarkY;
+            const size = 15;
             
-            g.moveTo(prev.x, prev.y)
-             .lineTo(p.x, p.y)
-             .stroke({ width: size, color: 0x00FF00, alpha: 0.5 });
-             
-            g.circle(p.x, p.y, size).fill({ color: 0x00FF00, alpha: 0.7 });
+            g.circle(x, y, size + 5).stroke({ width: 2, color: 0xFF0000 });
+            g.moveTo(x - size, y - size).lineTo(x + size, y + size).stroke({ width: 3, color: 0xFF0000 });
+            g.moveTo(x + size, y - size).lineTo(x - size, y + size).stroke({ width: 3, color: 0xFF0000 });
+        }
+    }
+
+    private getPathAt(world: WorldState, x: number, y: number, radius: number): number {
+        const paths = world.paths;
+        const rSq = radius * radius;
+        for (let p = 0; p < 10; p++) {
+            if (paths.active[p]) {
+                const count = paths.pointsCount[p];
+                const offset = p * 100;
+                for (let i = 0; i < count; i++) {
+                    const dx = paths.pointsX[offset + i] - x;
+                    const dy = paths.pointsY[offset + i] - y;
+                    if (dx*dx + dy*dy < rSq) return p;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private removePath(world: WorldState, pathId: number) {
+        world.paths.remove(pathId);
+        // Free sprigs
+        const sprigs = world.sprigs;
+        for (let i = 0; i < sprigs.active.length; i++) {
+            if (sprigs.active[i] && sprigs.pathId[i] === pathId) {
+                sprigs.state[i] = SprigState.IDLE;
+                sprigs.pathId[i] = -1;
+            }
         }
     }
 
