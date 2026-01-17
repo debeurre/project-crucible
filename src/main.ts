@@ -12,7 +12,6 @@ import { SignalSystem } from './systems/SignalSystem';
 import { TextureManager } from './core/TextureManager';
 import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, CONFIG } from './core/Config';
-import { FlowFieldSystem } from './systems/FlowFieldSystem';
 import { DEFAULT_LEVEL } from './data/LevelData';
 import { UIManager } from './ui/UIManager';
 
@@ -58,7 +57,6 @@ async function init() {
     const lifecycleSystem = new LifecycleSystem();
     const signalSystem = new SignalSystem();
     const uiSystem = new UISystem(app);
-    const flowFieldSystem = new FlowFieldSystem();
 
     const uiManager = new UIManager(toolManager, world);
 
@@ -87,7 +85,6 @@ async function init() {
         signalSystem.update(world, dt);
         jobDispatchSystem.update(world);
         jobExecutionSystem.update(world, dt);
-        flowFieldSystem.update();
         steeringSystem.update(world);
         physicsSystem.update(world, dt);
         
