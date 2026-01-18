@@ -29,16 +29,9 @@ As of JAN-17-2026: Housekeeping before next phase (threats).
 - **Code Bonsai:** Do not exceed 300 LOC per file. If unavoidable, report to developer and/or run `npm run janitor` to monitor health.
 
 ## 4. ARCHITECTURE (STRICT)
-- **Entity-Component-Systems (ECS):** Prefer composition and simple functions over deep class inheritance. Avoid state in **Systems**. **Systems** (e.g., `JobDispatchSystem`) manage **Pure Data** (`{ hp, x, y, type }`).
-- **Data-Oriented Design (DOD):** Use flat `Float32Array` buffers for high-volume entities (Sprigs). The 'target' is a smooth 60fps at 500+ entities/objects.
-- **Hybrid over Pure ECS-DOD:** Use of traditonal objects and patterns for rapid iteration is encouraged if the gains from enforcing architectural purity would be minimal at best.
-- **Separate Data from View:** **Renderers** (e.g., `RenderSystem`) read that data and manage **PixiJS Sprites**. **Never** store Sprites inside the Logic System.
-- **Raw Math Only:** Do NOT use `PIXI.Point` methods for physics. Use raw `x/y` numbers to avoid garbage collection pauses.
-- **Spatial Optimization:** Use Spatial Hash Grids for neighbor lookups.
-
-- **UI Architecture:** 
-    - **World Overlay (Cursors, Indicators):** Rendered in **PixiJS** via `RenderSystem`. Must live in World Space to support future camera transforms.
-    - **Controls (UIManager, Menus):** Rendered in **DOM (HTML/CSS)** via `src/ui`. This allows for rapid iteration of layout and native accessibility/input features.
+- **Hybrid ECS-DOD:** Logic is separated into Systems; data is stored in SSOT buffers (WorldState).
+- **File Limits:** Do not exceed 300 LOC per file. Use specialized Runners and Behaviors to delegate complexity.
+- **Reference:** See `ARCHITECTURE.md` for the full technical map, tick order, and glossary.
 
 ## 5. PIXIJS V8 SPECIFICS
 - **Initialization:** Use `await app.init({ resizeTo: window })`.
