@@ -1,7 +1,7 @@
 # PROJECT GARDENREALM: CONTEXT & RULES
 
-## CURRENT FOCUS: CLEANING AND ORGANIZATION
-As of JAN-17-2026: Housekeeping before next phase (threats).
+## CURRENT FOCUS: THREATS AND COMBAT
+As of JAN-17-2026: Implementing enemies, combat logic, and defensive behaviors.
 
 ## 1. THE DEVELOPER (CRITICAL)
 - **Input Constraints:** Developer MOSTLY uses a mouse/touchscreen (Tap/Drag). 
