@@ -51,6 +51,10 @@ export const CONFIG = {
     GUARD_RADIUS: 50.0,
     // Threats
     MAX_BURROWS: 5,
+    THIEF_HP: 20,
+    THIEF_ATTACK: 0,
+    THIEF_DEFENSE: 0,
+    THIEF_SPEED_MULT: 1.2,
     // Combat & Stats
     BASE_HP: 100,
     BASE_ATTACK: 10,

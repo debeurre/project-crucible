@@ -72,9 +72,12 @@ export class ThreatSystem {
         // Spawn Thief
         const thiefId = world.sprigs.spawn(sx, sy, EntityType.THIEF);
         if (thiefId !== -1) {
-            world.sprigs.hp[thiefId] = 20;
-            world.sprigs.maxHp[thiefId] = 20;
-            world.sprigs.speed[thiefId] = CONFIG.MAX_SPEED * 1.2;
+            world.sprigs.hp[thiefId] = CONFIG.THIEF_HP;
+            world.sprigs.maxHp[thiefId] = CONFIG.THIEF_HP;
+            world.sprigs.prevHp[thiefId] = CONFIG.THIEF_HP;
+            world.sprigs.attack[thiefId] = CONFIG.THIEF_ATTACK;
+            world.sprigs.defense[thiefId] = CONFIG.THIEF_DEFENSE;
+            world.sprigs.speed[thiefId] = CONFIG.MAX_SPEED * CONFIG.THIEF_SPEED_MULT;
             world.sprigs.homeID[thiefId] = burrow.id; // Store burrow ID as home
             world.sprigs.state[thiefId] = THIEF_STATE.SEEK_LOOT; // Reuse state array for thief state
         }
