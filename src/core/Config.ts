@@ -48,6 +48,10 @@ export const CONFIG = {
     SIGNAL_DURATION: 30.0,
     SIGNAL_ALPHA: 0.25,
     WAYPOINT_TOLERANCE: 40.0,
+    // Combat & Stats
+    BASE_HP: 100,
+    BASE_ATTACK: 10,
+    BASE_DEFENSE: 5,
 };
 
 export const SCREEN_WIDTH = CONFIG.GRID_SIZE * CONFIG.WORLD_WIDTH;

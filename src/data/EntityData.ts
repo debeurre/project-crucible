@@ -28,6 +28,19 @@ export class EntityData {
     public feedTimer: Float32Array;
     public hungerState: Uint8Array;
     public selected: Uint8Array;
+    
+    // Combat Stats
+    public hp: Int32Array;
+    public maxHp: Int32Array;
+    public attack: Int32Array;
+    public defense: Int32Array;
+
+    // Progression Stats
+    public xp_haul: Int32Array;
+    public xp_fight: Int32Array;
+    public level_haul: Int32Array;
+    public level_fight: Int32Array;
+
     public count: number;
     
     // Memory
@@ -62,6 +75,15 @@ export class EntityData {
         this.feedTimer = new Float32Array(size);
         this.hungerState = new Uint8Array(size);
         this.selected = new Uint8Array(size);
+        
+        this.hp = new Int32Array(size);
+        this.maxHp = new Int32Array(size);
+        this.attack = new Int32Array(size);
+        this.defense = new Int32Array(size);
+        this.xp_haul = new Int32Array(size);
+        this.xp_fight = new Int32Array(size);
+        this.level_haul = new Int32Array(size);
+        this.level_fight = new Int32Array(size);
         
         this.discoveryBuffer = new Int32Array(size * this.MEMORY_CAPACITY).fill(-1);
         this.discoveryCount = new Uint8Array(size);
@@ -113,6 +135,17 @@ export class EntityData {
                 this.hungerState[i] = 0;
                 this.selected[i] = 0;
                 this.discoveryCount[i] = 0;
+
+                // Initialize Stats
+                this.maxHp[i] = CONFIG.BASE_HP;
+                this.hp[i] = CONFIG.BASE_HP;
+                this.attack[i] = CONFIG.BASE_ATTACK;
+                this.defense[i] = CONFIG.BASE_DEFENSE;
+                this.xp_haul[i] = 0;
+                this.xp_fight[i] = 0;
+                this.level_haul[i] = 0;
+                this.level_fight[i] = 0;
+
                 this.count++;
                 return i;
             }

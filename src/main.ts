@@ -14,6 +14,7 @@ import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, CONFIG } from './core/Config';
 import { DEFAULT_LEVEL } from './data/LevelData';
 import { UIManager } from './ui/UIManager';
+import { CombatService } from './services/CombatService';
 
 async function init() {
     const app = new Application();
@@ -57,8 +58,21 @@ async function init() {
     const lifecycleSystem = new LifecycleSystem();
     const signalSystem = new SignalSystem();
     const uiSystem = new UISystem(app);
+    const combatService = new CombatService(world.sprigs);
 
     const uiManager = new UIManager(toolManager, world);
+
+    // Debug Console Commands
+    (window as any).debug_hit = (attackerId: number, victimId: number) => {
+        if (!world.sprigs.active[attackerId] || !world.sprigs.active[victimId]) {
+            console.warn('Invalid IDs');
+            return;
+        }
+        const dmg = combatService.applyDamage(victimId, world.sprigs.attack[attackerId]);
+        const remaining = world.sprigs.hp[victimId];
+        console.log(`Sprig [${attackerId}] hit Sprig [${victimId}] for ${dmg} damage! HP remaining: ${remaining}`);
+        if (remaining <= 0) console.log(`Sprig [${victimId}] died!`);
+    };
 
     window.addEventListener('keydown', (e) => {
         if (e.key === '1') toolManager.setTool('HAND');
