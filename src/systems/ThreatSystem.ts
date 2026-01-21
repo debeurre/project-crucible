@@ -1,0 +1,166 @@
+import { WorldState } from '../core/WorldState';
+import { StructureType, createStructure, getStructureStats } from '../data/StructureData';
+import { EntityType } from '../data/EntityData';
+import { CONFIG } from '../core/Config';
+import { SteeringBehaviors } from './steering/SteeringBehaviors';
+
+const THIEF_STATE = {
+    SEEK_LOOT: 0,
+    FLEE: 1
+};
+
+export class ThreatSystem {
+    private frameCount: number = 0;
+
+    public update(world: WorldState) {
+        this.frameCount++;
+        
+        // Part A: Shadow Spawning Logic (Every 60 frames)
+        if (this.frameCount % 60 === 0) {
+            this.handleSpawning(world);
+        }
+
+        // Part B: Thief AI Loop
+        this.updateThieves(world);
+    }
+
+    private handleSpawning(world: WorldState) {
+        // Trigger: Check wealth
+        let wealthyNest = null;
+        for (const s of world.structures) {
+            if (s.type === StructureType.NEST && s.stock && s.stock.count('FOOD') > 100) {
+                wealthyNest = s;
+                break;
+            }
+        }
+
+        if (!wealthyNest) return;
+
+        // Positioning
+        // Prompt says: Nest.visionRadius + 50. Config says NEST_VIEW_RADIUS = 400. So 450.
+        const spawnDist = CONFIG.NEST_VIEW_RADIUS + 50;
+        const angle = Math.random() * Math.PI * 2;
+        const sx = wealthyNest.x + Math.cos(angle) * spawnDist;
+        const sy = wealthyNest.y + Math.sin(angle) * spawnDist;
+
+        // Validation (Blind Spot)
+        const nearby = world.spatialHash.query(sx, sy, 50);
+        let hasSprigs = false;
+        for (const id of nearby) {
+            if (world.sprigs.active[id] && world.sprigs.type[id] === EntityType.SPRIG) {
+                hasSprigs = true;
+                break;
+            }
+        }
+
+        if (hasSprigs) return; // Abort
+
+        // Spawn Burrow
+        const burrow = createStructure(StructureType.BURROW, sx, sy);
+        burrow.id = world.nextStructureId++;
+        burrow.stock!.add('FOOD', 0); // Initialize stock tracking
+        world.structures.push(burrow);
+        world.structureHash.add(burrow);
+
+        // Spawn Thief
+        const thiefId = world.sprigs.spawn(sx, sy, EntityType.THIEF);
+        if (thiefId !== -1) {
+            world.sprigs.hp[thiefId] = 20;
+            world.sprigs.maxHp[thiefId] = 20;
+            world.sprigs.speed[thiefId] = CONFIG.MAX_SPEED * 1.2;
+            world.sprigs.homeID[thiefId] = burrow.id; // Store burrow ID as home
+            world.sprigs.state[thiefId] = THIEF_STATE.SEEK_LOOT; // Reuse state array for thief state
+        }
+    }
+
+    private updateThieves(world: WorldState) {
+        const sprigs = world.sprigs;
+        const structures = world.structures;
+
+        for (let i = 0; i < sprigs.active.length; i++) {
+            if (sprigs.active[i] === 0 || sprigs.type[i] !== EntityType.THIEF) continue;
+
+            const x = sprigs.x[i];
+            const y = sprigs.y[i];
+            const state = sprigs.state[i];
+
+            if (state === THIEF_STATE.SEEK_LOOT) {
+                // Find target
+                let target = null;
+                let minDistSq = Infinity;
+
+                // Simple linear scan for loot (optimize later)
+                for (const s of structures) {
+                    if ((s.type === StructureType.NEST || s.type === StructureType.COOKIE || s.type === StructureType.CRUMB || s.type === StructureType.BUSH) 
+                        && s.stock && s.stock.count('FOOD') > 0) {
+                        const dx = s.x - x;
+                        const dy = s.y - y;
+                        const dSq = dx*dx + dy*dy;
+                        if (dSq < minDistSq) {
+                            minDistSq = dSq;
+                            target = s;
+                        }
+                    }
+                }
+
+                if (target) {
+                    // Seek
+                    const seek = SteeringBehaviors.seek(i, sprigs, target.x, target.y, 1.0);
+                    sprigs.ax[i] = seek.ax;
+                    sprigs.ay[i] = seek.ay;
+
+                    // Interact
+                    const radius = getStructureStats(target.type).radius + 10;
+                    if (minDistSq < radius * radius) {
+                        // Steal
+                        if (target.stock && target.stock.remove('FOOD', 10)) {
+                            sprigs.stock[i].add('FOOD', 10);
+                            sprigs.state[i] = THIEF_STATE.FLEE;
+                        }
+                    }
+                } else {
+                    // No loot? Just wander or idle
+                    sprigs.ax[i] = 0;
+                    sprigs.ay[i] = 0;
+                }
+
+            } else if (state === THIEF_STATE.FLEE) {
+                const burrowId = sprigs.homeID[i];
+                const burrow = structures.find(s => s.id === burrowId);
+
+                if (burrow) {
+                    const seek = SteeringBehaviors.seek(i, sprigs, burrow.x, burrow.y, 1.0);
+                    sprigs.ax[i] = seek.ax;
+                    sprigs.ay[i] = seek.ay;
+
+                    const dx = burrow.x - x;
+                    const dy = burrow.y - y;
+                    const dSq = dx*dx + dy*dy;
+                    const radius = getStructureStats(StructureType.BURROW).radius + 10;
+
+                    if (dSq < radius * radius) {
+                        // Bank and Despawn
+                        const amount = sprigs.stock[i].count('FOOD');
+                        burrow.stock!.add('FOOD', amount); // Thieves deposit into burrow (effectively deleting from economy)
+                        
+                        sprigs.active[i] = 0; // Despawn Thief
+                        world.sprigs.count--;
+                        
+                        // Keep burrow? Prompt doesn't specify cleanup of burrow. Let's leave it as a trophy/scar.
+                        // Or maybe destroy it? "Temporary Burrow".
+                        // "The Thief is a nuisance unit... deposit them in a temporary 'Burrow'."
+                        // Let's destroy the burrow too for cleanup, or keep it to see where they came from.
+                        // I'll destroy it to keep map clean for now.
+                        world.structureHash.remove(burrow);
+                        const bIdx = world.structures.indexOf(burrow);
+                        if (bIdx !== -1) world.structures.splice(bIdx, 1);
+                    }
+                } else {
+                    // Burrow destroyed? Just die/despawn
+                    sprigs.active[i] = 0;
+                    world.sprigs.count--;
+                }
+            }
+        }
+    }
+}

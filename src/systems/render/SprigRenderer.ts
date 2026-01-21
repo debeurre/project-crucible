@@ -48,6 +48,10 @@ export class SprigRenderer {
 
     private getSprigTint(world: WorldState, i: number): number {
         const sprigs = world.sprigs;
+        
+        // Thief logic
+        if (sprigs.type[i] === 1) return 0x800080; // Purple
+
         const isHauling = sprigs.stock[i].count('FOOD') > 0;
         const hunger = sprigs.hungerState[i];
 

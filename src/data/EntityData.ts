@@ -2,6 +2,11 @@ import { CONFIG } from '../core/Config';
 import { SprigState } from './SprigState';
 import { Stock } from '../components/Stock';
 
+export const EntityType = {
+    SPRIG: 0,
+    THIEF: 1
+};
+
 export class EntityData {
     public x: Float32Array;
     public y: Float32Array;
@@ -14,6 +19,7 @@ export class EntityData {
     public debugAx: Float32Array;
     public debugAy: Float32Array;
     public active: Uint8Array;
+    public type: Uint8Array;
     public state: Uint8Array;
     public stock: Stock[];
     public targetX: Float32Array;
@@ -61,6 +67,7 @@ export class EntityData {
         this.debugAx = new Float32Array(size);
         this.debugAy = new Float32Array(size);
         this.active = new Uint8Array(size);
+        this.type = new Uint8Array(size);
         this.state = new Uint8Array(size);
         this.stock = Array.from({ length: size }, () => new Stock(5));
         this.targetX = new Float32Array(size);
@@ -108,7 +115,7 @@ export class EntityData {
         this.discoveryCount[sprigId] = 0;
     }
 
-    public spawn(startX: number, startY: number): number {
+    public spawn(startX: number, startY: number, type: number = EntityType.SPRIG): number {
         for (let i = 0; i < this.active.length; i++) {
             if (this.active[i] === 0) {
                 this.x[i] = startX;
@@ -120,6 +127,7 @@ export class EntityData {
                 this.avoidAx[i] = 0;
                 this.avoidAy[i] = 0;
                 this.active[i] = 1;
+                this.type[i] = type;
                 this.state[i] = SprigState.IDLE; 
                 this.stock[i].remove('FOOD', this.stock[i].count('FOOD')); // Clear stock
                 this.targetX[i] = startX;

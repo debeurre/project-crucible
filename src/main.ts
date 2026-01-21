@@ -15,6 +15,7 @@ import { SCREEN_WIDTH, SCREEN_HEIGHT, CONFIG } from './core/Config';
 import { DEFAULT_LEVEL } from './data/LevelData';
 import { UIManager } from './ui/UIManager';
 import { CombatService } from './services/CombatService';
+import { ThreatSystem } from './systems/ThreatSystem';
 
 async function init() {
     const app = new Application();
@@ -57,6 +58,7 @@ async function init() {
     const jobExecutionSystem = new JobExecutionSystem();
     const lifecycleSystem = new LifecycleSystem();
     const signalSystem = new SignalSystem();
+    const threatSystem = new ThreatSystem();
     const uiSystem = new UISystem(app);
     const combatService = new CombatService(world.sprigs);
 
@@ -99,6 +101,7 @@ async function init() {
         signalSystem.update(world, dt);
         jobDispatchSystem.update(world);
         jobExecutionSystem.update(world, dt);
+        threatSystem.update(world);
         steeringSystem.update(world);
         physicsSystem.update(world, dt);
         
