@@ -28,8 +28,8 @@ export class SteeringSystem {
             ax += seek.ax; ay += seek.ay;
 
             // Panic Multiplier
-            const isPanic = sprigs.hp[i] < sprigs.maxHp[i] * 0.25;
-            const panicMult = isPanic ? 5.0 : 1.0;
+            const isPanic = sprigs.hp[i] < sprigs.maxHp[i] * CONFIG.RETREAT_HP_THRESHOLD;
+            const panicMult = isPanic ? CONFIG.RETREAT_STEERING_WEIGHT : 1.0;
 
             // 3. AVOIDANCE (Rocks)
             const avoid = SteeringBehaviors.avoidStructures(i, sprigs, world.structures);

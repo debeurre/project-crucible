@@ -62,7 +62,7 @@ export class PatrolRunner {
                 // Check distance to flag
                 const dx = sprigs.x[i] - flag.x;
                 const dy = sprigs.y[i] - flag.y;
-                if (dx*dx + dy*dy > 50*50) {
+                if (dx*dx + dy*dy > CONFIG.GUARD_RADIUS*CONFIG.GUARD_RADIUS) {
                     // Too far, go back
                     sprigs.targetX[i] = flag.x;
                     sprigs.targetY[i] = flag.y;
@@ -70,7 +70,7 @@ export class PatrolRunner {
                     // Random patrol point
                     if (Math.random() < 0.05) {
                         const angle = Math.random() * Math.PI * 2;
-                        const dist = Math.random() * 40;
+                        const dist = Math.random() * (CONFIG.GUARD_RADIUS * 0.8);
                         sprigs.targetX[i] = flag.x + Math.cos(angle) * dist;
                         sprigs.targetY[i] = flag.y + Math.sin(angle) * dist;
                     }
@@ -95,7 +95,7 @@ export class PatrolRunner {
             const dy = sprigs.y[i] - ey;
             const distSq = dx*dx + dy*dy;
 
-            if (distSq < 30*30) {
+            if (distSq < CONFIG.SPRIG_ATTACK_RANGE*CONFIG.SPRIG_ATTACK_RANGE) {
                 // Range reached
                 sprigs.state[i] = SprigState.HARVESTING; // Combat
             }
@@ -117,13 +117,13 @@ export class PatrolRunner {
             
             if (sprigs.timer[i] <= 0) {
                 combatService.applyDamage(enemyId, world.sprigs.attack[i]);
-                sprigs.timer[i] = 1.0; // 1 sec cooldown
+                sprigs.timer[i] = CONFIG.SPRIG_ATTACK_COOLDOWN;
             }
             
             // Check distance, if too far, go back to chase
             const dx = sprigs.x[i] - world.sprigs.x[enemyId];
             const dy = sprigs.y[i] - world.sprigs.y[enemyId];
-            if (dx*dx + dy*dy > 40*40) {
+            if (dx*dx + dy*dy > (CONFIG.SPRIG_ATTACK_RANGE + 10)**2) {
                 sprigs.state[i] = SprigState.MOVE_TO_SINK;
             }
         }

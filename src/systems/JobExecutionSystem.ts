@@ -28,7 +28,7 @@ export class JobExecutionSystem {
             if (sprigs.state[i] === SprigState.FORCED_MARCH) continue;
 
             // Retreat Logic (Self-Preservation)
-            if (sprigs.hp[i] < sprigs.maxHp[i] * 0.25) {
+            if (sprigs.hp[i] < sprigs.maxHp[i] * CONFIG.RETREAT_HP_THRESHOLD) {
                 // Panic Mode
                 // Find nearest Nest
                 let nearestNest = null;
