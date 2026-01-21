@@ -5,7 +5,8 @@ import { CONFIG } from '../core/Config';
 
 const THIEF_STATE = {
     SEEK_LOOT: 0,
-    FLEE: 1
+    FLEE: 1,
+    DECISION: 2
 };
 
 export class ThreatSystem {
@@ -144,17 +145,39 @@ export class ThreatSystem {
                     const radius = getStructureStats(StructureType.BURROW).radius + 10;
 
                     if (dSq < radius * radius) {
-                        // Bank and Despawn
+                        // Bank
                         const amount = sprigs.stock[i].count('FOOD');
-                        burrow.stock!.add('FOOD', amount); // Thieves deposit into burrow (effectively deleting from economy)
+                        if (burrow.stock) {
+                            burrow.stock.add('FOOD', amount);
+                            sprigs.stock[i].remove('FOOD', amount);
+                        }
                         
-                        sprigs.active[i] = 0; // Despawn Thief
-                        world.sprigs.count--;
-                        
-                        // Keep burrow as a trophy/scar.
+                        // Decision Point
+                        sprigs.state[i] = THIEF_STATE.DECISION;
                     }
                 } else {
-                    // Burrow destroyed? Just die/despawn
+                    // Burrow destroyed? Panic flee to edge or despawn
+                    sprigs.active[i] = 0;
+                    world.sprigs.count--;
+                }
+            } else if (state === THIEF_STATE.DECISION) {
+                const burrowId = sprigs.homeID[i];
+                const burrow = structures.find(s => s.id === burrowId);
+
+                if (burrow && burrow.stock) {
+                    // Check Capacity (e.g. 100)
+                    if (burrow.stock.count('FOOD') >= 100) {
+                        // Mission Complete
+                        sprigs.active[i] = 0;
+                        world.sprigs.count--;
+                        // Optional: Despawn burrow too? Prompt says "Temporary Burrow"
+                        // Leaving it for now as per previous fix
+                    } else {
+                        // Go again
+                        sprigs.state[i] = THIEF_STATE.SEEK_LOOT;
+                    }
+                } else {
+                    // Burrow gone
                     sprigs.active[i] = 0;
                     world.sprigs.count--;
                 }

@@ -49,7 +49,7 @@ export const CONFIG = {
     SIGNAL_ALPHA: 0.25,
     WAYPOINT_TOLERANCE: 40.0,
     // Threats
-    MAX_BURROWS: 10,
+    MAX_BURROWS: 5,
     // Combat & Stats
     BASE_HP: 100,
     BASE_ATTACK: 10,
