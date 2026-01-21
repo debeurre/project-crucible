@@ -9,7 +9,7 @@ export const CONFIG = {
     MAX_SPEED: 100.0,
     SPRIG_RADIUS: 15.0,
     SPRIG_VIEW_RADIUS: 200.0,
-    NEST_VIEW_RADIUS: 400.0,
+    NEST_VIEW_RADIUS: 350.0,
     // Lifecycle
     HUNGER_INTERVAL: 10.0,
     HUNGER_PENALTY: 0.75,
@@ -48,6 +48,8 @@ export const CONFIG = {
     SIGNAL_DURATION: 30.0,
     SIGNAL_ALPHA: 0.25,
     WAYPOINT_TOLERANCE: 40.0,
+    // Threats
+    MAX_BURROWS: 10,
     // Combat & Stats
     BASE_HP: 100,
     BASE_ATTACK: 10,

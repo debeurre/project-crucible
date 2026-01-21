@@ -25,6 +25,13 @@ export class ThreatSystem {
     }
 
     private handleSpawning(world: WorldState) {
+        // Limit Burrows
+        let burrowCount = 0;
+        for (const st of world.structures) {
+            if (st.type === StructureType.BURROW) burrowCount++;
+        }
+        if (burrowCount >= CONFIG.MAX_BURROWS) return;
+
         // Trigger: Check wealth
         let wealthyNest = null;
         for (const s of world.structures) {
