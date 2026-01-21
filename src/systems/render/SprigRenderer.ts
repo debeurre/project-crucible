@@ -2,6 +2,7 @@ import { Container, Sprite, Graphics } from 'pixi.js';
 import { WorldState } from '../../core/WorldState';
 import { CONFIG } from '../../core/Config';
 import { TextureManager } from '../../core/TextureManager';
+import { JobType } from '../../data/JobData';
 
 export class SprigRenderer {
     private sprites: Map<number, Sprite> = new Map();
@@ -51,6 +52,13 @@ export class SprigRenderer {
         
         // Thief logic
         if (sprigs.type[i] === 1) return 0x800080; // Purple
+
+        // Patrol Job
+        const jobId = sprigs.jobId[i];
+        if (jobId !== -1) {
+            const jobType = world.jobs.type[jobId];
+            if (jobType === JobType.PATROL) return 0xFF0000; // Red
+        }
 
         const isHauling = sprigs.stock[i].count('FOOD') > 0;
         const hunger = sprigs.hungerState[i];
