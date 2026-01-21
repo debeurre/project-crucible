@@ -75,7 +75,7 @@ export function createStructure(type: StructureType, x: number, y: number): Stru
         structure.stock.add('FOOD', 10);
         structure.regenTimer = 0;
     } else if (type === StructureType.SIGNAL) {
-        structure.lifetime = CONFIG.SIGNAL_DURATION;
+        structure.lifetime = CONFIG.HARVEST_SIGNAL_DURATION;
     } else if (type === StructureType.BURROW) {
         structure.stock = new Stock(Infinity);
     }

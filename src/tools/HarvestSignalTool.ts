@@ -15,7 +15,7 @@ export class HarvestSignalTool implements Tool {
         world.structureHash.add(signal);
         
         // Signal Logic: Scan and Post Jobs
-        const RADIUS = CONFIG.SIGNAL_RADIUS;
+        const RADIUS = CONFIG.HARVEST_SIGNAL_RADIUS;
         const nearby = world.structureHash.query(x, y, RADIUS);
         let jobsPosted = 0;
 
