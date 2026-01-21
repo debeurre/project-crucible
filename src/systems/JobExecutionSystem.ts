@@ -5,6 +5,8 @@ import { CONFIG } from '../core/Config';
 import { SprigState } from '../data/SprigState';
 import { HarvestRunner } from './jobs/HarvestRunner';
 
+import { EntityType } from '../data/EntityData';
+
 const DEG_TO_RAD = Math.PI / 180;
 
 export class JobExecutionSystem {
@@ -17,7 +19,7 @@ export class JobExecutionSystem {
         if (!jobs) return; 
 
         for (let i = 0; i < sprigs.active.length; i++) {
-            if (sprigs.active[i] === 0) continue;
+            if (sprigs.active[i] === 0 || sprigs.type[i] === EntityType.THIEF) continue;
             if (sprigs.state[i] === SprigState.FORCED_MARCH) continue;
 
             const jobId = sprigs.jobId[i];

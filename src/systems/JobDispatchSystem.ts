@@ -4,6 +4,8 @@ import { JobType, JobData } from '../data/JobData';
 import { SprigState } from '../data/SprigState';
 import { CONFIG } from '../core/Config';
 
+import { EntityType } from '../data/EntityData';
+
 export class JobDispatchSystem {
     private frameCount: number = 0;
 
@@ -68,7 +70,7 @@ export class JobDispatchSystem {
                 // Simple: Find nearest idle sprig
                 // Optimization: Use SpatialHash if available, but linear scan for 500 sprigs is fine for now
                 for (let i = 0; i < sprigs.active.length; i++) {
-                    if (sprigs.active[i] && sprigs.jobId[i] === -1 && sprigs.state[i] !== SprigState.FORCED_MARCH) {
+                    if (sprigs.active[i] && sprigs.type[i] === EntityType.SPRIG && sprigs.jobId[i] === -1 && sprigs.state[i] !== SprigState.FORCED_MARCH) {
                         // Check distance to target? 
                         // We need target position.
                         // Job stores targetId. Look up structure.

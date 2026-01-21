@@ -2,6 +2,8 @@ import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
 import { StructureType, createStructure } from '../data/StructureData';
 
+import { EntityType } from '../data/EntityData';
+
 export class LifecycleSystem {
     public update(world: WorldState, dt: number) {
         this.updateHunger(world, dt);
@@ -35,7 +37,7 @@ export class LifecycleSystem {
         const structures = world.structures;
 
         for (let i = 0; i < sprigs.active.length; i++) {
-            if (sprigs.active[i] === 0) continue;
+            if (sprigs.active[i] === 0 || sprigs.type[i] === EntityType.THIEF) continue;
 
             sprigs.feedTimer[i] -= dt;
 

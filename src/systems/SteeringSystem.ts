@@ -4,6 +4,8 @@ import { SpatialHash } from '../core/SpatialHash';
 import { SprigState } from '../data/SprigState';
 import { SteeringBehaviors } from './steering/SteeringBehaviors';
 
+import { EntityType } from '../data/EntityData';
+
 export class SteeringSystem {
     public update(world: WorldState) {
         if (!world.spatialHash) world.spatialHash = new SpatialHash(CONFIG.GRID_SIZE * 2);
@@ -11,7 +13,7 @@ export class SteeringSystem {
         world.spatialHash.update(sprigs);
 
         for (let i = 0; i < sprigs.active.length; i++) {
-            if (sprigs.active[i] === 0) continue;
+            if (sprigs.active[i] === 0 || sprigs.type[i] === EntityType.THIEF) continue;
 
             const x = sprigs.x[i];
             const y = sprigs.y[i];
