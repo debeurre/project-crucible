@@ -1,7 +1,7 @@
 # PROJECT GARDENREALM: CONTEXT & RULES
 
 ## CURRENT FOCUS: THREATS AND COMBAT
-As of JAN-17-2026: Implementing enemies, combat logic, and defensive behaviors.
+As of JAN-20-2026: Begin implementing enemies, combat logic, and martial depth in waves, starting with sprig 'stats'.
 
 ## 1. THE DEVELOPER (CRITICAL)
 - **Input Constraints:** Developer MOSTLY uses a mouse/touchscreen (Tap/Drag). 
