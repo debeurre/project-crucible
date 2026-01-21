@@ -74,6 +74,8 @@ export function createStructure(type: StructureType, x: number, y: number): Stru
         structure.regenTimer = 0;
     } else if (type === StructureType.SIGNAL) {
         structure.lifetime = CONFIG.SIGNAL_DURATION;
+    } else if (type === StructureType.BURROW) {
+        structure.stock = new Stock(Infinity);
     }
     // Rocks have no stock by default
 

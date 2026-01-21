@@ -5,7 +5,7 @@ export const CONFIG = {
     WORLD_HEIGHT: 30,
     // Sprigs
     MAX_SPRIGS: 500,
-    START_SPRIGS: 20,
+    START_SPRIGS: 5,
     MAX_SPEED: 100.0,
     SPRIG_RADIUS: 15.0,
     SPRIG_VIEW_RADIUS: 200.0,

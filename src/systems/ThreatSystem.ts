@@ -28,7 +28,7 @@ export class ThreatSystem {
         // Trigger: Check wealth
         let wealthyNest = null;
         for (const s of world.structures) {
-            if (s.type === StructureType.NEST && s.stock && s.stock.count('FOOD') > 100) {
+            if (s.type === StructureType.NEST && s.stock && s.stock.count('FOOD') > 20) {
                 wealthyNest = s;
                 break;
             }
