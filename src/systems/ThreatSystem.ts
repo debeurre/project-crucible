@@ -2,7 +2,6 @@ import { WorldState } from '../core/WorldState';
 import { StructureType, createStructure, getStructureStats } from '../data/StructureData';
 import { EntityType } from '../data/EntityData';
 import { CONFIG } from '../core/Config';
-import { SteeringBehaviors } from './steering/SteeringBehaviors';
 
 const THIEF_STATE = {
     SEEK_LOOT: 0,
@@ -111,10 +110,9 @@ export class ThreatSystem {
                 }
 
                 if (target) {
-                    // Seek
-                    const seek = SteeringBehaviors.seek(i, sprigs, target.x, target.y, 1.0);
-                    sprigs.ax[i] = seek.ax;
-                    sprigs.ay[i] = seek.ay;
+                    // Set Target for SteeringSystem
+                    sprigs.targetX[i] = target.x;
+                    sprigs.targetY[i] = target.y;
 
                     // Interact
                     const radius = getStructureStats(target.type).radius + 10;
@@ -126,9 +124,9 @@ export class ThreatSystem {
                         }
                     }
                 } else {
-                    // No loot? Just wander or idle
-                    sprigs.ax[i] = 0;
-                    sprigs.ay[i] = 0;
+                    // No loot? Stop.
+                    sprigs.targetX[i] = x;
+                    sprigs.targetY[i] = y;
                 }
 
             } else if (state === THIEF_STATE.FLEE) {
@@ -136,9 +134,9 @@ export class ThreatSystem {
                 const burrow = structures.find(s => s.id === burrowId);
 
                 if (burrow) {
-                    const seek = SteeringBehaviors.seek(i, sprigs, burrow.x, burrow.y, 1.0);
-                    sprigs.ax[i] = seek.ax;
-                    sprigs.ay[i] = seek.ay;
+                    // Set Target for SteeringSystem
+                    sprigs.targetX[i] = burrow.x;
+                    sprigs.targetY[i] = burrow.y;
 
                     const dx = burrow.x - x;
                     const dy = burrow.y - y;
