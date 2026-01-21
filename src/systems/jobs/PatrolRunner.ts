@@ -62,7 +62,7 @@ export class PatrolRunner {
                 // Check distance to flag
                 const dx = sprigs.x[i] - flag.x;
                 const dy = sprigs.y[i] - flag.y;
-                if (dx*dx + dy*dy > CONFIG.GUARD_RADIUS*CONFIG.GUARD_RADIUS) {
+                if (dx*dx + dy*dy > CONFIG.PATROL_RADIUS*CONFIG.PATROL_RADIUS) {
                     // Too far, go back
                     sprigs.targetX[i] = flag.x;
                     sprigs.targetY[i] = flag.y;
@@ -70,7 +70,7 @@ export class PatrolRunner {
                     // Random patrol point
                     if (Math.random() < 0.05) {
                         const angle = Math.random() * Math.PI * 2;
-                        const dist = Math.random() * (CONFIG.GUARD_RADIUS * 0.8);
+                        const dist = Math.random() * (CONFIG.PATROL_RADIUS * 0.8);
                         sprigs.targetX[i] = flag.x + Math.cos(angle) * dist;
                         sprigs.targetY[i] = flag.y + Math.sin(angle) * dist;
                     }

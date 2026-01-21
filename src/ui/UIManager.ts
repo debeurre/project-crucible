@@ -32,7 +32,7 @@ export class UIManager {
     }
 
     private init() {
-        const PLAYER_TOOLS = [TOOL_NAMES.SIGNAL, TOOL_NAMES.COMMAND, TOOL_NAMES.PATROL];
+        const PLAYER_TOOLS = [TOOL_NAMES.HARVEST, TOOL_NAMES.COMMAND, TOOL_NAMES.PATROL];
         const DEV_TOOLS = TOOL_ORDER.filter(name => !PLAYER_TOOLS.includes(name));
 
         // Build Dev Tools

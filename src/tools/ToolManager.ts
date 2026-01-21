@@ -25,7 +25,7 @@ export class ToolManager {
             [TOOL_NAMES.SPAWN]: new SpawnTool(),
             [TOOL_NAMES.BUILD]: new BuildTool(),
             [TOOL_NAMES.ERASER]: new EraserTool(),
-            [TOOL_NAMES.SIGNAL]: new HarvestSignalTool(),
+            [TOOL_NAMES.HARVEST]: new HarvestSignalTool(),
             [TOOL_NAMES.COMMAND]: new CommandBrushTool(),
             [TOOL_NAMES.PATROL]: new PatrolTool()
         };
