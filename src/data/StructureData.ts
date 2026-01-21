@@ -8,7 +8,8 @@ export enum StructureType {
     ROCK = 3,
     BUSH = 4,
     SIGNAL = 5,
-    BURROW = 6
+    BURROW = 6,
+    PATROL_FLAG = 7
 }
 
 export interface StructureStats {
@@ -27,7 +28,8 @@ export const STRUCTURE_STATS: Record<StructureType, StructureStats> = {
     [StructureType.ROCK]:   { name: 'Rock',   radius: 40, color: 0x808080, solid: true,  shape: 'CIRCLE' },
     [StructureType.BUSH]:   { name: 'Bush',   radius: 20, color: 0x228B22, solid: false, shape: 'CIRCLE' },
     [StructureType.SIGNAL]: { name: 'Signal', radius: 300, color: 0x00FF00, solid: false, shape: 'CIRCLE' },
-    [StructureType.BURROW]: { name: 'Burrow', radius: 10,  color: 0x5D4037, solid: false, shape: 'CIRCLE' }
+    [StructureType.BURROW]: { name: 'Burrow', radius: 10,  color: 0x5D4037, solid: false, shape: 'CIRCLE' },
+    [StructureType.PATROL_FLAG]: { name: 'Patrol Flag', radius: 10, color: 0xFF0000, solid: false, shape: 'CIRCLE' }
 };
 
 export interface Structure {

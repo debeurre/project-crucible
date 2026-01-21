@@ -87,6 +87,24 @@ export class ThreatSystem {
         for (let i = 0; i < sprigs.active.length; i++) {
             if (sprigs.active[i] === 0 || sprigs.type[i] !== EntityType.THIEF) continue;
 
+            // Damage Reaction
+            if (sprigs.hp[i] < sprigs.prevHp[i]) {
+                // Took Damage!
+                const loot = sprigs.stock[i].count('FOOD');
+                if (loot > 0) {
+                    sprigs.stock[i].remove('FOOD', loot);
+                    // Spawn Loose Food (Crumb)
+                    const crumb = createStructure(StructureType.CRUMB, sprigs.x[i], sprigs.y[i]);
+                    crumb.id = world.nextStructureId++;
+                    crumb.stock!.remove('FOOD', 50);
+                    crumb.stock!.add('FOOD', loot);
+                    world.structures.push(crumb);
+                    world.structureHash.add(crumb);
+                }
+                sprigs.state[i] = THIEF_STATE.FLEE;
+            }
+            sprigs.prevHp[i] = sprigs.hp[i]; // Update history
+
             const x = sprigs.x[i];
             const y = sprigs.y[i];
             const state = sprigs.state[i];

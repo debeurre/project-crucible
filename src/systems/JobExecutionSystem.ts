@@ -4,6 +4,8 @@ import { StructureType } from '../data/StructureData';
 import { CONFIG } from '../core/Config';
 import { SprigState } from '../data/SprigState';
 import { HarvestRunner } from './jobs/HarvestRunner';
+import { PatrolRunner } from './jobs/PatrolRunner';
+import { CombatService } from '../services/CombatService';
 
 import { EntityType } from '../data/EntityData';
 
@@ -11,8 +13,11 @@ const DEG_TO_RAD = Math.PI / 180;
 
 export class JobExecutionSystem {
     private frameCount: number = 0;
+    private combatService: CombatService | null = null;
 
     public update(world: WorldState, dt: number) {
+        if (!this.combatService) this.combatService = new CombatService(world.sprigs);
+        
         this.frameCount++;
         const sprigs = world.sprigs;
         const jobs = world.jobs;
@@ -21,6 +26,36 @@ export class JobExecutionSystem {
         for (let i = 0; i < sprigs.active.length; i++) {
             if (sprigs.active[i] === 0 || sprigs.type[i] === EntityType.THIEF) continue;
             if (sprigs.state[i] === SprigState.FORCED_MARCH) continue;
+
+            // Retreat Logic (Self-Preservation)
+            if (sprigs.hp[i] < sprigs.maxHp[i] * 0.25) {
+                // Panic Mode
+                // Find nearest Nest
+                let nearestNest = null;
+                let minDistSq = Infinity;
+                for (const s of world.structures) {
+                    if (s.type === StructureType.NEST) {
+                        const dSq = (sprigs.x[i] - s.x)**2 + (sprigs.y[i] - s.y)**2;
+                        if (dSq < minDistSq) {
+                            minDistSq = dSq;
+                            nearestNest = s;
+                        }
+                    }
+                }
+                
+                if (nearestNest) {
+                    sprigs.targetX[i] = nearestNest.x;
+                    sprigs.targetY[i] = nearestNest.y;
+                    // Note: We need a way to tell SteeringSystem to panic. 
+                    // We can use a temporary state or just rely on Seek.
+                    // The prompt says: "SteeringSystem... multiply obstacleWeight... by 5.0".
+                    // Let's assume we handle that in SteeringSystem by checking HP.
+                }
+                
+                // If reached nest, heal/idle?
+                // For now, just overriding behavior.
+                continue; 
+            }
 
             const jobId = sprigs.jobId[i];
             if ((i + this.frameCount) % 30 === 0) this.scanForResources(world, i, jobId);
@@ -39,6 +74,8 @@ export class JobExecutionSystem {
             const type = jobs.type[currentJobId];
             if (type === JobType.HARVEST) {
                 HarvestRunner.handle(world, i, currentJobId);
+            } else if (type === JobType.PATROL) {
+                PatrolRunner.handle(world, i, currentJobId, this.combatService);
             }
         }
     }

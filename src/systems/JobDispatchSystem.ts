@@ -56,6 +56,25 @@ export class JobDispatchSystem {
                 for (const id of s.knownStructures) {
                     jobs.add(JobType.HARVEST, id, 5);
                 }
+            } else if (s.type === StructureType.PATROL_FLAG) {
+                // Post Patrol Job (High Priority)
+                // Check if job already exists for this target?
+                // JobData doesn't easily support querying "job for target X" without iterating.
+                // But we can check if it's already covered by checking assignments later.
+                // For now, let's just try to add it. JobData.add finds a free slot.
+                // To prevent duplicates, we iterate active jobs.
+                
+                let existingJob = false;
+                for(let j=0; j<jobs.count; j++) {
+                    if (jobs.active[j] && jobs.type[j] === JobType.PATROL && jobs.targetId[j] === s.id) {
+                        existingJob = true;
+                        break;
+                    }
+                }
+                
+                if (!existingJob) {
+                    jobs.add(JobType.PATROL, s.id, 10);
+                }
             }
         }
 

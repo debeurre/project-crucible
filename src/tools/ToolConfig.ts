@@ -5,7 +5,8 @@ export const TOOL_NAMES = {
     SPAWN: 'SPAWN',
     ERASER: 'ERASER',
     SIGNAL: 'SIGNAL',
-    COMMAND: 'COMMAND'
+    COMMAND: 'COMMAND',
+    PATROL: 'PATROL'
 };
 
 export const TOOL_ORDER = [
@@ -13,6 +14,7 @@ export const TOOL_ORDER = [
     TOOL_NAMES.COMMAND,
     TOOL_NAMES.SPAWN,
     TOOL_NAMES.SIGNAL,
+    TOOL_NAMES.PATROL,
     TOOL_NAMES.PAINT,
     TOOL_NAMES.BUILD,
     TOOL_NAMES.ERASER

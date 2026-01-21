@@ -27,6 +27,10 @@ export class SteeringSystem {
             const seek = SteeringBehaviors.seek(i, sprigs, sprigs.targetX[i], sprigs.targetY[i], CONFIG.STEER_SEEK_WEIGHT);
             ax += seek.ax; ay += seek.ay;
 
+            // Panic Multiplier
+            const isPanic = sprigs.hp[i] < sprigs.maxHp[i] * 0.25;
+            const panicMult = isPanic ? 5.0 : 1.0;
+
             // 3. AVOIDANCE (Rocks)
             const avoid = SteeringBehaviors.avoidStructures(i, sprigs, world.structures);
             
@@ -34,15 +38,15 @@ export class SteeringSystem {
             sprigs.avoidAx[i] *= 0.7;
             sprigs.avoidAy[i] *= 0.7;
             if (avoid.ax !== 0 || avoid.ay !== 0) {
-                sprigs.avoidAx[i] += avoid.ax * 0.2;
-                sprigs.avoidAy[i] += avoid.ay * 0.2;
+                sprigs.avoidAx[i] += avoid.ax * 0.2 * panicMult;
+                sprigs.avoidAy[i] += avoid.ay * 0.2 * panicMult;
             }
             ax += sprigs.avoidAx[i];
             ay += sprigs.avoidAy[i];
 
             // 4. NEIGHBORS
             const neighbors = world.spatialHash.query(x, y, 40);
-            const sep = SteeringBehaviors.separate(i, sprigs, neighbors, 40, CONFIG.STEER_SEPARATION_WEIGHT);
+            const sep = SteeringBehaviors.separate(i, sprigs, neighbors, 40, CONFIG.STEER_SEPARATION_WEIGHT * panicMult);
             ax += sep.ax; ay += sep.ay;
 
             // 5. COHESION

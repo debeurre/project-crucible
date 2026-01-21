@@ -25,6 +25,10 @@ export class StructureRenderer {
             } else if (s.type === StructureType.BURROW) {
                 g.circle(s.x, s.y, radius).fill(color);
                 g.circle(s.x, s.y, radius * 0.6).fill(0x000000); // Entrance hole
+            } else if (s.type === StructureType.PATROL_FLAG) {
+                // Red Pennant
+                g.moveTo(s.x, s.y + 10).lineTo(s.x, s.y - 20).stroke({ width: 2, color: 0xFFFFFF });
+                g.moveTo(s.x, s.y - 20).lineTo(s.x + 15, s.y - 12).lineTo(s.x, s.y - 5).closePath().fill(0xFF0000);
             } else {
                 g.circle(s.x, s.y, radius).fill(color);
             }

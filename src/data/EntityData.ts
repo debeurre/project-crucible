@@ -38,6 +38,7 @@ export class EntityData {
     // Combat Stats
     public hp: Int32Array;
     public maxHp: Int32Array;
+    public prevHp: Int32Array;
     public attack: Int32Array;
     public defense: Int32Array;
 
@@ -85,6 +86,7 @@ export class EntityData {
         
         this.hp = new Int32Array(size);
         this.maxHp = new Int32Array(size);
+        this.prevHp = new Int32Array(size);
         this.attack = new Int32Array(size);
         this.defense = new Int32Array(size);
         this.xp_haul = new Int32Array(size);
@@ -147,6 +149,7 @@ export class EntityData {
                 // Initialize Stats
                 this.maxHp[i] = CONFIG.BASE_HP;
                 this.hp[i] = CONFIG.BASE_HP;
+                this.prevHp[i] = CONFIG.BASE_HP;
                 this.attack[i] = CONFIG.BASE_ATTACK;
                 this.defense[i] = CONFIG.BASE_DEFENSE;
                 this.xp_haul[i] = 0;

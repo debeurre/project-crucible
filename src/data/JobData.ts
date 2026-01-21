@@ -5,7 +5,8 @@ export enum JobType {
     HARVEST = 1,
     BUILD = 2,
     HAUL = 3,
-    ATTACK = 4
+    ATTACK = 4,
+    PATROL = 5
 }
 
 export class JobData {
