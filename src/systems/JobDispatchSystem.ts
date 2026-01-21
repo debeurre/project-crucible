@@ -90,6 +90,10 @@ export class JobDispatchSystem {
                 // Optimization: Use SpatialHash if available, but linear scan for 500 sprigs is fine for now
                 for (let i = 0; i < sprigs.active.length; i++) {
                     if (sprigs.active[i] && sprigs.type[i] === EntityType.SPRIG && sprigs.jobId[i] === -1 && sprigs.state[i] !== SprigState.FORCED_MARCH) {
+                        
+                        // Qualification Check
+                        if (jobs.type[j] === JobType.PATROL && sprigs.hungerState[i] > 0) continue;
+
                         // Check distance to target? 
                         // We need target position.
                         // Job stores targetId. Look up structure.

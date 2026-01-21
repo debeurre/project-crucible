@@ -43,8 +43,21 @@ export class SprigRenderer {
                 if (sprigs.selected[i]) {
                     this.drawSelectionArrow(debugG, sprite.x, sprite.y);
                 }
+
+                // HP Bar
+                if (sprigs.hp[i] < sprigs.maxHp[i]) {
+                    this.drawHpBar(debugG, sprite.x, sprite.y, sprigs.hp[i], sprigs.maxHp[i]);
+                }
             }
         }
+    }
+
+    private drawHpBar(g: Graphics, x: number, y: number, hp: number, maxHp: number) {
+        const pct = Math.max(0, hp / maxHp);
+        const w = 20;
+        const h = 4;
+        g.rect(x - w/2, y - 25, w, h).fill(0x000000);
+        g.rect(x - w/2 + 1, y - 24, (w - 2) * pct, h - 2).fill(0xFF0000);
     }
 
     private getSprigTint(world: WorldState, i: number): number {
