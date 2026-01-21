@@ -77,11 +77,9 @@ export class HarvestRunner {
                 nest.stock.add('FOOD', amount);
                 this.gossip(world, i, nest, source);
             }
-            if (source && source.stock && source.stock.count('FOOD') > 0) {
-                sprigs.state[i] = SprigState.MOVE_TO_SOURCE;
-            } else {
-                this.completeJob(world, i, jobId);
-            }
+            
+            // Always complete job after delivery to allow priority re-evaluation
+            this.completeJob(world, i, jobId);
         }
     }
 

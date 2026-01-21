@@ -79,12 +79,22 @@ export class JobDispatchSystem {
         }
 
         // 2. Dispatch Jobs (The Boss)
-        // Iterate Open Jobs
+        // Get active job indices
+        const activeJobIndices: number[] = [];
         for (let j = 0; j < jobs.count; j++) {
             if (jobs.active[j] && jobs.assignedSprigId[j] === -1) {
-                // Find a worker
-                let bestDistSq = Infinity;
-                let bestWorkerId = -1;
+                activeJobIndices.push(j);
+            }
+        }
+
+        // Sort by Priority (High to Low)
+        activeJobIndices.sort((a, b) => jobs.priority[b] - jobs.priority[a]);
+
+        // Iterate Open Jobs
+        for (const j of activeJobIndices) {
+            // Find a worker
+            let bestDistSq = Infinity;
+            let bestWorkerId = -1;
 
                 // Simple: Find nearest idle sprig
                 // Optimization: Use SpatialHash if available, but linear scan for 500 sprigs is fine for now
@@ -118,6 +128,5 @@ export class JobDispatchSystem {
                     sprigs.state[bestWorkerId] = SprigState.MOVE_TO_SOURCE; 
                 }
             }
-        }
     }
 }
