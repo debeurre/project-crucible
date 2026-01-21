@@ -146,14 +146,7 @@ export class ThreatSystem {
                         sprigs.active[i] = 0; // Despawn Thief
                         world.sprigs.count--;
                         
-                        // Keep burrow? Prompt doesn't specify cleanup of burrow. Let's leave it as a trophy/scar.
-                        // Or maybe destroy it? "Temporary Burrow".
-                        // "The Thief is a nuisance unit... deposit them in a temporary 'Burrow'."
-                        // Let's destroy the burrow too for cleanup, or keep it to see where they came from.
-                        // I'll destroy it to keep map clean for now.
-                        world.structureHash.remove(burrow);
-                        const bIdx = world.structures.indexOf(burrow);
-                        if (bIdx !== -1) world.structures.splice(bIdx, 1);
+                        // Keep burrow as a trophy/scar.
                     }
                 } else {
                     // Burrow destroyed? Just die/despawn

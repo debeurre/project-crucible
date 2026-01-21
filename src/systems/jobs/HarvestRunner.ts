@@ -47,7 +47,7 @@ export class HarvestRunner {
             if (amount > 0 && source.stock!.remove('FOOD', amount)) {
                 sprigs.stock[i].add('FOOD', amount);
                 sprigs.state[i] = SprigState.MOVE_TO_SINK;
-                if (source.stock!.count('FOOD') <= 0 && source.type !== StructureType.BUSH) {
+                if (source.stock!.count('FOOD') <= 0 && source.type !== StructureType.BUSH && source.type !== StructureType.BURROW) {
                     this.destroyStructure(world, source);
                 }
             } else {

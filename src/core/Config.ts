@@ -15,8 +15,8 @@ export const CONFIG = {
     HUNGER_PENALTY: 0.75,
     HUNGER_BUFFER: 1,
     HUNGER_RISK: 0.5,
-    SPAWN_COST: 10,
-    SPAWN_TIME: 5.0,
+    SPAWN_COST: 20,
+    SPAWN_TIME: 10.0,
     REGEN_INTERVAL: 15.0,
     REGEN_AMOUNT: 5,
     // Wander
