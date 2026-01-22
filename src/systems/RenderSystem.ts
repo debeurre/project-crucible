@@ -8,6 +8,7 @@ import { ToolManager } from '../tools/ToolManager';
 import { StructureRenderer } from './render/StructureRenderer';
 import { SprigRenderer } from './render/SprigRenderer';
 import { PathRenderer } from './render/PathRenderer';
+import { JobType } from '../data/JobData';
 
 export class RenderSystem {
     private world: WorldState;
@@ -111,10 +112,21 @@ export class RenderSystem {
                 const home = this.world.structures.find(s => s.id === homeId);
                 if (home) {
                     const dist = Math.sqrt((x - home.x)**2 + (y - home.y)**2);
-                    const color = dist < CONFIG.NEST_VIEW_RADIUS ? 0x00FF00 : 0xFF0000;
+                    const color = dist < CONFIG.NEST_VIEW_RADIUS ? 0x00FF00 : 0xFFA500; // Orange
                     g.moveTo(x, y).lineTo(home.x, home.y).stroke({ width: 1, color, alpha: 0.5 });
                 }
             }
+
+            // Patrol Line
+            const jobId = sprigs.jobId[i];
+            if (jobId !== -1 && this.world.jobs.type[jobId] === JobType.PATROL) {
+                const targetId = this.world.jobs.targetId[jobId];
+                const flag = this.world.structures.find(s => s.id === targetId);
+                if (flag) {
+                    g.moveTo(x, y).lineTo(flag.x, flag.y).stroke({ width: 2, color: 0xFF0000, alpha: 0.8 });
+                }
+            }
+
             if (sprigs.targetX[i] + sprigs.targetY[i] > 0) {
                 g.moveTo(x, y).lineTo(sprigs.targetX[i], sprigs.targetY[i]).stroke({ width: 1, color: 0xFF00FF });
             }

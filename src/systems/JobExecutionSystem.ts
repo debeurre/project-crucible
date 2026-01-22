@@ -1,13 +1,12 @@
 import { WorldState } from '../core/WorldState';
 import { JobType } from '../data/JobData';
 import { StructureType } from '../data/StructureData';
+import { EntityType } from '../data/EntityData';
 import { CONFIG } from '../core/Config';
 import { SprigState } from '../data/SprigState';
 import { HarvestRunner } from './jobs/HarvestRunner';
 import { PatrolRunner } from './jobs/PatrolRunner';
 import { CombatService } from '../services/CombatService';
-
-import { EntityType } from '../data/EntityData';
 
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -61,7 +60,9 @@ export class JobExecutionSystem {
             if ((i + this.frameCount) % 30 === 0) this.scanForResources(world, i, jobId);
 
             if (sprigs.jobId[i] === -1) {
-                this.handleIdle(world, i, dt);
+                if (sprigs.state[i] !== SprigState.FORCED_MARCH) {
+                    this.handleIdle(world, i, dt);
+                }
                 continue;
             }
 

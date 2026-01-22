@@ -16,25 +16,6 @@ export class PatrolRunner {
             return;
         }
 
-        // Reuse state for sub-states? Or use a separate field? 
-        // SprigState has limited slots. We might need a generic "WORKING" state and use another field for sub-state.
-        // Or we can overload 'targetId' on the sprig to store the Enemy ID when intercepting?
-        // Let's use `sprigs.targetId` for enemy ID when in COMBAT mode.
-        // And we need a way to store "Current Mode". 
-        // Let's use `sprigs.state` mapping:
-        // IDLE/MOVE_TO_SOURCE -> GUARD
-        // MOVE_TO_SINK -> INTERCEPT
-        // HARVESTING -> COMBAT
-        // This is hacky. Better to add `sprigs.subState` later.
-        // For now:
-        // If state == MOVE_TO_SOURCE -> We are GUARDING/MOVING TO FLAG
-        // If state == ATTACKING? We don't have ATTACKING state.
-        
-        // Let's treat standard states as:
-        // MOVE_TO_SOURCE = Go to Flag / Guard
-        // MOVE_TO_SINK = Intercept/Chase Enemy
-        // HARVESTING = Attacking
-        
         const state = sprigs.state[i];
 
         if (state === SprigState.IDLE) {
@@ -42,7 +23,7 @@ export class PatrolRunner {
         }
 
         if (state === SprigState.MOVE_TO_SOURCE) {
-            // A. Guard (Orbit Flag)
+            // A. Patrol (Orbit Flag)
             // Scan for enemies
             const nearby = world.spatialHash.query(sprigs.x[i], sprigs.y[i], CONFIG.SPRIG_VIEW_RADIUS);
             let enemyId = -1;
