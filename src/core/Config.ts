@@ -55,7 +55,7 @@ export const CONFIG = {
     THIEF_ATTACK: 0,
     THIEF_DEFENSE: 0,
     THIEF_SPEED_MULT: 1.2,
-    THIEF_LEASH_RADIUS: 300.0,
+    THIEF_LEASH_RADIUS: 500.0,
     // Combat & Stats
     BASE_HP: 100,
     BASE_ATTACK: 10,

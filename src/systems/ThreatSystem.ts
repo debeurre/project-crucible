@@ -80,6 +80,9 @@ export class ThreatSystem {
             world.sprigs.speed[thiefId] = CONFIG.MAX_SPEED * CONFIG.THIEF_SPEED_MULT;
             world.sprigs.homeID[thiefId] = burrow.id; // Store burrow ID as home
             world.sprigs.state[thiefId] = THIEF_STATE.SEEK_LOOT; // Reuse state array for thief state
+            
+            // Set Thief Capacity to 10
+            world.sprigs.stock[thiefId].setCapacity(10);
         }
     }
 
@@ -171,10 +174,16 @@ export class ThreatSystem {
                     // Interact
                     const radius = getStructureStats(target.type).radius + 10;
                     if (minDistSq < radius * radius) {
-                        // Steal
-                        if (target.stock && target.stock.remove('FOOD', 10)) {
-                            sprigs.stock[i].add('FOOD', 10);
-                            sprigs.state[i] = THIEF_STATE.FLEE;
+                        // Steal: Calculate amount based on target and capacity
+                        const amount = Math.min(10, target.stock!.count('FOOD'));
+                        if (amount > 0 && target.stock!.remove('FOOD', amount)) {
+                            const added = sprigs.stock[i].add('FOOD', amount);
+                            if (added) {
+                                sprigs.state[i] = THIEF_STATE.FLEE;
+                            } else {
+                                // This shouldn't happen if capacity is set to 10
+                                console.warn(`Thief [${i}] failed to add food to inventory!`);
+                            }
                         }
                     }
                 } else {

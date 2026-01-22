@@ -44,6 +44,10 @@ export class Stock {
         return this.capacity;
     }
 
+    public setCapacity(newCapacity: number) {
+        this.capacity = newCapacity;
+    }
+
     public toJSON() {
         return {
             capacity: this.capacity,
