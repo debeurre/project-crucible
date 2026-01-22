@@ -168,10 +168,6 @@ export class RenderSystem {
                     if (this.world.sprigs.active[i] && this.world.sprigs.homeID[i] === s.id) housing++;
                 }
                 content += `\nHousing: ${housing}`;
-                this.debugGraphics.circle(s.x, s.y, CONFIG.NEST_VIEW_RADIUS).stroke({ width: 2, color: getStructureStats(s.type).color, alpha: 0.5 });
-            }
-            if (s.type === StructureType.BURROW) {
-                this.debugGraphics.circle(s.x, s.y, CONFIG.THIEF_LEASH_RADIUS).stroke({ width: 2, color: getStructureStats(s.type).color, alpha: 0.5 });
             }
 
             text.text = content;
