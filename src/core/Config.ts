@@ -51,6 +51,7 @@ export const CONFIG = {
     SIGNAL_ALPHA: 0.25,
     // Threats
     MAX_BURROWS: 5,
+    BURROW_LIMIT: 50,
     THIEF_HP: 20,
     THIEF_ATTACK: 0,
     THIEF_DEFENSE: 0,

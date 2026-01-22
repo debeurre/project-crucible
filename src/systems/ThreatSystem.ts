@@ -233,8 +233,8 @@ export class ThreatSystem {
                 const burrow = structures.find(s => s.id === burrowId);
 
                 if (burrow && burrow.stock) {
-                    // Check Capacity (e.g. 100)
-                    if (burrow.stock.count('FOOD') >= 100) {
+                    // Check Capacity
+                    if (burrow.stock.count('FOOD') >= CONFIG.BURROW_LIMIT) {
                         // Mission Complete
                         sprigs.active[i] = 0;
                         world.sprigs.count--;
