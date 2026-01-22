@@ -168,6 +168,12 @@ export class RenderSystem {
                     if (this.world.sprigs.active[i] && this.world.sprigs.homeID[i] === s.id) housing++;
                 }
                 content += `\nHousing: ${housing}`;
+                // Nest Radius Indicator
+                this.debugGraphics.circle(s.x, s.y, CONFIG.NEST_VIEW_RADIUS).stroke({ width: 2, color: getStructureStats(s.type).color, alpha: CONFIG.SIGNAL_ALPHA });
+            }
+            if (s.type === StructureType.BURROW) {
+                // Burrow Radius Indicator
+                this.debugGraphics.circle(s.x, s.y, CONFIG.THIEF_LEASH_RADIUS).stroke({ width: 2, color: getStructureStats(s.type).color, alpha: CONFIG.SIGNAL_ALPHA });
             }
 
             text.text = content;
