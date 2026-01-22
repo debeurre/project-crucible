@@ -135,10 +135,24 @@ export class ThreatSystem {
                 let target = null;
                 let minDistSq = Infinity;
 
+                const burrowId = sprigs.homeID[i];
+                const burrow = structures.find(s => s.id === burrowId);
+                if (!burrow) {
+                    sprigs.active[i] = 0;
+                    world.sprigs.count--;
+                    continue;
+                }
+
                 // Simple linear scan for loot (optimize later)
                 for (const s of structures) {
                     if ((s.type === StructureType.NEST || s.type === StructureType.COOKIE || s.type === StructureType.CRUMB || s.type === StructureType.BUSH) 
                         && s.stock && s.stock.count('FOOD') > 0) {
+                        
+                        // Leash Check: Target must be near burrow
+                        const bdx = s.x - burrow.x;
+                        const bdy = s.y - burrow.y;
+                        if (bdx*bdx + bdy*bdy > CONFIG.THIEF_LEASH_RADIUS * CONFIG.THIEF_LEASH_RADIUS) continue;
+
                         const dx = s.x - x;
                         const dy = s.y - y;
                         const dSq = dx*dx + dy*dy;
@@ -164,9 +178,8 @@ export class ThreatSystem {
                         }
                     }
                 } else {
-                    // No loot? Stop.
-                    sprigs.targetX[i] = x;
-                    sprigs.targetY[i] = y;
+                    // No loot within leash? Return to burrow
+                    sprigs.state[i] = THIEF_STATE.FLEE;
                 }
 
             } else if (state === THIEF_STATE.FLEE) {
@@ -187,8 +200,15 @@ export class ThreatSystem {
                         // Bank
                         const amount = sprigs.stock[i].count('FOOD');
                         if (burrow.stock) {
-                            burrow.stock.add('FOOD', amount);
-                            sprigs.stock[i].remove('FOOD', amount);
+                            const success = burrow.stock.add('FOOD', amount);
+                            if (success) {
+                                console.log(`Thief [${i}] banked ${amount} food into Burrow [${burrow.id}]. New Total: ${burrow.stock.count('FOOD')}`);
+                                sprigs.stock[i].remove('FOOD', amount);
+                            } else {
+                                console.warn(`Thief [${i}] failed to bank food into Burrow [${burrow.id}]. (Capacity: ${burrow.stock.capacityLimit})`);
+                            }
+                        } else {
+                            console.error(`Thief [${i}] attempted to bank into Burrow [${burrow.id}] but it has NO STOCK component!`);
                         }
                         
                         // Decision Point
