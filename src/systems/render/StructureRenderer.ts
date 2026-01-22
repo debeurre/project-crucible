@@ -33,6 +33,18 @@ export class StructureRenderer {
                 g.moveTo(s.x, s.y - 20).lineTo(s.x + 15, s.y - 12).lineTo(s.x, s.y - 5).closePath().fill(0xFF0000);
             } else {
                 g.circle(s.x, s.y, radius).fill(color);
+                
+                // Bush Berries
+                if (s.type === StructureType.BUSH && s.stock) {
+                    const count = s.stock.count('FOOD');
+                    for (let i = 0; i < count; i++) {
+                        const angle = (i / 10) * Math.PI * 2;
+                        const dist = radius * 0.6;
+                        const bx = s.x + Math.cos(angle) * dist;
+                        const by = s.y + Math.sin(angle) * dist;
+                        g.circle(bx, by, 3).fill(0xFF69B4); // Pink berries
+                    }
+                }
             }
 
             this.drawProgressBars(g, s);
