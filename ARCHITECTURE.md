@@ -69,3 +69,5 @@ To keep files under the **300 LOC limit**, we use a delegated structure:
 - **Scent Trail:** A manual waypoint path drawn by the player using the Command tool.
 - **Brownout:** A low-energy state caused by lack of food; results in reduced speed and efficiency.
 - **Known Structures:** A Nest's internal memory of resource locations, populated by scouting sprigs.
+
+TODO: Generate a file hierarchy with labels summarizing the role of each file/folder

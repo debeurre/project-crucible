@@ -14,7 +14,7 @@ import { InputState } from './core/InputState';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, CONFIG } from './core/Config';
 import { DEFAULT_LEVEL } from './data/LevelData';
 import { UIManager } from './ui/UIManager';
-import { CombatService } from './services/CombatService';
+import { CombatService } from './systems/services/CombatService';
 import { ThreatSystem } from './systems/ThreatSystem';
 
 async function init() {

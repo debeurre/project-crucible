@@ -2,7 +2,7 @@ import { WorldState } from '../../core/WorldState';
 import { StructureType, getStructureStats } from '../../data/StructureData';
 import { SprigState } from '../../data/SprigState';
 import { CONFIG } from '../../core/Config';
-import { EvolutionService } from '../evolution/EvolutionService';
+import { EvolutionService } from '../services/EvolutionService';
 
 export class HarvestRunner {
     public static handle(world: WorldState, i: number, jobId: number) {

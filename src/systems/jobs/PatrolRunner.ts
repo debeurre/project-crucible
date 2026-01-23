@@ -1,8 +1,9 @@
 import { WorldState } from '../../core/WorldState';
-import { EntityType } from '../../data/EntityData';
 import { SprigState } from '../../data/SprigState';
-import { CombatService } from '../../services/CombatService';
+import { CombatService } from '../services/CombatService';
 import { CONFIG } from '../../core/Config';
+
+import { ScoutService } from '../services/ScoutService';
 
 export class PatrolRunner {
     public static handle(world: WorldState, i: number, jobId: number, combatService: CombatService) {
@@ -24,16 +25,8 @@ export class PatrolRunner {
 
         if (state === SprigState.MOVE_TO_SOURCE) {
             // A. Patrol (Orbit Flag)
-            // Scan for enemies
-            const nearby = world.spatialHash.query(sprigs.x[i], sprigs.y[i], CONFIG.SPRIG_VIEW_RADIUS);
-            let enemyId = -1;
-            
-            for (const id of nearby) {
-                if (world.sprigs.active[id] && world.sprigs.type[id] === EntityType.THIEF) {
-                    enemyId = id;
-                    break;
-                }
-            }
+            // Scan for enemies using ScoutService (prioritize near Flag)
+            const enemyId = ScoutService.findBestTarget(world, i, flag.x, flag.y);
 
             if (enemyId !== -1) {
                 sprigs.state[i] = SprigState.MOVE_TO_SINK; // Transition to Intercept

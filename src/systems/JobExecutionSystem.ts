@@ -6,7 +6,7 @@ import { CONFIG } from '../core/Config';
 import { SprigState } from '../data/SprigState';
 import { HarvestRunner } from './jobs/HarvestRunner';
 import { PatrolRunner } from './jobs/PatrolRunner';
-import { CombatService } from '../services/CombatService';
+import { CombatService } from './services/CombatService';
 
 const DEG_TO_RAD = Math.PI / 180;
 

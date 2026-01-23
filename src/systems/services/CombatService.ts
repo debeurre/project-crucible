@@ -1,6 +1,6 @@
-import { EntityData } from '../data/EntityData';
-import { CONFIG } from '../core/Config';
-import { EvolutionService } from '../systems/evolution/EvolutionService';
+import { EntityData } from '../../data/EntityData';
+import { CONFIG } from '../../core/Config';
+import { EvolutionService } from './EvolutionService';
 
 export class CombatService {
     private sprigs: EntityData;
