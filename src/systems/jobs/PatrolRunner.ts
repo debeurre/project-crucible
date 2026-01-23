@@ -6,7 +6,7 @@ import { CONFIG } from '../../core/Config';
 import { ScoutService } from '../services/ScoutService';
 
 export class PatrolRunner {
-    public static handle(world: WorldState, i: number, jobId: number, combatService: CombatService) {
+    public static handle(world: WorldState, i: number, jobId: number, combatService: CombatService, dt: number) {
         const sprigs = world.sprigs;
         const structures = world.structures;
         const targetId = world.jobs.targetId[jobId];
@@ -41,8 +41,10 @@ export class PatrolRunner {
                     sprigs.targetX[i] = flag.x;
                     sprigs.targetY[i] = flag.y;
                 } else {
-                    // Random patrol point
-                    if (Math.random() < 0.05) {
+                    // Timer-based wandering
+                    sprigs.timer[i] -= dt;
+                    if (sprigs.timer[i] <= 0) {
+                        sprigs.timer[i] = CONFIG.WANDER_TMIN + Math.random() * (CONFIG.WANDER_TMAX - CONFIG.WANDER_TMIN);
                         const angle = Math.random() * Math.PI * 2;
                         const dist = Math.random() * (CONFIG.PATROL_RADIUS * 0.8);
                         sprigs.targetX[i] = flag.x + Math.cos(angle) * dist;
@@ -72,6 +74,7 @@ export class PatrolRunner {
             if (distSq < CONFIG.SPRIG_ATTACK_RANGE*CONFIG.SPRIG_ATTACK_RANGE) {
                 // Range reached
                 sprigs.state[i] = SprigState.HARVESTING; // Combat
+                sprigs.timer[i] = 0; // Ready to attack immediately
             }
         } else if (state === SprigState.HARVESTING) {
             // C. Combat
@@ -85,9 +88,8 @@ export class PatrolRunner {
             sprigs.targetX[i] = world.sprigs.x[enemyId];
             sprigs.targetY[i] = world.sprigs.y[enemyId];
 
-            // Cooldown check (reuse timer?)
-            sprigs.timer[i] -= 0.016; // Approx dt, we need dt passed in handle.
-            // Let's assume handle gets dt.
+            // Cooldown check
+            sprigs.timer[i] -= dt;
             
             if (sprigs.timer[i] <= 0) {
                 combatService.applyDamage(i, enemyId, world.sprigs.attack[i]);

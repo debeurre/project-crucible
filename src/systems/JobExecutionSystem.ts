@@ -76,7 +76,7 @@ export class JobExecutionSystem {
             if (type === JobType.HARVEST) {
                 HarvestRunner.handle(world, i, currentJobId);
             } else if (type === JobType.PATROL) {
-                PatrolRunner.handle(world, i, currentJobId, this.combatService);
+                PatrolRunner.handle(world, i, currentJobId, this.combatService, dt);
             }
         }
     }
