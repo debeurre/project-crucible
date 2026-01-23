@@ -84,6 +84,7 @@ export class JobExecutionSystem {
     private scanForResources(world: WorldState, i: number, currentJobId: number) {
         const sprigs = world.sprigs;
         if (sprigs.stock[i].count('FOOD') > 0) return;
+        if (currentJobId !== -1 && world.jobs.type[currentJobId] === JobType.PATROL) return;
 
         const x = sprigs.x[i], y = sprigs.y[i];
         const nearby = world.structureHash.query(x, y, CONFIG.SPRIG_VIEW_RADIUS);
