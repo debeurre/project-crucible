@@ -2,7 +2,7 @@ export const CONFIG = {
     // World
     GRID_SIZE: 32,
     WORLD_WIDTH: 55,
-    WORLD_HEIGHT: 30,
+    WORLD_HEIGHT: 40,
     // Sprigs
     MAX_SPRIGS: 500,
     START_SPRIGS: 5,
