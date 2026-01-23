@@ -14,6 +14,12 @@ export class HarvestRunner {
         const source = structures.find(s => s.id === targetId);
         const carrying = sprigs.stock[i].count('FOOD') > 0;
 
+        if (source && source.stock && source.stock.count('FOOD') <= 0) {
+            if (getStructureStats(source.type).destroyOnEmpty) {
+                this.destroyStructure(world, source);
+            }
+        }
+
         if ((!source || !source.stock || source.stock.count('FOOD') <= 0) && !carrying) {
             this.completeJob(world, i, jobId);
             return;
@@ -42,18 +48,20 @@ export class HarvestRunner {
         const dx = sprigs.x[i] - source.x;
         const dy = sprigs.y[i] - source.y;
         const distSq = dx*dx + dy*dy;
-        const range = getStructureStats(source.type).radius + 15;
+        const stats = getStructureStats(source.type);
+        const range = stats.radius + 15;
 
         if (distSq < range * range) {
             const amount = Math.min(sprigs.carryCapacity[i], source.stock!.count('FOOD'));
             if (amount > 0 && source.stock!.remove('FOOD', amount)) {
                 sprigs.stock[i].add('FOOD', amount);
                 sprigs.state[i] = SprigState.MOVE_TO_SINK;
-                if (source.stock!.count('FOOD') <= 0 && source.type !== StructureType.BUSH && source.type !== StructureType.BURROW) {
-                    this.destroyStructure(world, source);
-                }
             } else {
                 this.completeJob(world, i, jobId);
+            }
+
+            if (source.stock!.count('FOOD') <= 0 && stats.destroyOnEmpty) {
+                this.destroyStructure(world, source);
             }
         }
     }

@@ -182,6 +182,14 @@ export class ThreatSystem {
                             if (added) {
                                 sprigs.state[i] = THIEF_STATE.FLEE;
                             }
+                            
+                            // Cleanup empty structure
+                            if (target.stock!.count('FOOD') <= 0 && getStructureStats(target.type).destroyOnEmpty) {
+                                world.structureHash.remove(target);
+                                const idx = world.structures.indexOf(target);
+                                if (idx !== -1) world.structures.splice(idx, 1);
+                                world.refreshGrid();
+                            }
                         }
                     }
                 } else {
