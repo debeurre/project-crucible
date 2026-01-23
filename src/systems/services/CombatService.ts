@@ -22,8 +22,8 @@ export class CombatService {
                 const dx = sprigs.x[id] - burrow.x;
                 const dy = sprigs.y[id] - burrow.y;
                 if (dx*dx + dy*dy < CONFIG.THIEF_CORNERED_RADIUS * CONFIG.THIEF_CORNERED_RADIUS) {
-                    attack += 20;
-                    defense += 5;
+                    attack += CONFIG.THIEF_CORNERED_ATK;
+                    defense += CONFIG.THIEF_CORNERED_DEF;
                 }
             }
         }

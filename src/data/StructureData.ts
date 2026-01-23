@@ -28,9 +28,9 @@ export const STRUCTURE_STATS: Record<StructureType, StructureStats> = {
     [StructureType.COOKIE]: { name: 'Cookie', radius: 45, color: 0xDAA520, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
     [StructureType.ROCK]:   { name: 'Rock',   radius: 40, color: 0x808080, solid: true,  shape: 'CIRCLE', destroyOnEmpty: false },
     [StructureType.BUSH]:   { name: 'Bush',   radius: 20, color: 0x228B22, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
-    [StructureType.SIGNAL_HARVEST]: { name: 'Signal (Harvest)', radius: 300, color: 0x00FF00, solid: false, shape: 'CIRCLE', destroyOnEmpty: true },
+    [StructureType.SIGNAL_HARVEST]: { name: 'Signal (Harvest)', radius: CONFIG.HARVEST_SIGNAL_RADIUS, color: 0x00FF00, solid: false, shape: 'CIRCLE', destroyOnEmpty: true },
     [StructureType.BURROW]: { name: 'Burrow', radius: 10,  color: 0x800080, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
-    [StructureType.SIGNAL_PATROL]: { name: 'Signal (Patrol)', radius: 50, color: 0xFF0000, solid: false, shape: 'CIRCLE', destroyOnEmpty: false }
+    [StructureType.SIGNAL_PATROL]: { name: 'Signal (Patrol)', radius: CONFIG.PATROL_RADIUS, color: 0xFF0000, solid: false, shape: 'CIRCLE', destroyOnEmpty: false }
 };
 
 export interface Structure {
