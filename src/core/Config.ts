@@ -17,7 +17,7 @@ export const CONFIG = {
     HUNGER_RISK: 0.5,
     SPAWN_COST: 20,
     SPAWN_TIME: 10.0,
-    REGEN_INTERVAL: 30.0,
+    REGEN_INTERVAL: 15.0,
     REGEN_AMOUNT: 5,
     // Wander
     WANDER_SPEED: 50.0,
@@ -57,6 +57,7 @@ export const CONFIG = {
     THIEF_DEFENSE: 0,
     THIEF_SPEED_MULT: 1.2,
     THIEF_LEASH_RADIUS: 500.0,
+    THIEF_CORNERED_RADIUS: 100.0,
     // Progression
     XP_BASE: 100,
     LEVEL_CAP: 10,

@@ -15,7 +15,7 @@ export class JobExecutionSystem {
     private combatService: CombatService | null = null;
 
     public update(world: WorldState, dt: number) {
-        if (!this.combatService) this.combatService = new CombatService(world.sprigs);
+        if (!this.combatService) this.combatService = new CombatService(world);
         
         this.frameCount++;
         const sprigs = world.sprigs;
@@ -90,7 +90,7 @@ export class JobExecutionSystem {
         const nearby = world.structureHash.query(x, y, CONFIG.SPRIG_VIEW_RADIUS);
 
         for (const s of nearby) {
-            if ((s.type === StructureType.COOKIE || s.type === StructureType.CRUMB || s.type === StructureType.BUSH) && s.stock && s.stock.count('FOOD') > 0) {
+            if ((s.type === StructureType.COOKIE || s.type === StructureType.CRUMB || s.type === StructureType.BUSH || s.type === StructureType.BURROW) && s.stock && s.stock.count('FOOD') > 0) {
                 if (s.id !== (currentJobId !== -1 ? world.jobs.targetId[currentJobId] : -1)) {
                     sprigs.addDiscovery(i, s.id);
                 }

@@ -1,34 +1,55 @@
-import { EntityData } from '../../data/EntityData';
 import { CONFIG } from '../../core/Config';
 import { EvolutionService } from './EvolutionService';
+import { WorldState } from '../../core/WorldState';
+import { EntityType } from '../../data/EntityData';
+import { StructureType } from '../../data/StructureData';
 
 export class CombatService {
-    private sprigs: EntityData;
+    private world: WorldState;
 
-    constructor(sprigs: EntityData) {
-        this.sprigs = sprigs;
+    constructor(world: WorldState) {
+        this.world = world;
+    }
+
+    public getEffectiveStats(id: number): { attack: number, defense: number } {
+        const sprigs = this.world.sprigs;
+        let attack = sprigs.attack[id];
+        let defense = sprigs.defense[id];
+
+        if (sprigs.type[id] === EntityType.THIEF && sprigs.homeID[id] !== -1) {
+            const burrow = this.world.structures.find(s => s.id === sprigs.homeID[id]);
+            if (burrow && burrow.type === StructureType.BURROW) {
+                const dx = sprigs.x[id] - burrow.x;
+                const dy = sprigs.y[id] - burrow.y;
+                if (dx*dx + dy*dy < CONFIG.THIEF_CORNERED_RADIUS * CONFIG.THIEF_CORNERED_RADIUS) {
+                    attack += 20;
+                    defense += 5;
+                }
+            }
+        }
+        return { attack, defense };
     }
 
     public applyDamage(attackerId: number, targetId: number, amount: number): number {
-        if (this.sprigs.active[targetId] === 0) return 0;
+        if (this.world.sprigs.active[targetId] === 0) return 0;
 
         // Calculate Damage
-        const defense = this.sprigs.defense[targetId];
+        const defense = this.getEffectiveStats(targetId).defense;
         const damage = Math.max(1, amount - defense + 1);
 
-        this.sprigs.hp[targetId] -= damage;
+        this.world.sprigs.hp[targetId] -= damage;
 
         // XP for Attacker
-        if (attackerId !== -1 && this.sprigs.active[attackerId] === 1) {
-             this.sprigs.xp_fight[attackerId] += CONFIG.XP_PER_HIT;
-             EvolutionService.checkLevelUp(this.sprigs, attackerId);
+        if (attackerId !== -1 && this.world.sprigs.active[attackerId] === 1) {
+             this.world.sprigs.xp_fight[attackerId] += CONFIG.XP_PER_HIT;
+             EvolutionService.checkLevelUp(this.world.sprigs, attackerId);
         }
 
-        if (this.sprigs.hp[targetId] <= 0) {
+        if (this.world.sprigs.hp[targetId] <= 0) {
             // Kill XP
-            if (attackerId !== -1 && this.sprigs.active[attackerId] === 1) {
-                this.sprigs.xp_fight[attackerId] += CONFIG.XP_PER_KILL;
-                EvolutionService.checkLevelUp(this.sprigs, attackerId);
+            if (attackerId !== -1 && this.world.sprigs.active[attackerId] === 1) {
+                this.world.sprigs.xp_fight[attackerId] += CONFIG.XP_PER_KILL;
+                EvolutionService.checkLevelUp(this.world.sprigs, attackerId);
             }
             this.killSprig(targetId);
         }
@@ -37,7 +58,7 @@ export class CombatService {
     }
 
     private killSprig(id: number) {
-        this.sprigs.active[id] = 0;
-        this.sprigs.count--;
+        this.world.sprigs.active[id] = 0;
+        this.world.sprigs.count--;
     }
 }

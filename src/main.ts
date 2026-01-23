@@ -60,7 +60,7 @@ async function init() {
     const signalSystem = new SignalSystem();
     const threatSystem = new ThreatSystem();
     const uiSystem = new UISystem(app);
-    const combatService = new CombatService(world.sprigs);
+    const combatService = new CombatService(world);
 
     const uiManager = new UIManager(toolManager, world);
 
@@ -70,7 +70,8 @@ async function init() {
             console.warn('Invalid IDs');
             return;
         }
-        const dmg = combatService.applyDamage(attackerId, victimId, world.sprigs.attack[attackerId]);
+        const attack = combatService.getEffectiveStats(attackerId).attack;
+        const dmg = combatService.applyDamage(attackerId, victimId, attack);
         const remaining = world.sprigs.hp[victimId];
         console.log(`Sprig [${attackerId}] hit Sprig [${victimId}] for ${dmg} damage! HP remaining: ${remaining}`);
         if (remaining <= 0) console.log(`Sprig [${victimId}] died!`);

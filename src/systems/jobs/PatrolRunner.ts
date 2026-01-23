@@ -26,7 +26,7 @@ export class PatrolRunner {
         if (state === SprigState.MOVE_TO_SOURCE) {
             // A. Patrol (Orbit Signal)
             // Scan for enemies using ScoutService (prioritize near Signal)
-            const enemyId = ScoutService.findBestTarget(world, i, signal.x, signal.y);
+            const enemyId = ScoutService.findBestTarget(world, i, signal.x, signal.y, CONFIG.PATROL_RADIUS * 1.5);
 
             if (enemyId !== -1) {
                 sprigs.state[i] = SprigState.MOVE_TO_SINK; // Transition to Intercept
@@ -61,6 +61,14 @@ export class PatrolRunner {
                 return;
             }
 
+            // Leash Check
+            const dxSignal = sprigs.x[i] - signal.x;
+            const dySignal = sprigs.y[i] - signal.y;
+            if (dxSignal*dxSignal + dySignal*dySignal > (CONFIG.PATROL_RADIUS * 1.5)**2) {
+                sprigs.state[i] = SprigState.MOVE_TO_SOURCE;
+                return;
+            }
+
             // Move to enemy
             const ex = world.sprigs.x[enemyId];
             const ey = world.sprigs.y[enemyId];
@@ -84,6 +92,14 @@ export class PatrolRunner {
                 return;
             }
 
+            // Leash Check
+            const dxSignal = sprigs.x[i] - signal.x;
+            const dySignal = sprigs.y[i] - signal.y;
+            if (dxSignal*dxSignal + dySignal*dySignal > (CONFIG.PATROL_RADIUS * 1.5)**2) {
+                sprigs.state[i] = SprigState.MOVE_TO_SOURCE;
+                return;
+            }
+
             // Keep chasing
             sprigs.targetX[i] = world.sprigs.x[enemyId];
             sprigs.targetY[i] = world.sprigs.y[enemyId];
@@ -92,7 +108,8 @@ export class PatrolRunner {
             sprigs.timer[i] -= dt;
             
             if (sprigs.timer[i] <= 0) {
-                combatService.applyDamage(i, enemyId, world.sprigs.attack[i]);
+                const attack = combatService.getEffectiveStats(i).attack;
+                combatService.applyDamage(i, enemyId, attack);
                 sprigs.timer[i] = CONFIG.SPRIG_ATTACK_COOLDOWN;
             }
             

@@ -7,11 +7,13 @@ export class ScoutService {
         world: WorldState, 
         observerId: number, 
         referenceX: number, 
-        referenceY: number
+        referenceY: number,
+        maxRange: number = Infinity
     ): number {
         const sprigs = world.sprigs;
         const x = sprigs.x[observerId];
         const y = sprigs.y[observerId];
+        const maxRangeSq = maxRange * maxRange;
         
         // Query around the observer (what they can see)
         const nearby = world.spatialHash.query(x, y, CONFIG.SPRIG_VIEW_RADIUS);
@@ -27,7 +29,7 @@ export class ScoutService {
                 const dy = world.sprigs.y[id] - referenceY;
                 const score = dx*dx + dy*dy;
 
-                if (score < bestScore) {
+                if (score < maxRangeSq && score < bestScore) {
                     bestScore = score;
                     bestTargetId = id;
                 }

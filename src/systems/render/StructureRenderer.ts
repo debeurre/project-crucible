@@ -37,8 +37,9 @@ export class StructureRenderer {
                 // Bush Berries
                 if (s.type === StructureType.BUSH && s.stock) {
                     const count = s.stock.count('FOOD');
-                    for (let i = 0; i < count; i++) {
-                        const angle = (i / 10) * Math.PI * 2;
+                    const berryCount = Math.floor(count / CONFIG.REGEN_AMOUNT);
+                    for (let i = 0; i < berryCount; i++) {
+                        const angle = (i / (s.stock.capacityLimit / CONFIG.REGEN_AMOUNT)) * Math.PI * 2;
                         const dist = radius * 0.6;
                         const bx = s.x + Math.cos(angle) * dist;
                         const by = s.y + Math.sin(angle) * dist;
