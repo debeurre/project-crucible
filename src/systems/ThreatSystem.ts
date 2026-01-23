@@ -82,6 +82,7 @@ export class ThreatSystem {
             world.sprigs.state[thiefId] = THIEF_STATE.SEEK_LOOT; // Reuse state array for thief state
             
             // Set Thief Capacity to 10
+            world.sprigs.carryCapacity[thiefId] = 10;
             world.sprigs.stock[thiefId].setCapacity(10);
         }
     }
@@ -180,9 +181,6 @@ export class ThreatSystem {
                             const added = sprigs.stock[i].add('FOOD', amount);
                             if (added) {
                                 sprigs.state[i] = THIEF_STATE.FLEE;
-                            } else {
-                                // This shouldn't happen if capacity is set to 10
-                                console.warn(`Thief [${i}] failed to add food to inventory!`);
                             }
                         }
                     }
@@ -211,13 +209,8 @@ export class ThreatSystem {
                         if (burrow.stock) {
                             const success = burrow.stock.add('FOOD', amount);
                             if (success) {
-                                console.log(`Thief [${i}] banked ${amount} food into Burrow [${burrow.id}]. New Total: ${burrow.stock.count('FOOD')}`);
                                 sprigs.stock[i].remove('FOOD', amount);
-                            } else {
-                                console.warn(`Thief [${i}] failed to bank food into Burrow [${burrow.id}]. (Capacity: ${burrow.stock.capacityLimit})`);
                             }
-                        } else {
-                            console.error(`Thief [${i}] attempted to bank into Burrow [${burrow.id}] but it has NO STOCK component!`);
                         }
                         
                         // Decision Point

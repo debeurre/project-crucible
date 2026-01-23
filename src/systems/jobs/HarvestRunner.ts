@@ -1,6 +1,8 @@
 import { WorldState } from '../../core/WorldState';
 import { StructureType, getStructureStats } from '../../data/StructureData';
 import { SprigState } from '../../data/SprigState';
+import { CONFIG } from '../../core/Config';
+import { EvolutionService } from '../evolution/EvolutionService';
 
 export class HarvestRunner {
     public static handle(world: WorldState, i: number, jobId: number) {
@@ -43,7 +45,7 @@ export class HarvestRunner {
         const range = getStructureStats(source.type).radius + 15;
 
         if (distSq < range * range) {
-            const amount = Math.min(5, source.stock!.count('FOOD'));
+            const amount = Math.min(sprigs.carryCapacity[i], source.stock!.count('FOOD'));
             if (amount > 0 && source.stock!.remove('FOOD', amount)) {
                 sprigs.stock[i].add('FOOD', amount);
                 sprigs.state[i] = SprigState.MOVE_TO_SINK;
@@ -76,6 +78,10 @@ export class HarvestRunner {
             if (nest.stock && sprigs.stock[i].remove('FOOD', amount)) {
                 nest.stock.add('FOOD', amount);
                 this.gossip(world, i, nest, source);
+                
+                // XP Hook
+                sprigs.xp_haul[i] += CONFIG.XP_PER_HAUL;
+                EvolutionService.checkLevelUp(sprigs, i);
             }
             
             // Always complete job after delivery to allow priority re-evaluation

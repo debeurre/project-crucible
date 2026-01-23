@@ -97,7 +97,7 @@ export class PatrolRunner {
             // Let's assume handle gets dt.
             
             if (sprigs.timer[i] <= 0) {
-                combatService.applyDamage(enemyId, world.sprigs.attack[i]);
+                combatService.applyDamage(i, enemyId, world.sprigs.attack[i]);
                 sprigs.timer[i] = CONFIG.SPRIG_ATTACK_COOLDOWN;
             }
             

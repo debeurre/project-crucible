@@ -70,7 +70,7 @@ async function init() {
             console.warn('Invalid IDs');
             return;
         }
-        const dmg = combatService.applyDamage(victimId, world.sprigs.attack[attackerId]);
+        const dmg = combatService.applyDamage(attackerId, victimId, world.sprigs.attack[attackerId]);
         const remaining = world.sprigs.hp[victimId];
         console.log(`Sprig [${attackerId}] hit Sprig [${victimId}] for ${dmg} damage! HP remaining: ${remaining}`);
         if (remaining <= 0) console.log(`Sprig [${victimId}] died!`);
