@@ -5,11 +5,35 @@ import { StructureType, createStructure } from '../data/StructureData';
 import { EntityType } from '../data/EntityData';
 
 export class LifecycleSystem {
+    private frameCount: number = 0;
+
     public update(world: WorldState, dt: number) {
+        this.frameCount++;
+        if (this.frameCount % 300 === 0) {
+            this.runJanitor(world);
+        }
+
         this.updateHunger(world, dt);
         this.updateSpawning(world, dt);
         this.updateRegeneration(world, dt);
         this.updatePaths(world);
+    }
+
+    private runJanitor(world: WorldState) {
+        for (let i = world.structures.length - 1; i >= 0; i--) {
+            const s = world.structures[i];
+            if (s.type === StructureType.BURROW) {
+                // Check if empty AND abandoned
+                const isEmpty = !s.stock || s.stock.count('FOOD') <= 0;
+                const isAbandoned = !s.occupantCount || s.occupantCount <= 0;
+
+                if (isEmpty && isAbandoned) {
+                    console.log(`Janitor cleaned up Burrow [${s.id}]`);
+                    world.structureHash.remove(s);
+                    world.structures.splice(i, 1);
+                }
+            }
+        }
     }
 
     private updatePaths(world: WorldState) {

@@ -66,6 +66,7 @@ export class ThreatSystem {
         const burrow = createStructure(StructureType.BURROW, sx, sy);
         burrow.id = world.nextStructureId++;
         burrow.stock!.add('FOOD', 0); // Initialize stock tracking
+        burrow.occupantCount = 0; // Explicit init
         world.structures.push(burrow);
         world.structureHash.add(burrow);
 
@@ -84,6 +85,11 @@ export class ThreatSystem {
             // Set Thief Capacity to 10
             world.sprigs.carryCapacity[thiefId] = 10;
             world.sprigs.stock[thiefId].setCapacity(10);
+
+            // Track Occupant
+            if (burrow.occupantCount !== undefined) {
+                burrow.occupantCount++;
+            }
         }
     }
 
@@ -107,6 +113,8 @@ export class ThreatSystem {
                     world.structures.push(crumb);
                     world.structureHash.add(crumb);
                 }
+                
+                this.decrementOccupant(world, sprigs.homeID[i]);
                 sprigs.active[i] = 0;
                 world.sprigs.count--;
                 continue;
@@ -142,6 +150,8 @@ export class ThreatSystem {
                 const burrowId = sprigs.homeID[i];
                 const burrow = structures.find(s => s.id === burrowId);
                 if (!burrow) {
+                    // Burrow gone (destroyed?)
+                    // Just despawn thief or panic. Despawn for now.
                     sprigs.active[i] = 0;
                     world.sprigs.count--;
                     continue;
@@ -226,6 +236,7 @@ export class ThreatSystem {
                     }
                 } else {
                     // Burrow destroyed? Panic flee to edge or despawn
+                    this.decrementOccupant(world, sprigs.homeID[i]);
                     sprigs.active[i] = 0;
                     world.sprigs.count--;
                 }
@@ -237,6 +248,7 @@ export class ThreatSystem {
                     // Check Capacity
                     if (burrow.stock.count('FOOD') >= CONFIG.BURROW_LIMIT) {
                         // Mission Complete
+                        this.decrementOccupant(world, sprigs.homeID[i]);
                         sprigs.active[i] = 0;
                         world.sprigs.count--;
                         // Optional: Despawn burrow too? Prompt says "Temporary Burrow"
@@ -247,10 +259,19 @@ export class ThreatSystem {
                     }
                 } else {
                     // Burrow gone
+                    this.decrementOccupant(world, sprigs.homeID[i]);
                     sprigs.active[i] = 0;
                     world.sprigs.count--;
                 }
             }
+        }
+    }
+
+    private decrementOccupant(world: WorldState, burrowId: number) {
+        const burrow = world.structures.find(s => s.id === burrowId);
+        if (burrow && burrow.occupantCount !== undefined) {
+            burrow.occupantCount--;
+            if (burrow.occupantCount < 0) burrow.occupantCount = 0;
         }
     }
 }
