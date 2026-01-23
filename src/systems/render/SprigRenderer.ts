@@ -83,6 +83,14 @@ export class SprigRenderer {
         }
         if (hunger === 1) return 0xFFA500; // Orange
         if (hunger === 2) return 0xFF4500; // OrangeRed
+        
+        // Evolution Tints
+        const fLvl = sprigs.level_fight[i];
+        const hLvl = sprigs.level_haul[i];
+        
+        if (fLvl > hLvl) return fLvl > 5 ? 0x996666 : 0xFFCCCC; // Reddish (Darker if Vet)
+        if (hLvl > fLvl) return hLvl > 5 ? 0x666699 : 0xCCCCFF; // Blueish (Darker if Vet)
+
         return 0x00FF00; // Green
     }
 

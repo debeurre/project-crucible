@@ -47,6 +47,7 @@ export class EntityData {
     public xp_fight: Int32Array;
     public level_haul: Int32Array;
     public level_fight: Int32Array;
+    public carryCapacity: Uint8Array;
 
     public count: number;
     
@@ -93,6 +94,7 @@ export class EntityData {
         this.xp_fight = new Int32Array(size);
         this.level_haul = new Int32Array(size);
         this.level_fight = new Int32Array(size);
+        this.carryCapacity = new Uint8Array(size);
         
         this.discoveryBuffer = new Int32Array(size * this.MEMORY_CAPACITY).fill(-1);
         this.discoveryCount = new Uint8Array(size);
@@ -156,6 +158,8 @@ export class EntityData {
                 this.xp_fight[i] = 0;
                 this.level_haul[i] = 0;
                 this.level_fight[i] = 0;
+                this.carryCapacity[i] = CONFIG.BASE_CARRY_CAPACITY;
+                this.stock[i].setCapacity(CONFIG.BASE_CARRY_CAPACITY);
 
                 this.count++;
                 return i;
