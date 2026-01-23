@@ -38,7 +38,7 @@ export class EraserTool implements Tool {
             const dy = s.y - y;
             if (dx * dx + dy * dy < rSq) {
                 // Special handling for Signals
-                if (s.type === StructureType.SIGNAL && s.jobs) {
+                if (s.type === StructureType.SIGNAL_HARVEST && s.jobs) {
                     for (const jobId of s.jobs) {
                         // Cancel Job
                         world.jobs.remove(jobId);

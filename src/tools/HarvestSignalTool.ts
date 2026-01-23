@@ -7,7 +7,7 @@ import { CONFIG } from '../core/Config';
 export class HarvestSignalTool implements Tool {
     
     public onDown(world: WorldState, x: number, y: number): void {
-        const signal = createStructure(StructureType.SIGNAL, x, y);
+        const signal = createStructure(StructureType.SIGNAL_HARVEST, x, y);
         signal.id = world.nextStructureId++;
         signal.jobs = [];
         

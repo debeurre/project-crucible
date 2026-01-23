@@ -6,7 +6,7 @@ export class SignalSystem {
         for (let i = world.structures.length - 1; i >= 0; i--) {
             const s = world.structures[i];
             
-            if (s.type === StructureType.SIGNAL && s.lifetime !== undefined) {
+            if (s.type === StructureType.SIGNAL_HARVEST && s.lifetime !== undefined) {
                 s.lifetime -= dt;
                 
                 if (s.lifetime <= 0) {

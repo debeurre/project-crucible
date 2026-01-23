@@ -4,11 +4,11 @@ import { StructureType, createStructure } from '../data/StructureData';
 
 export class PatrolTool implements Tool {
     public onDown(world: WorldState, x: number, y: number): void {
-        const flag = createStructure(StructureType.PATROL_FLAG, x, y);
-        flag.id = world.nextStructureId++;
+        const signal = createStructure(StructureType.SIGNAL_PATROL, x, y);
+        signal.id = world.nextStructureId++;
         
-        world.structures.push(flag);
-        world.structureHash.add(flag);
+        world.structures.push(signal);
+        world.structureHash.add(signal);
         
         // Note: JobDispatchSystem will pick this up and assign a job automatically
     }

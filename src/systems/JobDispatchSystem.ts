@@ -56,7 +56,7 @@ export class JobDispatchSystem {
                 for (const id of s.knownStructures) {
                     jobs.add(JobType.HARVEST, id, 5);
                 }
-            } else if (s.type === StructureType.PATROL_FLAG) {
+            } else if (s.type === StructureType.SIGNAL_PATROL) {
                 // Post Patrol Job (High Priority)
                 // Check if job already exists for this target?
                 // JobData doesn't easily support querying "job for target X" without iterating.

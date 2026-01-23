@@ -7,9 +7,9 @@ export enum StructureType {
     COOKIE = 2,
     ROCK = 3,
     BUSH = 4,
-    SIGNAL = 5,
+    SIGNAL_HARVEST = 5,
     BURROW = 6,
-    PATROL_FLAG = 7
+    SIGNAL_PATROL = 7
 }
 
 export interface StructureStats {
@@ -18,18 +18,19 @@ export interface StructureStats {
     color: number;  // Hex
     solid: boolean; // True = Hard collision
     shape: 'CIRCLE' | 'DIAMOND';
+    destroyOnEmpty?: boolean;
 }
 
 // THE BLUEPRINT
 export const STRUCTURE_STATS: Record<StructureType, StructureStats> = {
-    [StructureType.NEST]:   { name: 'Nest',   radius: 30, color: 0xFFD700, solid: false, shape: 'CIRCLE' },
-    [StructureType.CRUMB]:  { name: 'Crumb',  radius: 10,  color: 0xB8860B, solid: false, shape: 'DIAMOND' },
-    [StructureType.COOKIE]: { name: 'Cookie', radius: 45, color: 0xDAA520, solid: false, shape: 'CIRCLE' },
-    [StructureType.ROCK]:   { name: 'Rock',   radius: 40, color: 0x808080, solid: true,  shape: 'CIRCLE' },
-    [StructureType.BUSH]:   { name: 'Bush',   radius: 20, color: 0x228B22, solid: false, shape: 'CIRCLE' },
-    [StructureType.SIGNAL]: { name: 'Signal', radius: 300, color: 0x00FF00, solid: false, shape: 'CIRCLE' },
-    [StructureType.BURROW]: { name: 'Burrow', radius: 10,  color: 0x800080, solid: false, shape: 'CIRCLE' },
-    [StructureType.PATROL_FLAG]: { name: 'Patrol Flag', radius: 50, color: 0xFF0000, solid: false, shape: 'CIRCLE' }
+    [StructureType.NEST]:   { name: 'Nest',   radius: 30, color: 0xFFD700, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
+    [StructureType.CRUMB]:  { name: 'Crumb',  radius: 10,  color: 0xB8860B, solid: false, shape: 'DIAMOND', destroyOnEmpty: true },
+    [StructureType.COOKIE]: { name: 'Cookie', radius: 45, color: 0xDAA520, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
+    [StructureType.ROCK]:   { name: 'Rock',   radius: 40, color: 0x808080, solid: true,  shape: 'CIRCLE', destroyOnEmpty: false },
+    [StructureType.BUSH]:   { name: 'Bush',   radius: 20, color: 0x228B22, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
+    [StructureType.SIGNAL_HARVEST]: { name: 'Signal (Harvest)', radius: 300, color: 0x00FF00, solid: false, shape: 'CIRCLE', destroyOnEmpty: true },
+    [StructureType.BURROW]: { name: 'Burrow', radius: 10,  color: 0x800080, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
+    [StructureType.SIGNAL_PATROL]: { name: 'Signal (Patrol)', radius: 50, color: 0xFF0000, solid: false, shape: 'CIRCLE', destroyOnEmpty: false }
 };
 
 export interface Structure {
@@ -74,7 +75,7 @@ export function createStructure(type: StructureType, x: number, y: number): Stru
         structure.stock = new Stock(10);
         structure.stock.add('FOOD', 10);
         structure.regenTimer = 0;
-    } else if (type === StructureType.SIGNAL) {
+    } else if (type === StructureType.SIGNAL_HARVEST) {
         structure.lifetime = CONFIG.HARVEST_SIGNAL_DURATION;
     } else if (type === StructureType.BURROW) {
         structure.stock = new Stock(Infinity);

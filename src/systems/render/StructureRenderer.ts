@@ -18,14 +18,14 @@ export class StructureRenderer {
                  .lineTo(s.x - radius, s.y)
                  .closePath()
                  .fill(color);
-            } else if (s.type === StructureType.SIGNAL) {
+            } else if (s.type === StructureType.SIGNAL_HARVEST) {
                 g.circle(s.x, s.y, radius).fill({ color, alpha: CONFIG.SIGNAL_ALPHA });
                 g.moveTo(s.x, s.y + 10).lineTo(s.x, s.y - 20).stroke({ width: 2, color: 0xFFFFFF });
                 g.moveTo(s.x, s.y - 20).lineTo(s.x + 15, s.y - 12).lineTo(s.x, s.y - 5).closePath().fill(color);
             } else if (s.type === StructureType.BURROW) {
                 g.circle(s.x, s.y, radius).fill(color);
                 g.circle(s.x, s.y, radius * 0.6).fill(0x000000); // Entrance hole
-            } else if (s.type === StructureType.PATROL_FLAG) {
+            } else if (s.type === StructureType.SIGNAL_PATROL) {
                 // Area Indicator
                 g.circle(s.x, s.y, radius).fill({ color, alpha: CONFIG.SIGNAL_ALPHA });
                 // Red Pennant

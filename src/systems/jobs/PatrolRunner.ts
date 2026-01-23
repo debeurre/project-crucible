@@ -10,9 +10,9 @@ export class PatrolRunner {
         const sprigs = world.sprigs;
         const structures = world.structures;
         const targetId = world.jobs.targetId[jobId];
-        const flag = structures.find(s => s.id === targetId);
+        const signal = structures.find(s => s.id === targetId);
 
-        if (!flag) {
+        if (!signal) {
             this.completeJob(world, i, jobId);
             return;
         }
@@ -24,22 +24,22 @@ export class PatrolRunner {
         }
 
         if (state === SprigState.MOVE_TO_SOURCE) {
-            // A. Patrol (Orbit Flag)
-            // Scan for enemies using ScoutService (prioritize near Flag)
-            const enemyId = ScoutService.findBestTarget(world, i, flag.x, flag.y);
+            // A. Patrol (Orbit Signal)
+            // Scan for enemies using ScoutService (prioritize near Signal)
+            const enemyId = ScoutService.findBestTarget(world, i, signal.x, signal.y);
 
             if (enemyId !== -1) {
                 sprigs.state[i] = SprigState.MOVE_TO_SINK; // Transition to Intercept
                 sprigs.targetId[i] = enemyId; // Lock target
             } else {
-                // Orbit/Wander near flag
-                // Check distance to flag
-                const dx = sprigs.x[i] - flag.x;
-                const dy = sprigs.y[i] - flag.y;
+                // Orbit/Wander near signal
+                // Check distance to signal
+                const dx = sprigs.x[i] - signal.x;
+                const dy = sprigs.y[i] - signal.y;
                 if (dx*dx + dy*dy > CONFIG.PATROL_RADIUS*CONFIG.PATROL_RADIUS) {
                     // Too far, go back
-                    sprigs.targetX[i] = flag.x;
-                    sprigs.targetY[i] = flag.y;
+                    sprigs.targetX[i] = signal.x;
+                    sprigs.targetY[i] = signal.y;
                 } else {
                     // Timer-based wandering
                     sprigs.timer[i] -= dt;
@@ -47,8 +47,8 @@ export class PatrolRunner {
                         sprigs.timer[i] = CONFIG.WANDER_TMIN + Math.random() * (CONFIG.WANDER_TMAX - CONFIG.WANDER_TMIN);
                         const angle = Math.random() * Math.PI * 2;
                         const dist = Math.random() * (CONFIG.PATROL_RADIUS * 0.8);
-                        sprigs.targetX[i] = flag.x + Math.cos(angle) * dist;
-                        sprigs.targetY[i] = flag.y + Math.sin(angle) * dist;
+                        sprigs.targetX[i] = signal.x + Math.cos(angle) * dist;
+                        sprigs.targetY[i] = signal.y + Math.sin(angle) * dist;
                     }
                 }
             }
