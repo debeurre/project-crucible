@@ -1,6 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { WorldState } from '../../core/WorldState';
-import { CONFIG } from '../../core/Config';
 import { ParticleType } from '../../data/ParticleData';
 
 export class ParticleRenderer {
@@ -37,9 +36,9 @@ export class ParticleRenderer {
                     if (!text) {
                         const style = new TextStyle({
                             fontFamily: 'monospace',
-                            fontSize: p.type[i] === ParticleType.ICON ? CONFIG.TEXT_SIZE_LARGE : CONFIG.TEXT_SIZE_MEDIUM,
+                            fontSize: p.scale[i], // Pixel size from System
                             fill: color,
-                            stroke: { color: '#000000', width: 4 }, // Thicker stroke for larger font
+                            stroke: { color: '#000000', width: p.scale[i] > 20 ? 4 : 2 },
                             dropShadow: {
                                 alpha: 0.5,
                                 blur: 2,
@@ -55,7 +54,7 @@ export class ParticleRenderer {
                     text.x = x;
                     text.y = y;
                     text.alpha = alpha;
-                    text.scale.set(scale * (14 / CONFIG.TEXT_SIZE_MEDIUM)); // Adjust scale relative to base 14px resolution
+                    text.scale.set(1.0); // 1:1 Pixel rendering
                 }
             }
         }

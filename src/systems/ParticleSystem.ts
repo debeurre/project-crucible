@@ -75,20 +75,22 @@ export class ParticleSystem {
     }
 
     public static spawnLevelUpFX(world: WorldState, x: number, y: number) {
-        // Flash (Circle)
-        const flash = world.particles.spawn(x, y, ParticleType.CIRCLE, 0.5);
-        if (flash !== -1) {
-            world.particles.color[flash] = CONFIG.COLOR_PARTICLE_GOLD;
-            world.particles.scale[flash] = 3.0; 
+        // Multi-stage Flash (Bloom)
+        for (let i = 0; i < 3; i++) {
+            const flash = world.particles.spawn(x, y, ParticleType.CIRCLE, 0.3 + i * 0.1);
+            if (flash !== -1) {
+                world.particles.color[flash] = CONFIG.COLOR_PARTICLE_GOLD;
+                world.particles.scale[flash] = 2.0 + i * 2.0; 
+            }
         }
 
-        // Sparks (Yellow, Red, Blue)
+        // Sparks (Yellow, Red, Blue) - High Density
         const colors = [CONFIG.COLOR_PARTICLE_SPARK, 0xFF0000, 0x0000FF];
-        for(let i=0; i<12; i++) {
-            const spark = world.particles.spawn(x, y, ParticleType.SPARK, 0.8);
+        for(let i=0; i<48; i++) {
+            const spark = world.particles.spawn(x, y, ParticleType.SPARK, 0.5 + Math.random() * 1.0);
             if (spark !== -1) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = 80 + Math.random() * 80;
+                const speed = 40 + Math.random() * 160;
                 world.particles.vx[spark] = Math.cos(angle) * speed;
                 world.particles.vy[spark] = Math.sin(angle) * speed;
                 world.particles.color[spark] = colors[i % colors.length];
