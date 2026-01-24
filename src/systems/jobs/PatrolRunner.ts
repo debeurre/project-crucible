@@ -84,7 +84,7 @@ export class PatrolRunner {
                 // Range reached
                 sprigs.state[i] = SprigState.HARVESTING; // Combat
                 sprigs.timer[i] = 0; // Ready to attack immediately
-                ParticleSystem.spawnEmote(world, i, "⚔️");
+                ParticleSystem.spawnEmote(world, i, CONFIG.EMOTE_COMBAT);
             }
         } else if (state === SprigState.HARVESTING) {
             // C. Combat

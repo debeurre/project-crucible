@@ -136,7 +136,7 @@ export class ThreatSystem {
                     world.structureHash.add(crumb);
                 }
                 sprigs.state[i] = THIEF_STATE.FLEE;
-                ParticleSystem.spawnEmote(world, i, "🫨");
+                ParticleSystem.spawnEmote(world, i, CONFIG.EMOTE_THIEF_HURT);
             }
             sprigs.prevHp[i] = sprigs.hp[i]; // Update history
 
@@ -144,7 +144,7 @@ export class ThreatSystem {
             const y = sprigs.y[i];
             const state = sprigs.state[i];
 
-            if ((state === THIEF_STATE.SEEK_LOOT || state === THIEF_STATE.FLEE) && this.frameCount % 20 === 0) {
+            if ((state === THIEF_STATE.SEEK_LOOT || state === THIEF_STATE.FLEE) && this.frameCount % CONFIG.THIEF_STEP_INTERVAL === 0) {
                 ParticleSystem.spawnFootprint(world, x, y);
             }
 
@@ -197,7 +197,7 @@ export class ThreatSystem {
                             const added = sprigs.stock[i].add('FOOD', amount);
                             if (added) {
                                 sprigs.state[i] = THIEF_STATE.FLEE;
-                                ParticleSystem.spawnEmote(world, i, "😈");
+                                ParticleSystem.spawnEmote(world, i, CONFIG.EMOTE_THIEF_STEAL);
                             }
                             
                             // Cleanup empty structure

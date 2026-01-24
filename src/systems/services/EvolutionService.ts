@@ -12,10 +12,25 @@ export class EvolutionService {
         this.checkFightLevel(world, id);
     }
 
+    public static addHaulXp(world: WorldState, id: number, amount: number) {
+        const sprigs = world.sprigs;
+        sprigs.xp_haul[id] += amount;
+        // Small XP Text
+        ParticleSystem.spawnFloatingText(world, sprigs.x[id], sprigs.y[id], `+${amount} XP`, 0xFFFFFF, 0.7);
+        this.checkHaulLevel(world, id);
+    }
+
+    public static addFightXp(world: WorldState, id: number, amount: number) {
+        const sprigs = world.sprigs;
+        sprigs.xp_fight[id] += amount;
+        // Small XP Text
+        ParticleSystem.spawnFloatingText(world, sprigs.x[id], sprigs.y[id], `+${amount} XP`, 0xFF8888, 0.7);
+        this.checkFightLevel(world, id);
+    }
+
     private static checkHaulLevel(world: WorldState, id: number) {
         const sprigs = world.sprigs;
         if (sprigs.level_haul[id] >= CONFIG.LEVEL_CAP) {
-            // Cap Log
             return;
         }
 
@@ -28,7 +43,8 @@ export class EvolutionService {
             this.recalculateStats(sprigs, id);
             
             // VFX
-            ParticleSystem.spawnFloatingText(world, sprigs.x[id], sprigs.y[id], `HAUL UP!`, 0xFFD700);
+            ParticleSystem.spawnFloatingText(world, sprigs.x[id], sprigs.y[id], `HAUL UP!`, 0xFFD700, CONFIG.PARTICLE_TEXT_SCALE_LEVEL);
+            ParticleSystem.spawnLevelUpFX(world, sprigs.x[id], sprigs.y[id]);
             
             console.log(`Sprig [${id}] reached Haul Level ${sprigs.level_haul[id]}!`);
             this.checkHaulLevel(world, id);
@@ -50,7 +66,8 @@ export class EvolutionService {
             this.recalculateStats(sprigs, id);
             
             // VFX
-            ParticleSystem.spawnFloatingText(world, sprigs.x[id], sprigs.y[id], `FIGHT UP!`, 0xFF4500);
+            ParticleSystem.spawnFloatingText(world, sprigs.x[id], sprigs.y[id], `FIGHT UP!`, 0xFF4500, CONFIG.PARTICLE_TEXT_SCALE_LEVEL);
+            ParticleSystem.spawnLevelUpFX(world, sprigs.x[id], sprigs.y[id]);
 
             console.log(`Sprig [${id}] reached Fight Level ${sprigs.level_fight[id]}!`);
             this.checkFightLevel(world, id);

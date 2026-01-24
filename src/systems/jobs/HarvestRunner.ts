@@ -57,7 +57,7 @@ export class HarvestRunner {
             if (amount > 0 && source.stock!.remove('FOOD', amount)) {
                 sprigs.stock[i].add('FOOD', amount);
                 sprigs.state[i] = SprigState.MOVE_TO_SINK;
-                ParticleSystem.spawnEmote(world, i, "📦");
+                ParticleSystem.spawnEmote(world, i, CONFIG.EMOTE_HAUL);
             } else {
                 this.completeJob(world, i, jobId);
             }
@@ -90,8 +90,7 @@ export class HarvestRunner {
                 this.gossip(world, i, nest, source);
                 
                 // XP Hook
-                sprigs.xp_haul[i] += CONFIG.XP_PER_HAUL;
-                EvolutionService.checkLevelUp(world, i);
+                EvolutionService.addHaulXp(world, i, CONFIG.XP_PER_HAUL);
             }
             
             // Always complete job after delivery to allow priority re-evaluation

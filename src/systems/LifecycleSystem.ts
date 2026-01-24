@@ -1,6 +1,7 @@
 import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
 import { StructureType, createStructure } from '../data/StructureData';
+import { ParticleSystem } from './ParticleSystem';
 
 import { EntityType } from '../data/EntityData';
 
@@ -108,6 +109,7 @@ export class LifecycleSystem {
                         // Sated (Normal Green)
                         sprigs.hungerState[i] = 0;
                         sprigs.speed[i] = CONFIG.MAX_SPEED;
+                        ParticleSystem.spawnEmote(world, i, CONFIG.EMOTE_EAT);
                     } else {
                         // Starving (increment hunger state)
                         if (sprigs.hungerState[i] < 2) {

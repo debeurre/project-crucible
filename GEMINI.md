@@ -3,6 +3,8 @@
 ## CURRENT FOCUS: THREATS AND COMBAT
 As of JAN-20-2026: Begin implementing enemies, combat logic, and martial depth in waves, starting with sprig 'stats'.
 
+As of JAN-24-2026: Waves 1-5 done (stats, thief, patrols, evolution, spectacle). Further waves (TBD) dedicated to refining and expanding on this foundation.
+
 ## 1. THE DEVELOPER (CRITICAL)
 - **Input Constraints:** Developer MOSTLY uses a mouse/touchscreen (Tap/Drag). 
 - **MINIMAL KEYBOARD CONTROLS:** Do not suggest WASD, arrow keys, or complex hotkeys.

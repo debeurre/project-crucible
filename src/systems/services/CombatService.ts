@@ -42,19 +42,17 @@ export class CombatService {
 
         // VFX
         ParticleSystem.spawnCombatFX(this.world, this.world.sprigs.x[targetId], this.world.sprigs.y[targetId]);
-        ParticleSystem.spawnFloatingText(this.world, this.world.sprigs.x[targetId], this.world.sprigs.y[targetId], `-${damage}`, 0xFF0000);
+        ParticleSystem.spawnFloatingText(this.world, this.world.sprigs.x[targetId], this.world.sprigs.y[targetId], `-${damage}`, 0xFF0000, CONFIG.PARTICLE_TEXT_SCALE_DAMAGE);
 
         // XP for Attacker
         if (attackerId !== -1 && this.world.sprigs.active[attackerId] === 1) {
-             this.world.sprigs.xp_fight[attackerId] += CONFIG.XP_PER_HIT;
-             EvolutionService.checkLevelUp(this.world, attackerId);
+             EvolutionService.addFightXp(this.world, attackerId, CONFIG.XP_PER_HIT);
         }
 
         if (this.world.sprigs.hp[targetId] <= 0) {
             // Kill XP
             if (attackerId !== -1 && this.world.sprigs.active[attackerId] === 1) {
-                this.world.sprigs.xp_fight[attackerId] += CONFIG.XP_PER_KILL;
-                EvolutionService.checkLevelUp(this.world, attackerId);
+                EvolutionService.addFightXp(this.world, attackerId, CONFIG.XP_PER_KILL);
             }
             this.killSprig(targetId);
         }

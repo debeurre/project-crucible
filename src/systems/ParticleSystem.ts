@@ -1,5 +1,6 @@
 import { WorldState } from '../core/WorldState';
 import { ParticleType } from '../data/ParticleData';
+import { CONFIG } from '../core/Config';
 
 export class ParticleSystem {
     public update(world: WorldState, dt: number) {
@@ -33,12 +34,13 @@ export class ParticleSystem {
         }
     }
 
-    public static spawnFloatingText(world: WorldState, x: number, y: number, text: string, color: number) {
+    public static spawnFloatingText(world: WorldState, x: number, y: number, text: string, color: number, scale: number = 1.0) {
         const id = world.particles.spawn(x, y, ParticleType.TEXT, 1.5); // 1.5s life
         if (id !== -1) {
             world.particles.color[id] = color;
             world.particles.vy[id] = -20; // Float up
             world.particles.textContent.set(id, text);
+            world.particles.scale[id] = scale;
         }
     }
 
@@ -47,7 +49,7 @@ export class ParticleSystem {
         if (id !== -1) {
             world.particles.ownerId[id] = ownerId;
             world.particles.textContent.set(id, iconChar);
-            world.particles.scale[id] = 1.5;
+            world.particles.scale[id] = CONFIG.PARTICLE_EMOTE_SCALE;
         }
     }
 
@@ -72,8 +74,30 @@ export class ParticleSystem {
         }
     }
 
+    public static spawnLevelUpFX(world: WorldState, x: number, y: number) {
+        // Flash (Circle)
+        const flash = world.particles.spawn(x, y, ParticleType.CIRCLE, 0.5);
+        if (flash !== -1) {
+            world.particles.color[flash] = 0xFFD700; // Gold
+            world.particles.scale[flash] = 3.0; 
+        }
+
+        // Sparks (Yellow, Red, Blue)
+        const colors = [0xFFFF00, 0xFF0000, 0x0000FF];
+        for(let i=0; i<12; i++) {
+            const spark = world.particles.spawn(x, y, ParticleType.SPARK, 0.8);
+            if (spark !== -1) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 80 + Math.random() * 80;
+                world.particles.vx[spark] = Math.cos(angle) * speed;
+                world.particles.vy[spark] = Math.sin(angle) * speed;
+                world.particles.color[spark] = colors[i % colors.length];
+            }
+        }
+    }
+
     public static spawnFootprint(world: WorldState, x: number, y: number) {
-        const id = world.particles.spawn(x, y, ParticleType.CIRCLE, 5.0);
+        const id = world.particles.spawn(x, y, ParticleType.CIRCLE, CONFIG.PARTICLE_FOOTPRINT_LIFE);
         if (id !== -1) {
             world.particles.color[id] = 0x000000;
             world.particles.scale[id] = 0.5;
