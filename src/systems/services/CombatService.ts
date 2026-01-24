@@ -42,7 +42,7 @@ export class CombatService {
 
         // VFX
         ParticleSystem.spawnCombatFX(this.world, this.world.sprigs.x[targetId], this.world.sprigs.y[targetId]);
-        ParticleSystem.spawnFloatingText(this.world, this.world.sprigs.x[targetId], this.world.sprigs.y[targetId], `-${damage}`, 0xFF0000, CONFIG.PARTICLE_TEXT_SCALE_DAMAGE);
+        ParticleSystem.spawnFloatingText(this.world, this.world.sprigs.x[targetId], this.world.sprigs.y[targetId], `-${damage}`, CONFIG.COLOR_TEXT_DAMAGE, CONFIG.PARTICLE_SIZE_DAMAGE);
 
         // XP for Attacker
         if (attackerId !== -1 && this.world.sprigs.active[attackerId] === 1) {
