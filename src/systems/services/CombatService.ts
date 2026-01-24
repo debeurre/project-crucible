@@ -3,6 +3,7 @@ import { EvolutionService } from './EvolutionService';
 import { WorldState } from '../../core/WorldState';
 import { EntityType } from '../../data/EntityData';
 import { StructureType } from '../../data/StructureData';
+import { ParticleSystem } from '../ParticleSystem';
 
 export class CombatService {
     private world: WorldState;
@@ -39,17 +40,21 @@ export class CombatService {
 
         this.world.sprigs.hp[targetId] -= damage;
 
+        // VFX
+        ParticleSystem.spawnCombatFX(this.world, this.world.sprigs.x[targetId], this.world.sprigs.y[targetId]);
+        ParticleSystem.spawnFloatingText(this.world, this.world.sprigs.x[targetId], this.world.sprigs.y[targetId], `-${damage}`, 0xFF0000);
+
         // XP for Attacker
         if (attackerId !== -1 && this.world.sprigs.active[attackerId] === 1) {
              this.world.sprigs.xp_fight[attackerId] += CONFIG.XP_PER_HIT;
-             EvolutionService.checkLevelUp(this.world.sprigs, attackerId);
+             EvolutionService.checkLevelUp(this.world, attackerId);
         }
 
         if (this.world.sprigs.hp[targetId] <= 0) {
             // Kill XP
             if (attackerId !== -1 && this.world.sprigs.active[attackerId] === 1) {
                 this.world.sprigs.xp_fight[attackerId] += CONFIG.XP_PER_KILL;
-                EvolutionService.checkLevelUp(this.world.sprigs, attackerId);
+                EvolutionService.checkLevelUp(this.world, attackerId);
             }
             this.killSprig(targetId);
         }

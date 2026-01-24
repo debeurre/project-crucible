@@ -3,6 +3,7 @@ import { StructureType, getStructureStats } from '../../data/StructureData';
 import { SprigState } from '../../data/SprigState';
 import { CONFIG } from '../../core/Config';
 import { EvolutionService } from '../services/EvolutionService';
+import { ParticleSystem } from '../ParticleSystem';
 
 export class HarvestRunner {
     public static handle(world: WorldState, i: number, jobId: number) {
@@ -56,6 +57,7 @@ export class HarvestRunner {
             if (amount > 0 && source.stock!.remove('FOOD', amount)) {
                 sprigs.stock[i].add('FOOD', amount);
                 sprigs.state[i] = SprigState.MOVE_TO_SINK;
+                ParticleSystem.spawnEmote(world, i, "📦");
             } else {
                 this.completeJob(world, i, jobId);
             }
@@ -89,7 +91,7 @@ export class HarvestRunner {
                 
                 // XP Hook
                 sprigs.xp_haul[i] += CONFIG.XP_PER_HAUL;
-                EvolutionService.checkLevelUp(sprigs, i);
+                EvolutionService.checkLevelUp(world, i);
             }
             
             // Always complete job after delivery to allow priority re-evaluation

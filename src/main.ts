@@ -16,6 +16,7 @@ import { DEFAULT_LEVEL } from './data/LevelData';
 import { UIManager } from './ui/UIManager';
 import { CombatService } from './systems/services/CombatService';
 import { ThreatSystem } from './systems/ThreatSystem';
+import { ParticleSystem } from './systems/ParticleSystem';
 
 async function init() {
     const app = new Application();
@@ -61,6 +62,7 @@ async function init() {
     const threatSystem = new ThreatSystem();
     const uiSystem = new UISystem(app);
     const combatService = new CombatService(world);
+    const particleSystem = new ParticleSystem();
 
     const uiManager = new UIManager(toolManager, world);
 
@@ -103,6 +105,7 @@ async function init() {
         jobDispatchSystem.update(world);
         jobExecutionSystem.update(world, dt);
         threatSystem.update(world);
+        particleSystem.update(world, dt);
         steeringSystem.update(world);
         physicsSystem.update(world, dt);
         

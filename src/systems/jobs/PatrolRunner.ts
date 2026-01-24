@@ -2,6 +2,7 @@ import { WorldState } from '../../core/WorldState';
 import { SprigState } from '../../data/SprigState';
 import { CombatService } from '../services/CombatService';
 import { CONFIG } from '../../core/Config';
+import { ParticleSystem } from '../ParticleSystem';
 
 import { ScoutService } from '../services/ScoutService';
 
@@ -83,6 +84,7 @@ export class PatrolRunner {
                 // Range reached
                 sprigs.state[i] = SprigState.HARVESTING; // Combat
                 sprigs.timer[i] = 0; // Ready to attack immediately
+                ParticleSystem.spawnEmote(world, i, "⚔️");
             }
         } else if (state === SprigState.HARVESTING) {
             // C. Combat

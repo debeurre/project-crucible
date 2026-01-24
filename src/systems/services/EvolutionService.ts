@@ -1,18 +1,21 @@
 import { CONFIG } from '../../core/Config';
 import { EntityData } from '../../data/EntityData';
+import { WorldState } from '../../core/WorldState';
+import { ParticleSystem } from '../ParticleSystem';
 
 export class EvolutionService {
-    public static checkLevelUp(sprigs: EntityData, id: number) {
+    public static checkLevelUp(world: WorldState, id: number) {
         // Haul Level
-        this.checkHaulLevel(sprigs, id);
+        this.checkHaulLevel(world, id);
         
         // Fight Level
-        this.checkFightLevel(sprigs, id);
+        this.checkFightLevel(world, id);
     }
 
-    private static checkHaulLevel(sprigs: EntityData, id: number) {
+    private static checkHaulLevel(world: WorldState, id: number) {
+        const sprigs = world.sprigs;
         if (sprigs.level_haul[id] >= CONFIG.LEVEL_CAP) {
-            console.log(`Apprenticeship XP (Haul): ${sprigs.xp_haul[id]}`);
+            // Cap Log
             return;
         }
 
@@ -23,14 +26,18 @@ export class EvolutionService {
             sprigs.level_haul[id]++;
             sprigs.xp_haul[id] -= required;
             this.recalculateStats(sprigs, id);
+            
+            // VFX
+            ParticleSystem.spawnFloatingText(world, sprigs.x[id], sprigs.y[id], `HAUL UP!`, 0xFFD700);
+            
             console.log(`Sprig [${id}] reached Haul Level ${sprigs.level_haul[id]}!`);
-            this.checkHaulLevel(sprigs, id);
+            this.checkHaulLevel(world, id);
         }
     }
 
-    private static checkFightLevel(sprigs: EntityData, id: number) {
+    private static checkFightLevel(world: WorldState, id: number) {
+        const sprigs = world.sprigs;
         if (sprigs.level_fight[id] >= CONFIG.LEVEL_CAP) {
-            console.log(`Apprenticeship XP (Fight): ${sprigs.xp_fight[id]}`);
             return;
         }
 
@@ -41,8 +48,12 @@ export class EvolutionService {
             sprigs.level_fight[id]++;
             sprigs.xp_fight[id] -= required;
             this.recalculateStats(sprigs, id);
+            
+            // VFX
+            ParticleSystem.spawnFloatingText(world, sprigs.x[id], sprigs.y[id], `FIGHT UP!`, 0xFF4500);
+
             console.log(`Sprig [${id}] reached Fight Level ${sprigs.level_fight[id]}!`);
-            this.checkFightLevel(sprigs, id);
+            this.checkFightLevel(world, id);
         }
     }
 

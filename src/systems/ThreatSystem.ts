@@ -2,6 +2,7 @@ import { WorldState } from '../core/WorldState';
 import { StructureType, createStructure, getStructureStats } from '../data/StructureData';
 import { EntityType } from '../data/EntityData';
 import { CONFIG } from '../core/Config';
+import { ParticleSystem } from './ParticleSystem';
 
 const THIEF_STATE = {
     SEEK_LOOT: 0,
@@ -135,12 +136,17 @@ export class ThreatSystem {
                     world.structureHash.add(crumb);
                 }
                 sprigs.state[i] = THIEF_STATE.FLEE;
+                ParticleSystem.spawnEmote(world, i, "🫨");
             }
             sprigs.prevHp[i] = sprigs.hp[i]; // Update history
 
             const x = sprigs.x[i];
             const y = sprigs.y[i];
             const state = sprigs.state[i];
+
+            if ((state === THIEF_STATE.SEEK_LOOT || state === THIEF_STATE.FLEE) && this.frameCount % 20 === 0) {
+                ParticleSystem.spawnFootprint(world, x, y);
+            }
 
             if (state === THIEF_STATE.SEEK_LOOT) {
                 // Find target
@@ -191,6 +197,7 @@ export class ThreatSystem {
                             const added = sprigs.stock[i].add('FOOD', amount);
                             if (added) {
                                 sprigs.state[i] = THIEF_STATE.FLEE;
+                                ParticleSystem.spawnEmote(world, i, "😈");
                             }
                             
                             // Cleanup empty structure

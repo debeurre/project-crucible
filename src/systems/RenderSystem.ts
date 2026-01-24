@@ -8,6 +8,7 @@ import { ToolManager } from '../tools/ToolManager';
 import { StructureRenderer } from './render/StructureRenderer';
 import { SprigRenderer } from './render/SprigRenderer';
 import { PathRenderer } from './render/PathRenderer';
+import { ParticleRenderer } from './render/ParticleRenderer';
 import { JobType } from '../data/JobData';
 
 export class RenderSystem {
@@ -18,12 +19,15 @@ export class RenderSystem {
     private structureGraphics: Graphics;
     private debugGraphics: Graphics;
     private hoverGraphics: Graphics;
+    private particleGraphics: Graphics;
     private spriteContainer: Container;
+    private particleContainer: Container;
     private labelContainer: Container;
     
     private structureRenderer: StructureRenderer;
     private sprigRenderer: SprigRenderer;
     private pathRenderer: PathRenderer;
+    private particleRenderer: ParticleRenderer;
     
     private structureLabels: Map<number, Text> = new Map();
     private needsRedraw: boolean = true;
@@ -36,6 +40,8 @@ export class RenderSystem {
         this.gridGraphics = new Graphics();
         this.structureGraphics = new Graphics();
         this.spriteContainer = new Container();
+        this.particleGraphics = new Graphics();
+        this.particleContainer = new Container();
         this.debugGraphics = new Graphics();
         this.labelContainer = new Container();
         this.hoverGraphics = new Graphics();
@@ -43,6 +49,8 @@ export class RenderSystem {
         app.stage.addChild(this.gridGraphics);
         app.stage.addChild(this.structureGraphics);
         app.stage.addChild(this.spriteContainer);
+        app.stage.addChild(this.particleGraphics);
+        app.stage.addChild(this.particleContainer);
         app.stage.addChild(this.debugGraphics);
         app.stage.addChild(this.labelContainer);
         app.stage.addChild(this.hoverGraphics);
@@ -50,6 +58,7 @@ export class RenderSystem {
         this.structureRenderer = new StructureRenderer();
         this.sprigRenderer = new SprigRenderer();
         this.pathRenderer = new PathRenderer();
+        this.particleRenderer = new ParticleRenderer();
     }
 
     public update() {
@@ -65,6 +74,7 @@ export class RenderSystem {
         this.pathRenderer.draw(this.debugGraphics, this.world);
         this.toolManager.drawActiveToolPreview(this.debugGraphics, this.world);
         this.sprigRenderer.update(this.spriteContainer, this.debugGraphics, this.world);
+        this.particleRenderer.update(this.particleContainer, this.particleGraphics, this.world);
         
         this.drawDebugVectors();
         this.drawStructureLabels();
