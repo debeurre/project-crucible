@@ -25,7 +25,7 @@ export interface StructureStats {
 export const STRUCTURE_STATS: Record<StructureType, StructureStats> = {
     [StructureType.NEST]:   { name: 'Nest',   radius: 30, color: 0xFFD700, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
     [StructureType.CRUMB]:  { name: 'Crumb',  radius: 10,  color: 0xB8860B, solid: false, shape: 'DIAMOND', destroyOnEmpty: true },
-    [StructureType.COOKIE]: { name: 'Cookie', radius: 45, color: 0xDAA520, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
+    [StructureType.COOKIE]: { name: 'Cookie', radius: 45, color: 0xDAA520, solid: false, shape: 'CIRCLE', destroyOnEmpty: true },
     [StructureType.ROCK]:   { name: 'Rock',   radius: 40, color: 0x808080, solid: true,  shape: 'CIRCLE', destroyOnEmpty: false },
     [StructureType.BUSH]:   { name: 'Bush',   radius: 20, color: 0x228B22, solid: false, shape: 'CIRCLE', destroyOnEmpty: false },
     [StructureType.SIGNAL_HARVEST]: { name: 'Signal (Harvest)', radius: CONFIG.HARVEST_SIGNAL_RADIUS, color: 0x00FF00, solid: false, shape: 'CIRCLE', destroyOnEmpty: true },

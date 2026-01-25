@@ -42,8 +42,10 @@ export class JobDispatchSystem {
         // A. Scan Local Area (The "Eye")
         const nearby = world.structureHash.query(s.x, s.y, CONFIG.NEST_VIEW_RADIUS);
         for (const other of nearby) {
-            if ((other.type === StructureType.COOKIE || other.type === StructureType.CRUMB || other.type === StructureType.BUSH || other.type === StructureType.BURROW) && 
-                other.stock && other.stock.count('FOOD') > 0) {
+            const isResource = other.type === StructureType.COOKIE || other.type === StructureType.CRUMB || other.type === StructureType.BUSH;
+            const isSafeBurrow = other.type === StructureType.BURROW && (other.occupantCount === 0 || other.occupantCount === undefined);
+
+            if ((isResource || isSafeBurrow) && other.stock && other.stock.count('FOOD') > 0) {
                 
                 // Distance Check
                 const distSq = (other.x - s.x)**2 + (other.y - s.y)**2;
@@ -81,8 +83,10 @@ export class JobDispatchSystem {
     private handleHarvestSignal(world: WorldState, s: any, jobs: JobData) {
         const nearby = world.structureHash.query(s.x, s.y, CONFIG.HARVEST_SIGNAL_RADIUS);
         for (const other of nearby) {
-            if ((other.type === StructureType.COOKIE || other.type === StructureType.CRUMB || other.type === StructureType.BUSH || other.type === StructureType.BURROW) &&
-                other.stock && other.stock.count('FOOD') > 0) {
+            const isResource = other.type === StructureType.COOKIE || other.type === StructureType.CRUMB || other.type === StructureType.BUSH;
+            const isSafeBurrow = other.type === StructureType.BURROW && (other.occupantCount === 0 || other.occupantCount === undefined);
+
+            if ((isResource || isSafeBurrow) && other.stock && other.stock.count('FOOD') > 0) {
                 
                 // Distance Check
                 const distSq = (other.x - s.x)**2 + (other.y - s.y)**2;

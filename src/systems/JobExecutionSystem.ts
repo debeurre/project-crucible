@@ -90,7 +90,10 @@ export class JobExecutionSystem {
         const nearby = world.structureHash.query(x, y, CONFIG.SPRIG_VIEW_RADIUS);
 
         for (const s of nearby) {
-            if ((s.type === StructureType.COOKIE || s.type === StructureType.CRUMB || s.type === StructureType.BUSH || s.type === StructureType.BURROW) && s.stock && s.stock.count('FOOD') > 0) {
+            const isResource = s.type === StructureType.COOKIE || s.type === StructureType.CRUMB || s.type === StructureType.BUSH;
+            const isSafeBurrow = s.type === StructureType.BURROW && (s.occupantCount === 0 || s.occupantCount === undefined);
+
+            if ((isResource || isSafeBurrow) && s.stock && s.stock.count('FOOD') > 0) {
                 if (s.id !== (currentJobId !== -1 ? world.jobs.targetId[currentJobId] : -1)) {
                     sprigs.addDiscovery(i, s.id);
                 }
