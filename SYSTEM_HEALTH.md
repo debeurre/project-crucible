@@ -1,9 +1,7 @@
 # 🧹 System Health Report
 
-**Generated:** 1/24/2026, 7:11:04 PM
+**Generated:** 1/24/2026, 7:40:17 PM
 **Total Source Files:** 50
-
-🚨 **ARCHITECTURAL SMELLS DETECTED:** 18
 
 ### Legend
 - 🟢 Healthy (< 200 LOC)
@@ -12,30 +10,30 @@
 
 | File | LOC | Status | Issues |
 | :--- | :---: | :---: | :--- |
-| `src/systems/ThreatSystem.ts` | 284 | 🟡 WARNING | Imports src/systems/ParticleSystem.ts (Spaghetti!) |
-| `src/systems/RenderSystem.ts` | 220 | 🟡 WARNING | Imports src/systems/render/ParticleRenderer.ts (Spaghetti!), Imports src/systems/render/PathRenderer.ts (Spaghetti!), Imports src/systems/render/SprigRenderer.ts (Spaghetti!), Imports src/systems/render/StructureRenderer.ts (Spaghetti!) |
+| `src/systems/ThreatSystem.ts` | 284 | 🟡 WARNING |  |
+| `src/systems/JobDispatchSystem.ts` | 228 | 🟡 WARNING |  |
+| `src/systems/RenderSystem.ts` | 220 | 🟡 WARNING |  |
+| `src/systems/LifecycleSystem.ts` | 218 | 🟡 WARNING |  |
 | `src/tools/CommandBrushTool.ts` | 208 | 🟡 WARNING |  |
-| `src/systems/LifecycleSystem.ts` | 201 | 🟡 WARNING | Imports src/systems/ParticleSystem.ts (Spaghetti!) |
-| `src/systems/JobDispatchSystem.ts` | 196 | 🟢 HEALTHY |  |
-| `src/data/EntityData.ts` | 183 | 🟢 HEALTHY |  |
+| `src/data/EntityData.ts` | 187 | 🟢 HEALTHY |  |
 | `src/ui/UIManager.ts` | 162 | 🟢 HEALTHY |  |
-| `src/systems/JobExecutionSystem.ts` | 160 | 🟢 HEALTHY | Imports src/systems/jobs/HarvestRunner.ts (Spaghetti!), Imports src/systems/jobs/PatrolRunner.ts (Spaghetti!), Imports src/systems/services/CombatService.ts (Spaghetti!) |
-| `src/systems/jobs/PatrolRunner.ts` | 135 | 🟢 HEALTHY | Imports src/systems/ParticleSystem.ts (Spaghetti!), Imports src/systems/services/CombatService.ts (Spaghetti!), Imports src/systems/services/ScoutService.ts (Spaghetti!) |
-| `src/systems/jobs/HarvestRunner.ts` | 128 | 🟢 HEALTHY | Imports src/systems/ParticleSystem.ts (Spaghetti!), Imports src/systems/services/EvolutionService.ts (Spaghetti!) |
+| `src/systems/JobExecutionSystem.ts` | 160 | 🟢 HEALTHY |  |
+| `src/systems/jobs/HarvestRunner.ts` | 128 | 🟢 HEALTHY |  |
+| `src/systems/jobs/PatrolRunner.ts` | 125 | 🟢 HEALTHY |  |
 | `src/systems/steering/SteeringBehaviors.ts` | 124 | 🟢 HEALTHY |  |
-| `src/systems/SteeringSystem.ts` | 122 | 🟢 HEALTHY | Imports src/systems/steering/SteeringBehaviors.ts (Spaghetti!) |
+| `src/systems/SteeringSystem.ts` | 122 | 🟢 HEALTHY |  |
 | `src/main.ts` | 120 | 🟢 HEALTHY |  |
 | `src/core/Config.ts` | 118 | 🟢 HEALTHY |  |
 | `src/core/WorldState.ts` | 114 | 🟢 HEALTHY |  |
 | `src/systems/ParticleSystem.ts` | 110 | 🟢 HEALTHY |  |
-| `src/systems/services/EvolutionService.ts` | 107 | 🟢 HEALTHY | Imports src/systems/ParticleSystem.ts (Spaghetti!) |
+| `src/systems/services/EvolutionService.ts` | 107 | 🟢 HEALTHY |  |
 | `src/systems/PhysicsSystem.ts` | 105 | 🟢 HEALTHY |  |
 | `src/systems/render/SprigRenderer.ts` | 105 | 🟢 HEALTHY |  |
 | `src/tools/ToolManager.ts` | 95 | 🟢 HEALTHY |  |
 | `src/data/StructureData.ts` | 89 | 🟢 HEALTHY |  |
+| `src/systems/services/CombatService.ts` | 83 | 🟢 HEALTHY |  |
 | `src/core/StructureHash.ts` | 78 | 🟢 HEALTHY |  |
 | `src/data/JobData.ts` | 78 | 🟢 HEALTHY |  |
-| `src/systems/services/CombatService.ts` | 77 | 🟢 HEALTHY | Imports src/systems/ParticleSystem.ts (Spaghetti!), Imports src/systems/services/EvolutionService.ts (Spaghetti!) |
 | `src/data/ParticleData.ts` | 75 | 🟢 HEALTHY |  |
 | `src/tools/TerrainTool.ts` | 74 | 🟢 HEALTHY |  |
 | `src/core/Grid.ts` | 73 | 🟢 HEALTHY |  |

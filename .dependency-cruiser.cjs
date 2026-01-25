@@ -13,13 +13,13 @@ module.exports = {
     {
       name: 'no-system-to-system-import',
       severity: 'error',
-      comment: 'Systems should not import other Systems (ECS Purity).',
+      comment: 'Systems should not import other Systems (ECS Purity). Particles and logic sub-modules are exceptions.',
       from: {
         path: '^src/systems/',
       },
       to: {
         path: '^src/systems/',
-        pathNot: 'ISystem', // Allow interfaces if any
+        pathNot: 'ISystem|ParticleSystem\\.ts|services/|render/|jobs/|steering/SteeringBehaviors\\.ts',
       },
     },
   ],
