@@ -95,3 +95,83 @@
     width: 80px;
     margin-top: 10px;
 }
+
+.ui-stats-toggle {
+    background-color: #9C27B0;
+    color: white;
+    padding: 10px 0;
+    border: 1px solid #7B1FA2;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    width: 80px;
+    margin-top: 10px;
+}
+
+.sprig-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(20, 20, 20, 0.95);
+    border: 2px solid #444;
+    border-radius: 10px;
+    padding: 20px;
+    width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    pointer-events: auto;
+}
+
+.sprig-modal.active {
+    display: block;
+}
+
+.sprig-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    color: #fff;
+    border-bottom: 1px solid #444;
+    padding-bottom: 10px;
+}
+
+.sprig-modal-close {
+    cursor: pointer;
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+}
+
+.sprig-list {
+    font-size: 12px;
+    color: #ccc;
+}
+
+.sprig-entry {
+    border-bottom: 1px solid #333;
+    padding: 8px 0;
+    display: grid;
+    grid-template-columns: 60px 100px 80px 100px 80px 120px 1fr;
+    gap: 5px;
+    font-family: 'Courier New', Courier, monospace;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.sprig-entry:last-child {
+    border-bottom: none;
+}
+
+.sprig-entry .id { color: #fff; font-weight: bold; }
+.sprig-entry .haul { color: #88f; }
+.sprig-entry .fight { color: #f88; }
+.sprig-entry .job { color: #fb8; }
+.sprig-entry .stock { color: #8f8; }

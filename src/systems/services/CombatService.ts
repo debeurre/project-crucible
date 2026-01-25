@@ -34,6 +34,13 @@ export class CombatService {
     public applyDamage(attackerId: number, targetId: number, amount: number): number {
         if (this.world.sprigs.active[targetId] === 0) return 0;
 
+        // Friendly Fire Check (Sprigs don't hit Sprigs)
+        if (attackerId !== -1 && 
+            this.world.sprigs.type[attackerId] === EntityType.SPRIG && 
+            this.world.sprigs.type[targetId] === EntityType.SPRIG) {
+            return 0;
+        }
+
         // Calculate Damage
         const defense = this.getEffectiveStats(targetId).defense;
         const damage = Math.max(1, amount - defense + 1);
