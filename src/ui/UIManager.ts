@@ -13,6 +13,7 @@ export class UIManager {
     
     private toolButtons: Record<string, HTMLDivElement> = {};
     private toolOptionIcons: Record<string, { val: number, el: HTMLDivElement }[]> = {};
+    private toolOptionContainers: Record<string, HTMLDivElement> = {};
     private lastActiveTool: string = '';
 
     constructor(toolManager: ToolManager, world: WorldState) {
@@ -62,6 +63,8 @@ export class UIManager {
         if (options && options.length > 0) {
             const optionsDiv = document.createElement('div');
             optionsDiv.className = 'ui-row';
+            optionsDiv.style.display = (name === this.toolManager.getActiveToolName()) ? 'flex' : 'none';
+            this.toolOptionContainers[name] = optionsDiv;
             this.toolOptionIcons[name] = [];
 
             options.forEach(opt => {
@@ -141,6 +144,9 @@ export class UIManager {
             this.lastActiveTool = active;
             for (const name in this.toolButtons) {
                 this.toolButtons[name].classList.toggle('active', name === active);
+            }
+            for (const name in this.toolOptionContainers) {
+                this.toolOptionContainers[name].style.display = (name === active) ? 'flex' : 'none';
             }
         }
 

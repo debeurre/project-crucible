@@ -57,9 +57,9 @@ export const CONFIG = {
     // Progression
     XP_BASE: 100,
     LEVEL_CAP: 10,
-    XP_PER_HAUL: 1,
-    XP_PER_HIT: 1,
-    XP_PER_KILL: 30,
+    XP_PER_HAUL: 3,
+    XP_PER_HIT: 5,
+    XP_PER_KILL: 15,
     // Hauling
     BASE_CARRY_CAPACITY: 5,
     HP_PER_HAUL_LEVEL: 30,
@@ -86,7 +86,7 @@ export const CONFIG = {
     THIEF_CORNERED_RADIUS: 100.0,
     THIEF_CORNERED_ATK: 20,
     THIEF_CORNERED_DEF: 5,
-    THIEF_STEP_INTERVAL: 80,
+    THIEF_STEP_INTERVAL: 40,
     // Visuals
     TEXT_SIZE_SMALL: TEXT_SMALL,
     TEXT_SIZE_MEDIUM: TEXT_MEDIUM,
