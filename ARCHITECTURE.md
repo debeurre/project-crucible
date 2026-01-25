@@ -15,11 +15,13 @@ The game loop runs inside `main.ts` via the Pixi ticker. The execution order is 
 
 1.  **Input:** `ToolManager` processes mouse/touch interactions.
 2.  **Lifecycle:** `LifecycleSystem` handles hunger, spawning, and path cleanup.
-3.  **Job Dispatch:** `JobDispatchSystem` matches open jobs to idle sprigs.
-4.  **Job Execution:** `JobExecutionSystem` runs the state-logic for current tasks.
-5.  **Steering:** `SteeringSystem` calculates forces (Seek, Avoid, Separate).
-6.  **Physics:** `PhysicsSystem` integrates forces into velocity/position and handles friction.
-7.  **Rendering:** `RenderSystem` and `UIManager` update the visual state.
+3.  **Threats:** `ThreatSystem` manages enemy AI (Thieves) and burrow spawning.
+4.  **Job Dispatch:** `JobDispatchSystem` matches open jobs to idle sprigs.
+5.  **Job Execution:** `JobExecutionSystem` runs the state-logic for current tasks.
+6.  **Particle System:** `ParticleSystem` updates life, physics, and attachment for FX.
+7.  **Steering:** `SteeringSystem` calculates forces (Seek, Avoid, Separate).
+8.  **Physics:** `PhysicsSystem` integrates forces into velocity/position and handles friction.
+9.  **Rendering:** `RenderSystem` and `UIManager` update the visual state.
 
 ---
 
@@ -27,7 +29,7 @@ The game loop runs inside `main.ts` via the Pixi ticker. The execution order is 
 `WorldState.ts` is the **Single Source of Truth**. 
 - Systems are stateless; they accept `WorldState` and `dt` (delta time) and transform the data.
 - **Objects vs. Arrays:**
-    - **Use Arrays (SoA):** For high-volume entities (Sprigs). We use `Float32Array` buffers in `EntityData` for performance and memory locality.
+    - **Use Arrays (SoA):** For high-volume entities (Sprigs, Particles). We use `Float32Array` buffers in `EntityData` and `ParticleData` for performance and memory locality.
     - **Use Objects/Interfaces:** For low-volume or unique world elements (Structures, Jobs, Paths).
 
 ---
@@ -45,14 +47,16 @@ The game logic centers on a Contract-based Job System:
 To keep files under the **300 LOC limit**, we use a delegated structure:
 - **Core Systems:** Orchestrate logic (e.g., `SteeringSystem`).
 - **Behaviors/Runners:** Pure logic/math units (e.g., `SteeringBehaviors`, `HarvestRunner`).
-- **Renderers:** Specialized Pixi drawers (e.g., `SprigRenderer`, `StructureRenderer`).
+- **Services:** Centralized logic helpers shared across systems (e.g., `CombatService`, `EvolutionService`, `ScoutService`).
+- **Renderers:** Specialized Pixi drawers (e.g., `SprigRenderer`, `StructureRenderer`, `ParticleRenderer`).
 
 ---
 
 ## 6. UI Tiering
 1.  **World Layer (PixiJS):** Physical entities like Sprigs and Structures.
-2.  **Overlay Layer (PixiJS Debug):** Scent trails, selection arrows, and progress bars.
-3.  **Chrome Layer (DOM):** Managed by `UIManager`, styled via `src/ui/style.css`. Used for buttons and toggles.
+2.  **Spectacle Layer (PixiJS Particles):** Transient visual feedback (Emotes, Floating Text, Sparks).
+3.  **Overlay Layer (PixiJS Debug):** Scent trails, selection arrows, and progress bars.
+4.  **Chrome Layer (DOM):** Managed by `UIManager`, styled via `src/ui/style.css`. Used for buttons and toggles.
 
 ---
 
@@ -66,8 +70,14 @@ To keep files under the **300 LOC limit**, we use a delegated structure:
 
 ## 8. Glossary
 - **Sprig:** The primary actor/unit in the colony.
+- **Thief:** An enemy unit that spawns from a Burrow to steal food from the colony.
+- **Burrow:** A structure that acts as a home and storage for Thieves.
 - **Scent Trail:** A manual waypoint path drawn by the player using the Command tool.
 - **Brownout:** A low-energy state caused by lack of food; results in reduced speed and efficiency.
 - **Known Structures:** A Nest's internal memory of resource locations, populated by scouting sprigs.
+- **Dibs:** A reservation system that prevents too many Sprigs from targeting the same nearly-depleted resource.
+- **Effect (FX):** Transient visual elements like flashes and sparks managed by the `ParticleSystem`.
+- **Emote:** An attached icon particle (e.g., 📦, 🍕) used to communicate an entity's current intent or state.
+- **Floating Text:** A temporary text particle used for numerical feedback (e.g., -5 HP) or status alerts (+XP, HAUL UP!).
 
 TODO: Generate a file hierarchy with labels summarizing the role of each file/folder
