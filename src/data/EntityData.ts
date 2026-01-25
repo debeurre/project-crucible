@@ -30,6 +30,7 @@ export class EntityData {
     public pathId: Int32Array;
     public pathTargetIdx: Int32Array;
     public timer: Float32Array;
+    public attackCooldown: Float32Array;
     public speed: Float32Array;
     public feedTimer: Float32Array;
     public hungerState: Uint8Array;
@@ -80,6 +81,7 @@ export class EntityData {
         this.pathId = new Int32Array(size).fill(-1);
         this.pathTargetIdx = new Int32Array(size).fill(-1);
         this.timer = new Float32Array(size);
+        this.attackCooldown = new Float32Array(size);
         this.speed = new Float32Array(size);
         this.feedTimer = new Float32Array(size);
         this.hungerState = new Uint8Array(size);
@@ -142,6 +144,7 @@ export class EntityData {
                 this.pathId[i] = -1;
                 this.pathTargetIdx[i] = -1;
                 this.timer[i] = 0;
+                this.attackCooldown[i] = 0;
                 this.speed[i] = CONFIG.MAX_SPEED;
                 this.feedTimer[i] = CONFIG.HUNGER_INTERVAL;
                 this.hungerState[i] = 0;

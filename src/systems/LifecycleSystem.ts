@@ -2,6 +2,8 @@ import { WorldState } from '../core/WorldState';
 import { CONFIG } from '../core/Config';
 import { StructureType, createStructure } from '../data/StructureData';
 import { ParticleSystem } from './ParticleSystem';
+import { JobType } from '../data/JobData';
+import { SprigState } from '../data/SprigState';
 
 import { EntityType } from '../data/EntityData';
 
@@ -115,6 +117,14 @@ export class LifecycleSystem {
                         if (sprigs.hungerState[i] < 2) {
                              sprigs.hungerState[i]++;
                              sprigs.speed[i] = CONFIG.MAX_SPEED * CONFIG.HUNGER_PENALTY;
+
+                             // Fire from Patrol
+                             const jobId = sprigs.jobId[i];
+                             if (jobId !== -1 && world.jobs.type[jobId] === JobType.PATROL) {
+                                 world.jobs.unassign(jobId);
+                                 sprigs.jobId[i] = -1;
+                                 sprigs.state[i] = SprigState.IDLE;
+                             }
                         } else {
                              // Missed 3rd meal -> Die
                              this.killSprig(world, i);
@@ -127,6 +137,13 @@ export class LifecycleSystem {
 
     private killSprig(world: WorldState, i: number) {
         const sprigs = world.sprigs;
+
+        // Cleanup Job
+        const jobId = sprigs.jobId[i];
+        if (jobId !== -1) {
+            world.jobs.unassign(jobId);
+        }
+
         sprigs.active[i] = 0;
         world.sprigs.count--;
         

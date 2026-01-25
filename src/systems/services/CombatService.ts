@@ -61,6 +61,12 @@ export class CombatService {
     }
 
     private killSprig(id: number) {
+        // Cleanup Job
+        const jobId = this.world.sprigs.jobId[id];
+        if (jobId !== -1) {
+            this.world.jobs.unassign(jobId);
+        }
+
         // Decrement Burrow Occupancy if Thief
         if (this.world.sprigs.type[id] === EntityType.THIEF) {
             const burrowId = this.world.sprigs.homeID[id];

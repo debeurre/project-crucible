@@ -169,6 +169,7 @@ export class JobDispatchSystem {
             let bestDistSq = Infinity;
             let bestWorkerId = -1;
 
+            // Search 1: Idle sprigs
             for (let i = 0; i < sprigs.active.length; i++) {
                 if (sprigs.active[i] && sprigs.type[i] === EntityType.SPRIG && sprigs.jobId[i] === -1 && sprigs.state[i] !== SprigState.FORCED_MARCH) {
                     if (jobs.type[j] === JobType.PATROL && sprigs.hungerState[i] > 0) continue;
@@ -183,6 +184,36 @@ export class JobDispatchSystem {
                             bestWorkerId = i;
                         }
                     }
+                }
+            }
+
+            // Search 2: Fallback for Patrol (Overwrite nearest Green Hauler)
+            if (bestWorkerId === -1 && jobs.type[j] === JobType.PATROL) {
+                for (let i = 0; i < sprigs.active.length; i++) {
+                    if (sprigs.active[i] && sprigs.type[i] === EntityType.SPRIG && sprigs.hungerState[i] === 0) {
+                        // "Green" Check (No specialization)
+                        const isGreen = sprigs.level_haul[i] === 0 && sprigs.level_fight[i] === 0;
+                        if (!isGreen) continue;
+
+                        const currentJobId = sprigs.jobId[i];
+                        if (currentJobId !== -1 && jobs.type[currentJobId] === JobType.HARVEST) {
+                            const targetStruct = structures.find(s => s.id === jobs.targetId[j]);
+                            if (targetStruct) {
+                                const dx = sprigs.x[i] - targetStruct.x;
+                                const dy = sprigs.y[i] - targetStruct.y;
+                                const distSq = dx*dx + dy*dy;
+                                if (distSq < bestDistSq) {
+                                    bestDistSq = distSq;
+                                    bestWorkerId = i;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (bestWorkerId !== -1) {
+                    const oldJobId = sprigs.jobId[bestWorkerId];
+                    jobs.unassign(oldJobId);
                 }
             }
 

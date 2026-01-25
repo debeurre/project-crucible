@@ -10,6 +10,12 @@ export class PatrolRunner {
     public static handle(world: WorldState, i: number, jobId: number, combatService: CombatService, dt: number) {
         const sprigs = world.sprigs;
         const structures = world.structures;
+        
+        // Non-resetting cooldown decrement
+        if (sprigs.attackCooldown[i] > 0) {
+            sprigs.attackCooldown[i] -= dt;
+        }
+
         const targetId = world.jobs.targetId[jobId];
         const signal = structures.find(s => s.id === targetId);
 
@@ -83,7 +89,7 @@ export class PatrolRunner {
             if (distSq < CONFIG.SPRIG_ATTACK_RANGE*CONFIG.SPRIG_ATTACK_RANGE) {
                 // Range reached
                 sprigs.state[i] = SprigState.HARVESTING; // Combat
-                sprigs.timer[i] = 0; // Ready to attack immediately
+                // Do not reset cooldown here to prevent instant-wipe on new target
                 ParticleSystem.spawnEmote(world, i, CONFIG.EMOTE_COMBAT);
             }
         } else if (state === SprigState.HARVESTING) {
@@ -94,33 +100,17 @@ export class PatrolRunner {
                 return;
             }
 
-            // Leash Check
-            const dxSignal = sprigs.x[i] - signal.x;
-            const dySignal = sprigs.y[i] - signal.y;
-            if (dxSignal*dxSignal + dySignal*dySignal > (CONFIG.PATROL_RADIUS * 1.5)**2) {
-                sprigs.state[i] = SprigState.MOVE_TO_SOURCE;
-                return;
-            }
-
             // Keep chasing
             sprigs.targetX[i] = world.sprigs.x[enemyId];
             sprigs.targetY[i] = world.sprigs.y[enemyId];
 
             // Cooldown check
-            sprigs.timer[i] -= dt;
-            
-            if (sprigs.timer[i] <= 0) {
+            if (sprigs.attackCooldown[i] <= 0) {
                 const attack = combatService.getEffectiveStats(i).attack;
                 combatService.applyDamage(i, enemyId, attack);
-                sprigs.timer[i] = CONFIG.SPRIG_ATTACK_COOLDOWN;
+                sprigs.attackCooldown[i] = CONFIG.SPRIG_ATTACK_COOLDOWN;
             }
-            
-            // Check distance, if too far, go back to chase
-            const dx = sprigs.x[i] - world.sprigs.x[enemyId];
-            const dy = sprigs.y[i] - world.sprigs.y[enemyId];
-            if (dx*dx + dy*dy > (CONFIG.SPRIG_ATTACK_RANGE + 10)**2) {
-                sprigs.state[i] = SprigState.MOVE_TO_SINK;
-            }
+
         }
     }
 
